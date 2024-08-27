@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 selenium = "^4.23.1"
+pandas = "^2.2.2"
 
 
 [build-system]
