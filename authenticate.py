@@ -23,8 +23,3 @@ time.sleep(3)
 
 driver.find_element("xpath", login_submit).click()
 
-# Wait for user input to close the browser
-input("Press Enter to close the browser...")
-
-# Close the browser
-driver.quit()
