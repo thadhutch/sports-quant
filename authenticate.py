@@ -1,16 +1,16 @@
-from selenium import webdriver  # Python Dynamic web scraping library
+import os
 import time
-import pandas as pd
+from selenium import webdriver  # Python Dynamic web scraping library
+
 
 url = 'https://premium.pff.com/nfl/teams/2022/REGPO/tampa-bay-buccaneers/schedule'
 signinurl = 'https://auth.pff.com'
-email = 'your email here!'
-pw = 'your pw here!'
+email = os.environ.get('PFF_EMAIL')
+pw = os.environ.get('PFF_PASSWORD')
 email_input = '//*[@id="login-form_email"]'
 pw_input = '//*[@id="login-form_password"]'
 login_submit = '//*[@id="sign-in"]'
 continuetostats = '/html/body/div/div/div/div/div/div/ul/li[2]/a'
-
 
 driver = webdriver.Chrome()
 driver.get(signinurl)
@@ -18,7 +18,13 @@ driver.get(signinurl)
 
 driver.find_element("xpath", email_input).send_keys(email)
 driver.find_element("xpath", pw_input).send_keys(pw)
+
+time.sleep(3)
+
 driver.find_element("xpath", login_submit).click()
 
-# Sign In
-driver.find_element("xpath", '//*[@id="react-root"]/div/header/div[3]/button').click()
+# Wait for user input to close the browser
+input("Press Enter to close the browser...")
+
+# Close the browser
+driver.quit()
