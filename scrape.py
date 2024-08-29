@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 from selenium import webdriver
-from authenticate import login_to_pff
+from authenticate import login_to_pff, navigate_and_sign_in
 from teams import url_teams, encoded_teams, url_decoded_teams
 
 """
@@ -16,8 +16,11 @@ NAME DISCREPENCIES
 # San Diego Chargers moved in 2017 to Los Angeles
 """
 
+
 def scrape_pff_data():
     driver = login_to_pff()
+
+    time.sleep(5)
 
     games_dict = {}
 
@@ -47,6 +50,9 @@ def scrape_pff_data():
             url = f"https://premium.pff.com/nfl/teams/{szn}/REGPO/{url_team}/schedule"
             driver.get(url)
             time.sleep(5)
+
+            # Use the new function to navigate and sign in
+            navigate_and_sign_in(driver, url)
 
             home_stats = [
                 "",
@@ -97,6 +103,8 @@ def scrape_pff_data():
             )  # should be 1,22 for all possible games including playoffs
             stat_nums = range(1, 19)  # should be 1,20 to include special teams
 
+            df = pd.DataFrame(games_dict)
+            df.to_csv("team_data.csv")
             for row in row_nums:
                 try:
                     # if away = '@', the current team is away. if empty, the current team is home
@@ -183,8 +191,7 @@ def scrape_pff_data():
                     except:
                         continue
 
-
     df = pd.DataFrame(games_dict)
     df = df.T
-    df.to_excel("output.xlsx")
-    df.to_csv("output.csv")
+    # df.to_excel("output.xlsx")
+    df.to_csv("team_data.csv")
