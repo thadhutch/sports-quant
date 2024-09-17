@@ -313,6 +313,20 @@ files = [
 six = ">=1.5"
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.1"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
+    {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
+]
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "pytz"
 version = "2024.1"
 description = "World timezone definitions, modern and historical"
@@ -321,6 +335,17 @@ python-versions = "*"
 files = [
     {file = "pytz-2024.1-py2.py3-none-any.whl", hash = "sha256:328171f4e3623139da4983451950b28e95ac706e13f3f2630a879749e7a8b319"},
     {file = "pytz-2024.1.tar.gz", hash = "sha256:2a29735ea9c18baf14b448846bde5a48030ed267578472d8955cd0e7443a9812"},
+]
+
+[[package]]
+name = "sbrscrape"
+version = "0.0.10"
+description = "Scrape odds data from sbrodds"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "sbrscrape-0.0.10-py3-none-any.whl", hash = "sha256:200a61dd1321e4c2d33b21e1a6c4fbfbcdb57e6c8a10f256975cf5f726bcda07"},
+    {file = "sbrscrape-0.0.10.tar.gz", hash = "sha256:6c18384dc955f4814b291991dcab8aeaa326e9a357394b17435b99c0f09ba88d"},
 ]
 
 [[package]]
@@ -484,4 +509,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "ba4c27dcdc63aa2653e9697ea8998d12bba9c766665cde7b266c23339775f519"
+content-hash = "c1287500d5bf5ca3a27a36bb9ddacad34c71dfe5ab0c0ffd710d24c2d7f0c5ad"

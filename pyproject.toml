@@ -9,6 +9,8 @@ readme = "README.md"
 python = "^3.12"
 selenium = "^4.23.1"
 pandas = "^2.2.2"
+python-dotenv = "^1.0.1"
+sbrscrape = "^0.0.10"
 
 
 [build-system]
