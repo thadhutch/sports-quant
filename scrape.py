@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 from selenium import webdriver
-from authenticate import login_to_pff, navigate_and_sign_in
+from utils.authenticate import login_to_pff, navigate_and_sign_in
 from teams import url_teams, encoded_teams, url_decoded_teams
 
 """

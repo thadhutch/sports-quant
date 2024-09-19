@@ -72,7 +72,8 @@ encoded_teams = {
     "San Diego Chargers": "SDC",
     "St. Louis Rams": "SLR",
 }
-encoded_teams = {
+
+mascot_encoded_teams = {
     "Cardinals": "AC",
     "Falcons": "AF",
     "Ravens": "BR",
