@@ -15,6 +15,7 @@ bs4 = "^0.0.2"
 selenium-wire = "^5.1.0"
 setuptools = "^75.1.0"
 blinker = "1.7.0"
+requests = "^2.32.3"
 
 
 [build-system]
