@@ -16,7 +16,7 @@ merged_df = pd.merge(
 )
 
 # Drop any columns that are redundant after merging, if necessary
-merged_df.drop(columns=['date', 'team_0', 'team_1'], inplace=True)
+merged_df.drop(columns=['team_0', 'team_1', 'Title', 'game-string', 'date'], inplace=True)
 
 # Display the merged dataframe
 print(merged_df.head())
