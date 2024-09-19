@@ -2,7 +2,7 @@ import pandas as pd
 from teams import encoded_teams  # Import the encoded teams dictionary
 
 # Load the dataset
-df = pd.read_csv('data/pff/team_data.csv')  # Update with the actual path to your dataset
+df = pd.read_csv('data/pff/dates_team_data.csv')  # Update with the actual path to your dataset
 
 # Create a reverse mapping of encoded_teams dictionary
 reverse_encoded_teams = {v: k for k, v in encoded_teams.items()}

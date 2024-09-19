@@ -12,7 +12,7 @@ merged_df = pd.merge(
     df2,
     left_on=['Formatted Date', 'away_team', 'home_team'],
     right_on=['date', 'team_0', 'team_1'],
-    how='outer'  # Change to 'outer' if you want to include non-matching rows as well
+    how='inner'  # Change to 'outer' if you want to include non-matching rows as well
 )
 
 # Drop any columns that are redundant after merging, if necessary
