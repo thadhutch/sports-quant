@@ -128,7 +128,7 @@ df.drop(
     inplace=True,
 )
 # Save the modified DataFrame to a new CSV if needed
-df.to_csv("data/over-under/v1-dataset-modified.csv", index=False)
+df.to_csv("data/over-under/data-w-averages.csv", index=False)
 print(
     "The dataset has been modified with average stats, resetting at the start of each new season."
 )
