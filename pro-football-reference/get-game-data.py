@@ -8,7 +8,8 @@ import time
 import csv
 
 # Path to the boxscores URLs file
-boxscores_file_path = "data/pfr/boxscores_urls.txt"
+boxscores_file_path = "2024_boxscore_urls.txt"
+csv_file_path = "2024_regular_game_data.csv"
 
 # Path to your WebDriver (update this if necessary)
 webdriver_path = "/path/to/chromedriver"
@@ -213,7 +214,6 @@ def scrape_all_game_info():
             time.sleep(1)  # Add a small delay to avoid overwhelming the server
             
         # Save the results to a CSV file
-        csv_file_path = "data/pfr/regular_game_data.csv"
         with open(csv_file_path, "w", newline="", encoding="utf-8") as csvfile:
             fieldnames = ["Title", "Roof", "Surface", "Vegas Line", "Over/Under"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

@@ -1,8 +1,17 @@
+import os
+import sys
+
+# Add the parent directory to sys.path
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+
 import time
 import pandas as pd
 from selenium import webdriver
 from utils.authenticate import login_to_pff, navigate_and_sign_in
 from teams import url_teams, encoded_teams, url_decoded_teams
+
 
 """
 
@@ -16,6 +25,8 @@ NAME DISCREPENCIES
 # San Diego Chargers moved in 2017 to Los Angeles
 """
 
+output_path = "2024_team_data.csv"
+
 
 def scrape_pff_data():
     driver = login_to_pff()
@@ -25,7 +36,7 @@ def scrape_pff_data():
     games_dict = {}
 
     # This variable can be modified to include whichever seasons you prefer
-    seasons = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+    seasons = ["2024"]
 
     for szn in seasons:
         for url_team in url_teams:
@@ -191,5 +202,4 @@ def scrape_pff_data():
 
     df = pd.DataFrame(games_dict)
     df = df.T
-    # df.to_excel("output.xlsx")
-    df.to_csv("team_data.csv")
+    df.to_csv(output_path)

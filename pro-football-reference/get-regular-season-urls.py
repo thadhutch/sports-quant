@@ -4,13 +4,15 @@ import random
 import time
 import csv
 
+output_path = "2024_boxscore_urls.txt"
+
 # Base URL structure
 base_url = "https://www.pro-football-reference.com/years/{}/week_{}.htm"
 
 # Years and weeks to loop through
-start_year = 2015
-end_year = 2023
-max_week = 18
+start_year = 2024
+end_year = 2024
+max_week = 6
 
 # Function to read proxies from a CSV file
 def load_proxies_from_csv(file_path):
@@ -85,7 +87,7 @@ for boxscore in all_boxscores:
     print(boxscore)
 
 # Optionally save the results to a file
-with open('boxscores_urls.txt', 'w') as f:
+with open(output_path, 'w') as f:
     for boxscore in all_boxscores:
         f.write(boxscore + '\n')
 
