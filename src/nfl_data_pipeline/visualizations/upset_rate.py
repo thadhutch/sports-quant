@@ -4,8 +4,6 @@ import logging
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
-
 from nfl_data_pipeline import _config as config
 
 logger = logging.getLogger(__name__)
@@ -90,46 +88,107 @@ def generate_upset_rate_chart():
     min_season, max_season = int(min(seasons)), int(max(seasons))
     season_label = f"{min_season}–{max_season}" if min_season != max_season else str(min_season)
 
-    # Build the chart
-    sns.set_theme(style="whitegrid")
-    fig, ax = plt.subplots(figsize=(8, 5))
+    # Build the chart — dark theme styled for Reddit
+    bg_color = "#0e1117"
+    text_color = "#e0e0e0"
+    bar_colors = ["#2ecc71", "#f1c40f", "#e67e22", "#e74c3c"]
+    bucket_labels = ["1–3 pts", "3.5–7 pts", "7.5–10 pts", "10+ pts"]
+
+    fig, ax = plt.subplots(figsize=(10, 5), facecolor=bg_color)
+    ax.set_facecolor(bg_color)
 
     bars = ax.bar(
-        stats.index,
+        range(len(stats)),
         stats["upset_pct"],
-        color=sns.color_palette("Blues_d", len(stats)),
-        edgecolor="black",
-        linewidth=0.5,
+        color=bar_colors[: len(stats)],
+        width=0.6,
     )
 
-    # Annotate bars with game counts
+    # Bold percentage labels inside bars
     for bar, (_, row) in zip(bars, stats.iterrows()):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() / 2,
+            f"{row['upset_pct']:.1f}%",
+            ha="center",
+            va="center",
+            fontsize=18,
+            fontweight="bold",
+            color="white",
+        )
+        # Sample size above bars
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 1,
             f"n={int(row['games'])}",
             ha="center",
             va="bottom",
-            fontsize=10,
-            fontweight="bold",
+            fontsize=9,
+            color="#888888",
         )
 
-    ax.set_xlabel("Spread (points)", fontsize=12)
-    ax.set_ylabel("Upset Win %", fontsize=12)
-    fig.suptitle("NFL Underdog Straight-Up Win Rate by Spread Size", fontsize=14, fontweight="bold", y=0.98)
+    # 50% coin-flip reference line
+    ax.axhline(y=50, color="#888888", linestyle="--", linewidth=0.8)
+    ax.text(
+        len(stats) - 0.5,
+        51,
+        "Coin Flip",
+        ha="right",
+        va="bottom",
+        fontsize=9,
+        color="#888888",
+        fontstyle="italic",
+    )
+
+    # Axes styling
+    ax.set_xticks(range(len(stats)))
+    ax.set_xticklabels(bucket_labels, fontsize=11, color=text_color)
+    ax.set_yticks([])
+    ax.set_ylim(0, max(stats["upset_pct"].max() + 10, 55))
+    ax.set_xlabel("Spread Size", fontsize=11, color=text_color, labelpad=8)
+
+    # Remove spines, add subtle gridlines
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    ax.yaxis.grid(True, color="#333333", linewidth=0.5, alpha=0.5)
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="x", colors=text_color, length=0)
+
+    # Title and subtitle
+    fig.suptitle(
+        "NFL Underdog Straight-Up Win Rate by Spread Size",
+        fontsize=15,
+        fontweight="bold",
+        color="white",
+        y=0.97,
+    )
     ax.set_title(
         f"Regular season {season_label} · {int(stats['games'].sum()):,} games",
         fontsize=10,
-        color="gray",
-        pad=12,
+        color="#888888",
+        pad=14,
     )
-    ax.set_ylim(0, stats["upset_pct"].max() + 10)
 
-    plt.tight_layout()
+    # Footer with source attribution
+    fig.text(
+        0.5,
+        0.01,
+        "Source: PFR/Vegas lines · r/sportsbetting",
+        ha="center",
+        fontsize=8,
+        color="#555555",
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
     # Save
     config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
-    fig.savefig(config.UPSET_RATE_CHART, dpi=150, bbox_inches="tight")
+    fig.savefig(
+        config.UPSET_RATE_CHART,
+        dpi=200,
+        bbox_inches="tight",
+        facecolor=bg_color,
+    )
     logger.info("Chart saved to %s", config.UPSET_RATE_CHART)
 
     plt.show()
