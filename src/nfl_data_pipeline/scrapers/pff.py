@@ -30,9 +30,11 @@ def scrape_pff_data() -> None:
     time.sleep(5)
 
     games_dict = {}
+    total_teams = len(url_teams)
 
-    for szn in config.SEASONS:
-        for url_team in url_teams:
+    for szn_idx, szn in enumerate(config.SEASONS, 1):
+        logger.info("=== Season %s (%d/%d) ===", szn, szn_idx, len(config.SEASONS))
+        for team_idx, url_team in enumerate(url_teams, 1):
 
             if url_team == "washington-commanders":
                 if szn in ["2020", "2021"]:
@@ -50,13 +52,11 @@ def scrape_pff_data() -> None:
                 url_team = "san-diego-chargers"
 
             team = url_decoded_teams[url_team]
+            logger.info("Scraping %s [%d/%d] (season %s)", team, team_idx, total_teams, szn)
 
             url = f"https://premium.pff.com/nfl/teams/{szn}/REGPO/{url_team}/schedule"
-            driver.get(url)
-            time.sleep(5)
-
-            # Use the new function to navigate and sign in
             navigate_and_sign_in(driver, url)
+            time.sleep(5)
 
             home_stats = [
                 "",
@@ -195,6 +195,7 @@ def scrape_pff_data() -> None:
                         logger.debug("Error scraping stat %d in row %d: %s", stat, row, e)
                         continue
 
+    logger.info("Scraping complete. %d games collected.", len(games_dict))
     df = pd.DataFrame(games_dict)
     df = df.T
     df.to_csv(config.PFF_RAW_FILE)
