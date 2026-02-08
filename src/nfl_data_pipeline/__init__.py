@@ -1,5 +1,5 @@
 """nfl-data-pipeline -- NFL data pipeline combining PFF grades and PFR game data."""
-__version__ = "1.0.1"
+__version__ = "1.1.1"
 
 from nfl_data_pipeline.scrapers.pff import scrape_pff_data
 from nfl_data_pipeline.scrapers.pfr_urls import collect_boxscore_urls
