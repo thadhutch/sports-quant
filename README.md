@@ -31,7 +31,7 @@ An end-to-end data pipeline that combines [PFF](https://www.pff.com/) team grade
 
 ## Features
 
-- **PFF Scraping** &mdash; Selenium-based scraper for PFF team grades (requires PFF Premium)
+- **PFF Scraping** &mdash; Selenium-based scraper for PFF team grades (requires PFF Premium; manual login on first run, cookies cached for subsequent runs)
 - **PFR Scraping** &mdash; Proxy-rotated scraper for Pro Football Reference boxscores
 - **Data Normalization** &mdash; Standardizes dates and team names across sources
 - **Dataset Merging** &mdash; Inner join on date + team columns
@@ -61,7 +61,7 @@ poetry install
 | Requirement | Why |
 |---|---|
 | Python 3.12+ | Runtime |
-| Google Chrome + [ChromeDriver](https://chromedriver.chromium.org/) | PFF scraper uses Selenium to render client-side data |
+| Google Chrome | PFF scraper uses Selenium to render client-side data |
 | [PFF Premium](https://www.pff.com/) subscription | Authenticates access to PFF team grades |
 | Rotating proxies (CSV) | PFR rate-limits aggressively; proxies prevent blocks |
 
@@ -70,13 +70,11 @@ poetry install
 Create a `.env` file (see [`.env.example`](.env.example)) or export environment variables directly:
 
 ```bash
-cp .env.example .env   # then fill in your credentials
+cp .env.example .env
 ```
 
 | Variable | Default | Description |
 |---|---|---|
-| `PFF_EMAIL` | &mdash; | PFF account email **(required for PFF scraping)** |
-| `PFF_PASSWORD` | &mdash; | PFF account password **(required for PFF scraping)** |
 | `NFL_SEASONS` | `2024` | Comma-separated seasons to scrape from PFF |
 | `NFL_START_YEAR` | `2024` | First year for PFR boxscore URL collection |
 | `NFL_END_YEAR` | `2024` | Last year for PFR boxscore URL collection |
@@ -88,7 +86,9 @@ cp .env.example .env   # then fill in your credentials
 
 ### CLI
 
-The `nfl-pipeline` command is available after installation:
+The `nfl-pipeline` command is available after installation.
+
+> **Note:** The first time you run `nfl-pipeline scrape pff`, a Chrome window will open for you to log in to PFF manually. After login, cookies are saved locally and reused for future runs.
 
 ```bash
 # Full end-to-end pipeline
@@ -273,6 +273,7 @@ Please make sure all existing tests pass before submitting a PR.
 - **PFF scraping is DOM-dependent.** The scraper relies on XPath selectors tied to PFF's frontend. If PFF changes their page structure, the selectors in `scrapers/pff.py` will need updating.
 - **PFR scraping requires rotating proxies.** Without them, requests will be rate-limited and blocked.
 - **The PFF scraper is slow by design.** It drives a real Chrome browser via Selenium because PFF renders data client-side.
+- **PFF login requires manual interaction on first run.** A Chrome window will open for you to log in. Cookies are cached afterward, so subsequent runs are fully automated.
 - **Data files are not tracked in git.** Run the pipeline to generate them, or bring your own data in the expected CSV format.
 
 ## License
