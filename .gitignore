@@ -1,5 +1,8 @@
 .env
-
 __pycache__/
-
 proxies/
+data/
+*.csv
+*.json
+!pyproject.toml
+failed_urls.txt
