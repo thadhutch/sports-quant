@@ -77,6 +77,18 @@ def all():
     run_processing_pipeline()
 
 
+@cli.group()
+def chart():
+    """Generate data visualizations."""
+
+
+@chart.command(name="upset-rate")
+def upset_rate():
+    """Generate upset rate by spread size chart."""
+    from nfl_data_pipeline.visualizations.upset_rate import generate_upset_rate_chart
+    generate_upset_rate_chart()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""

@@ -35,3 +35,6 @@ OVERUNDER_RAW = OVERUNDER_DATA_DIR / "raw-dataset.csv"
 OVERUNDER_AVERAGES = OVERUNDER_DATA_DIR / "data-w-averages.csv"
 OVERUNDER_GP = OVERUNDER_DATA_DIR / "v1-dataset-gp.csv"
 OVERUNDER_RANKED = OVERUNDER_DATA_DIR / "v1-dataset-gp-ranked.csv"
+
+CHARTS_DIR = DATA_DIR / "charts"
+UPSET_RATE_CHART = CHARTS_DIR / "upset_rate_by_spread.png"
