@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "scrape-nfl-data"
 version = "1.0.1"
+package-mode = false
 description = "Scrape NFL data from PFF and Pro Football Reference for over/under analysis"
 authors = ["Thad Hutcheson <thadhutch@gmail.com>"]
 readme = "README.md"
