@@ -5,4 +5,5 @@ data/
 *.csv
 *.json
 !pyproject.toml
-failed_urls.txt
+*.txt
+!requirements.txt
