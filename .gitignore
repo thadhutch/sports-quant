@@ -1,5 +1,6 @@
 .env
 .venv/
+test-venv/
 __pycache__/
 proxies/
 data/
@@ -10,3 +11,4 @@ data/
 !requirements.txt
 dist/
 *.egg-info/
+chromedriver

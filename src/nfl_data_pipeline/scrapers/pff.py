@@ -4,8 +4,6 @@ import logging
 import time
 
 import pandas as pd
-from selenium import webdriver
-
 from nfl_data_pipeline.scrapers.auth import login_to_pff, navigate_and_sign_in
 from nfl_data_pipeline.teams import url_teams, encoded_teams, url_decoded_teams
 from nfl_data_pipeline import _config as config
