@@ -31,7 +31,7 @@ def extract_date_and_season(game_str: str) -> tuple:
 
 def extract_dates():
     # Load the CSV data into a pandas DataFrame
-    data = pd.read_csv(config.PFF_DATES_FILE)
+    data = pd.read_csv(config.PFF_RAW_FILE)
 
     # Rename 'Unnamed: 0' to 'game-string' and 'game' to 'index'
     data.rename(columns={'Unnamed: 0': 'game-string', 'game': 'index'}, inplace=True)
