@@ -89,6 +89,20 @@ def upset_rate():
     generate_upset_rate_chart()
 
 
+@chart.command(name="underdog-teams")
+def underdog_teams():
+    """Generate best underdog teams chart."""
+    from nfl_data_pipeline.visualizations.underdog_teams import generate_best_underdog_teams_chart
+    generate_best_underdog_teams_chart()
+
+
+@chart.command(name="dogs-that-bite")
+def dogs_that_bite():
+    """Generate dogs that bite (7+ point underdogs) chart."""
+    from nfl_data_pipeline.visualizations.underdog_teams import generate_dogs_that_bite_chart
+    generate_dogs_that_bite_chart()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
