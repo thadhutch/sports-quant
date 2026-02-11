@@ -5,10 +5,10 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An end-to-end data pipeline that combines [PFF](https://www.pff.com/) team grades with [Pro Football Reference](https://www.pro-football-reference.com/) game and betting data, then produces analysis-ready datasets with rolling averages, rankings, and over/under features.
+An end-to-end data pipeline that scrapes [PFF](https://www.pff.com/) team grades and [Pro Football Reference](https://www.pro-football-reference.com/) game/betting data, builds analysis-ready datasets, and trains an ensemble XGBoost model for NFL over/under prediction.
 
 <p align="center">
-  <img src="docs/dogs_that_bite.png" alt="Dogs That Bite: Best Teams at 7+ Point Underdogs" width="600">
+  <img src="docs/accuracy_by_algorithm_score.png" alt="Accuracy by Algorithm Score" width="600">
 </p>
 
 ---
@@ -251,18 +251,47 @@ Normalize Names        Normalize Names
 
 ## Modeling
 
-The `modeling` subpackage provides two pipelines built on top of the ranked dataset:
+### How It Works
+
+The core idea is simple: **don't try to predict every game &mdash; find the games where the model is reliably right, and only bet those.**
+
+On each game-day the pipeline trains 50 XGBoost models with different random seeds on all available historical data. Most of those models are mediocre. The pipeline filters to the top 3 based on a weighted seasonal accuracy score (heavier weight on the current season, lighter on last season), then requires all three to agree on a pick before it counts. Each consensus pick gets an *algorithm score* &mdash; a weighted blend of each model's per-bin confidence accuracy &mdash; that captures how well the ensemble has historically performed at that confidence level.
+
+$$S = \sum_{i=1}^{N} w_i \cdot A_i$$
+
+$$A_i = \alpha \cdot \text{acc}_{i,\,c,\,b} \;+\; (1 - \alpha) \cdot \text{acc}_{i,\,c-1,\,b}$$
+
+$$\alpha = \text{clamp}\!\bigg(\frac{d_{\text{elapsed}}}{d_{\text{total}}},\; 0,\; 1\bigg)$$
+
+where
+
+- $N$ = number of top models kept after selection (hyperparameter)
+- $w_i$ = ensemble weight for model $i$ (configured in `model_config.yaml`)
+- $A_i$ = adjusted score for model $i$
+- $\text{acc}_{i,s,b}$ = model $i$'s historical accuracy in confidence bin $b$ for season $s$
+- $b$ = confidence bin of the prediction (binned from $\max(\hat{p})$)
+- $c$ = current season
+- $d_{\text{elapsed}}$ = days since Sep 1, &ensp; $d_{\text{total}}$ = days from Sep 1 to Jan 15
+
+The chart at the top of this README tells the story: across 629 total picks, accuracy rises as the algorithm score increases, crossing above coin-flip around the 50% bin and climbing into the 60&ndash;70%+ range at higher bins. Most picks cluster in the middle of the distribution (the grey bars), but the profitable edge lives in the tails.
+
+The heatmap below shows that this isn't a one-season fluke. Higher algorithm-score bins tend to stay green (accurate) across multiple seasons, while lower bins stay red:
+
+<p align="center">
+  <img src="docs/accuracy_by_algorithm_score_season.png" alt="Accuracy by Algorithm Score and Season" width="600">
+</p>
+### Technical Details
+
+| Parameter | Value |
+|---|---|
+| Models trained per game-day | 50 |
+| Models kept after selection | Top 3 by weighted seasonal accuracy |
+| Consensus requirement | All 3 must agree |
+| Algorithm score | Weighted blend of per-model confidence-bin accuracy (0.4 / 0.35 / 0.25) |
+| Bet sizing | 1% Kelly criterion |
+| Starting simulation capital | $100 |
 
 ### Ensemble Training (`nfl-pipeline model train`)
-
-For each game-day in the dataset:
-
-1. **Train 50 XGBoost models** using all data before that date
-2. **Filter** to models with validation accuracy > 50%
-3. **Select top 3** by weighted seasonal accuracy (current season vs. last season, weighted by how far into the NFL calendar we are)
-4. **Require consensus** &mdash; only keep picks where all 3 models agree
-5. **Score picks** with a weighted combination of per-model confidence-bin accuracy (weights: 0.4 / 0.35 / 0.25)
-6. **Simulate betting** on high-accuracy score bins using 1% Kelly criterion sizing
 
 Outputs to `data/models/{version}/algorithm/`:
 - `combined_picks.csv` &mdash; all consensus picks with algorithm scores
@@ -272,11 +301,7 @@ Outputs to `data/models/{version}/algorithm/`:
 
 ### Walk-Forward Backtesting (`nfl-pipeline model backtest`)
 
-Evaluates model generalization using strict temporal separation:
-
-1. **Outer loop**: 50 models (each with a different random seed)
-2. **Inner loop**: for each test date, train on all prior data, predict the current date
-3. **Average** accuracy metrics across all 50 models
+Evaluates model generalization using strict temporal separation: for each test date, train on all prior data, predict the current date, repeat across 50 random seeds, and average the metrics.
 
 Outputs to `data/backtest/{version}/`:
 - `average_season_accuracy.csv` + chart
