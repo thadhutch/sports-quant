@@ -124,6 +124,41 @@ def feature_importance():
     generate_feature_importance()
 
 
+@chart.command(name="pff-vs-vegas-spread")
+def pff_vs_vegas_spread():
+    """Generate PFF grade differential vs Vegas spread scatter plot."""
+    from nfl_data_pipeline.visualizations.pff_vs_vegas_spread import generate_pff_vs_vegas_spread
+    generate_pff_vs_vegas_spread()
+
+
+@chart.command(name="ou-line-vs-actual")
+def ou_line_vs_actual():
+    """Generate O/U line vs actual total score scatter plot."""
+    from nfl_data_pipeline.visualizations.ou_line_vs_actual import generate_ou_line_vs_actual
+    generate_ou_line_vs_actual()
+
+
+@chart.command(name="team-ranking-heatmap")
+def team_ranking_heatmap():
+    """Generate team ranking heatmap across PFF grade categories."""
+    from nfl_data_pipeline.visualizations.team_ranking_heatmap import generate_team_ranking_heatmap
+    generate_team_ranking_heatmap()
+
+
+@chart.command(name="vegas-line-accuracy")
+def vegas_line_accuracy():
+    """Generate Vegas spread accuracy histogram."""
+    from nfl_data_pipeline.visualizations.vegas_line_accuracy import generate_vegas_line_accuracy
+    generate_vegas_line_accuracy()
+
+
+@chart.command(name="vegas-accuracy-conditions")
+def vegas_accuracy_conditions():
+    """Generate Vegas spread accuracy box plots by surface/roof type."""
+    from nfl_data_pipeline.visualizations.vegas_accuracy_by_conditions import generate_vegas_accuracy_by_conditions
+    generate_vegas_accuracy_by_conditions()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
