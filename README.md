@@ -25,6 +25,7 @@ An end-to-end data pipeline that scrapes [PFF](https://www.pff.com/) team grades
   - [Make Targets](#make-targets)
 - [Pipeline Architecture](#pipeline-architecture)
 - [Modeling](#modeling)
+- [Example Charts](#example-charts)
 - [Project Structure](#project-structure)
 - [Development](#development)
 - [Contributing](#contributing)
@@ -307,6 +308,48 @@ Outputs to `data/backtest/{version}/`:
 - `average_season_accuracy.csv` + chart
 - `average_confidence_accuracy.csv` + chart
 - `average_confidence_accuracy_by_season.csv` + chart
+
+## Example Charts
+
+<p align="center">
+  <img src="docs/example_charts/vegas_line_accuracy.png" alt="Vegas Line Accuracy" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/vegas_accuracy_by_conditions.png" alt="Vegas Accuracy by Conditions" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/ou_line_vs_actual.png" alt="O/U Line vs Actual" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/pff_vs_vegas_spread.png" alt="PFF vs Vegas Spread" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/pff_grade_vs_points.png" alt="PFF Grade vs Points" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/correlation_heatmap.png" alt="Correlation Heatmap" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/team_ranking_heatmap.png" alt="Team Ranking Heatmap" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/upset_rate.png" alt="Upset Rate" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/underdog_teams.png" alt="Underdog Teams" width="600">
+</p>
+
+<p align="center">
+  <img src="docs/example_charts/dogs_that_bite.png" alt="Dogs That Bite" width="600">
+</p>
 
 ## Project Structure
 
