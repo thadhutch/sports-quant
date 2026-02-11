@@ -180,6 +180,41 @@ def off_vs_def_correlation():
     generate_off_vs_def_correlation()
 
 
+@chart.command(name="team-radar")
+def team_radar():
+    """Generate team PFF grade radar/spider chart."""
+    from nfl_data_pipeline.visualizations.team_radar_chart import generate_team_radar_chart
+    generate_team_radar_chart()
+
+
+@chart.command(name="wins-vs-pff-grade")
+def wins_vs_pff_grade():
+    """Generate win percentage vs composite PFF grade scatter plot."""
+    from nfl_data_pipeline.visualizations.wins_vs_pff_grade import generate_wins_vs_pff_grade
+    generate_wins_vs_pff_grade()
+
+
+@chart.command(name="grade-differential-upsets")
+def grade_differential_upsets():
+    """Generate biggest PFF grade-differential upsets bar chart."""
+    from nfl_data_pipeline.visualizations.grade_differential_upsets import generate_grade_differential_upsets
+    generate_grade_differential_upsets()
+
+
+@chart.command(name="early-vs-late-grades")
+def early_vs_late_grades():
+    """Generate early vs late season PFF grade comparison chart."""
+    from nfl_data_pipeline.visualizations.early_vs_late_grades import generate_early_vs_late_grades
+    generate_early_vs_late_grades()
+
+
+@chart.command(name="grade-stability")
+def grade_stability():
+    """Generate PFF grade stability by games played line chart."""
+    from nfl_data_pipeline.visualizations.grade_stability import generate_grade_stability
+    generate_grade_stability()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
