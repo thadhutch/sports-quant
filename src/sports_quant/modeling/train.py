@@ -31,6 +31,7 @@ from sports_quant.modeling.plots import (
     plot_accuracy_by_algorithm_score_season,
     plot_accuracy_by_confidence,
     plot_cumulative_profit,
+    plot_cumulative_profit_by_pick,
 )
 
 logger = logging.getLogger(__name__)
@@ -189,6 +190,7 @@ def run_training() -> None:
         selected.to_csv(out_dir / "simulation_picks.csv", index=False)
 
         plot_cumulative_profit(selected, out_dir / "cumulative_profit.png")
+        plot_cumulative_profit_by_pick(selected, out_dir / "cumulative_profit_by_pick.png")
 
         stats = compute_performance_stats(selected)
         write_performance_stats(stats, out_dir / "performance_statistics.txt")

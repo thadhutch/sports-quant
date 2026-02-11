@@ -234,6 +234,13 @@ def backtest():
     run_backtest()
 
 
+@model.command()
+def analyze():
+    """Analyze what distinguishes reliable picks from unreliable ones."""
+    from sports_quant.modeling.analysis import run_analysis
+    run_analysis()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""

@@ -381,6 +381,298 @@ def plot_cumulative_profit(
     _save(fig, out_path)
 
 
+def plot_cumulative_profit_by_pick(
+    picks_df: pd.DataFrame,
+    out_path: Path,
+) -> None:
+    """Cumulative profit in units over sequential pick number."""
+    df = picks_df.sort_values("Date").reset_index(drop=True)
+    df["Pick Number"] = range(1, len(df) + 1)
+
+    fig, ax = plt.subplots(figsize=(14, 7), facecolor=_BG)
+    _style_ax(ax)
+
+    # Cyan line + filled area for units profit
+    ax.plot(
+        df["Pick Number"],
+        df["Cumulative Profit (Units)"],
+        color=_CYAN,
+        linewidth=1.8,
+        zorder=3,
+    )
+    ax.fill_between(
+        df["Pick Number"],
+        df["Cumulative Profit (Units)"],
+        alpha=0.15,
+        color=_CYAN,
+        zorder=2,
+    )
+    ax.set_ylabel("Cumulative Profit (Units)", fontsize=10, color=_TEXT)
+
+    # Zero reference line
+    ax.axhline(y=0, color=_GRID, linewidth=0.6, zorder=1)
+
+    # Annotate final value
+    final_units = df["Cumulative Profit (Units)"].iloc[-1]
+    last_pick = df["Pick Number"].iloc[-1]
+    ax.annotate(
+        f"{final_units:+.1f} u",
+        xy=(last_pick, final_units),
+        fontsize=10,
+        fontweight="bold",
+        color=_CYAN,
+        ha="left",
+        va="bottom",
+        xytext=(8, 4),
+        textcoords="offset points",
+    )
+
+    ax.set_xlabel("Pick Number", fontsize=10, color=_TEXT)
+
+    fig.suptitle(
+        "Cumulative Profit Over Picks",
+        fontsize=15,
+        fontweight="bold",
+        color="white",
+        y=0.97,
+    )
+
+    ax.set_title(
+        f"{len(df):,} picks",
+        fontsize=10,
+        color=_SUBTITLE,
+        pad=14,
+    )
+    fig.text(
+        0.5, 0.01,
+        "Source: PFF grades + PFR/Vegas lines \u00b7 50-model ensemble",
+        ha="center", fontsize=8, color=_FOOTER,
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    _save(fig, out_path)
+
+
+# ---------------------------------------------------------------------------
+# Analysis plots (pick reliability breakdown)
+# ---------------------------------------------------------------------------
+
+
+def plot_accuracy_by_timing(
+    timing_df: pd.DataFrame,
+    out_path: Path,
+) -> None:
+    """Grouped bar chart: accuracy by season timing and accuracy tier."""
+    # Filter to the three main tiers
+    tiers = ["High (55-60%)", "Mid (60-75%)", "Low (45-55%, 75-80%)"]
+    df = timing_df[timing_df["Accuracy Tier"].isin(tiers)].copy()
+    if df.empty:
+        logger.warning("No data for timing plot.")
+        return
+
+    timings = df["Timing"].unique()
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor=_BG)
+    _style_ax(ax)
+
+    x = np.arange(len(tiers))
+    width = 0.35
+    colors = [_CYAN, _CORAL]
+
+    for i, timing in enumerate(sorted(timings)):
+        subset = df[df["Timing"] == timing]
+        # Align to tier order
+        vals = []
+        counts = []
+        for tier in tiers:
+            row = subset[subset["Accuracy Tier"] == tier]
+            vals.append(row["Accuracy"].values[0] if len(row) else 0)
+            counts.append(int(row["N"].values[0]) if len(row) else 0)
+
+        bars = ax.bar(
+            x + i * width, vals, width,
+            label=timing, color=colors[i % len(colors)], zorder=3,
+        )
+        for bar, val, n in zip(bars, vals, counts):
+            if val > 0:
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.01,
+                    f"{val:.0%}\n(N={n})",
+                    ha="center", va="bottom",
+                    fontsize=8, fontweight="bold", color=_TEXT,
+                )
+
+    # Gold 50% reference
+    ax.axhline(y=0.5, color=_GOLD, linestyle="--", linewidth=0.8, zorder=2)
+    ax.text(
+        len(tiers) - 0.5, 0.505, "Coin Flip",
+        ha="right", va="bottom", fontsize=9, color=_GOLD, fontstyle="italic",
+    )
+
+    ax.set_xticks(x + width / 2)
+    ax.set_xticklabels(tiers, fontsize=9)
+    ax.set_ylabel("Accuracy", fontsize=10, color=_TEXT)
+    ax.set_ylim(0, 1.0)
+    ax.legend(
+        fontsize=9, facecolor="#1a1a2e", edgecolor=_GRID, labelcolor=_TEXT,
+    )
+
+    fig.suptitle(
+        "Accuracy by Season Timing",
+        fontsize=15, fontweight="bold", color="white", y=0.97,
+    )
+    ax.set_title(
+        "Early-season (Sep-Oct) vs Mid/Late-season (Nov-Jan)",
+        fontsize=10, color=_SUBTITLE, pad=14,
+    )
+    fig.text(
+        0.5, 0.01,
+        "Source: PFF grades + PFR/Vegas lines \u00b7 50-model ensemble",
+        ha="center", fontsize=8, color=_FOOTER,
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    _save(fig, out_path)
+
+
+def plot_accuracy_by_direction(
+    direction_df: pd.DataFrame,
+    out_path: Path,
+) -> None:
+    """Grouped bar chart: accuracy by prediction direction and accuracy tier."""
+    tiers = ["High (55-60%)", "Mid (60-75%)", "Low (45-55%, 75-80%)"]
+    df = direction_df[direction_df["Accuracy Tier"].isin(tiers)].copy()
+    if df.empty:
+        logger.warning("No data for direction plot.")
+        return
+
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor=_BG)
+    _style_ax(ax)
+
+    x = np.arange(len(tiers))
+    width = 0.35
+    colors = [_GREEN, _CORAL]
+
+    for i, direction in enumerate(["Over", "Under"]):
+        subset = df[df["Direction"] == direction]
+        vals = []
+        counts = []
+        for tier in tiers:
+            row = subset[subset["Accuracy Tier"] == tier]
+            vals.append(row["Accuracy"].values[0] if len(row) else 0)
+            counts.append(int(row["N"].values[0]) if len(row) else 0)
+
+        bars = ax.bar(
+            x + i * width, vals, width,
+            label=direction, color=colors[i], zorder=3,
+        )
+        for bar, val, n in zip(bars, vals, counts):
+            if val > 0:
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.01,
+                    f"{val:.0%}\n(N={n})",
+                    ha="center", va="bottom",
+                    fontsize=8, fontweight="bold", color=_TEXT,
+                )
+
+    # Gold 50% reference
+    ax.axhline(y=0.5, color=_GOLD, linestyle="--", linewidth=0.8, zorder=2)
+    ax.text(
+        len(tiers) - 0.5, 0.505, "Coin Flip",
+        ha="right", va="bottom", fontsize=9, color=_GOLD, fontstyle="italic",
+    )
+
+    ax.set_xticks(x + width / 2)
+    ax.set_xticklabels(tiers, fontsize=9)
+    ax.set_ylabel("Accuracy", fontsize=10, color=_TEXT)
+    ax.set_ylim(0, 1.0)
+    ax.legend(
+        fontsize=9, facecolor="#1a1a2e", edgecolor=_GRID, labelcolor=_TEXT,
+    )
+
+    fig.suptitle(
+        "Accuracy by Prediction Direction",
+        fontsize=15, fontweight="bold", color="white", y=0.97,
+    )
+    ax.set_title(
+        "Over vs Under predictions by accuracy tier",
+        fontsize=10, color=_SUBTITLE, pad=14,
+    )
+    fig.text(
+        0.5, 0.01,
+        "Source: PFF grades + PFR/Vegas lines \u00b7 50-model ensemble",
+        ha="center", fontsize=8, color=_FOOTER,
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    _save(fig, out_path)
+
+
+def plot_confidence_calibration(
+    confidence_df: pd.DataFrame,
+    out_path: Path,
+) -> None:
+    """Bar chart: actual accuracy by XGBoost confidence bin with N annotations."""
+    df = confidence_df[confidence_df["N"] > 0].copy()
+    if df.empty:
+        logger.warning("No data for confidence calibration plot.")
+        return
+
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor=_BG)
+    _style_ax(ax)
+
+    bins = df["Confidence Bin"].astype(str)
+    accuracy = df["Accuracy"]
+    counts = df["N"]
+
+    # Gradient bar colors
+    cmap = plt.cm.RdYlGn
+    norm = plt.Normalize(vmin=accuracy.min() - 0.02, vmax=accuracy.max() + 0.02)
+    colors = [cmap(norm(v)) for v in accuracy]
+
+    bars = ax.bar(bins, accuracy, color=colors, width=0.6, zorder=3)
+
+    for bar, val, n in zip(bars, accuracy, counts):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.01,
+            f"{val:.0%}\n(N={n})",
+            ha="center", va="bottom",
+            fontsize=8, fontweight="bold", color=_TEXT,
+        )
+
+    # Gold 50% reference
+    ax.axhline(y=0.5, color=_GOLD, linestyle="--", linewidth=0.8, zorder=2)
+    ax.text(
+        len(df) - 0.5, 0.505, "Coin Flip",
+        ha="right", va="bottom", fontsize=9, color=_GOLD, fontstyle="italic",
+    )
+
+    ax.set_xlabel("XGBoost Confidence Bin", fontsize=10, color=_TEXT)
+    ax.set_ylabel("Actual Accuracy", fontsize=10, color=_TEXT)
+    ax.set_xticks(range(len(df)))
+    ax.set_xticklabels(bins, rotation=45, ha="right")
+    ax.set_ylim(0, accuracy.max() + 0.12)
+
+    fig.suptitle(
+        "XGBoost Confidence vs Actual Accuracy",
+        fontsize=15, fontweight="bold", color="white", y=0.97,
+    )
+    ax.set_title(
+        "Higher model confidence does not always mean higher accuracy",
+        fontsize=10, color=_SUBTITLE, pad=14,
+    )
+    fig.text(
+        0.5, 0.01,
+        "Source: PFF grades + PFR/Vegas lines \u00b7 50-model ensemble",
+        ha="center", fontsize=8, color=_FOOTER,
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    _save(fig, out_path)
+
+
 # ---------------------------------------------------------------------------
 # Backtest plots (ported from nfl-model/backtest.py)
 # ---------------------------------------------------------------------------
