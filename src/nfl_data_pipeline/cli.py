@@ -159,6 +159,27 @@ def vegas_accuracy_conditions():
     generate_vegas_accuracy_by_conditions()
 
 
+@chart.command(name="team-trajectory")
+def team_trajectory():
+    """Generate team performance trajectory line chart."""
+    from nfl_data_pipeline.visualizations.team_performance_trajectory import generate_team_performance_trajectory
+    generate_team_performance_trajectory()
+
+
+@chart.command(name="ou-accuracy-by-range")
+def ou_accuracy_by_range():
+    """Generate O/U accuracy by line range bar chart."""
+    from nfl_data_pipeline.visualizations.ou_accuracy_by_line_range import generate_ou_accuracy_by_line_range
+    generate_ou_accuracy_by_line_range()
+
+
+@chart.command(name="off-vs-def-correlation")
+def off_vs_def_correlation():
+    """Generate offensive vs defensive PFF grade correlation scatter plot."""
+    from nfl_data_pipeline.visualizations.off_vs_def_correlation import generate_off_vs_def_correlation
+    generate_off_vs_def_correlation()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
