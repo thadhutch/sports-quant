@@ -112,7 +112,7 @@ def generate_ou_line_vs_actual():
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.LINE_ANALYSIS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.OU_LINE_VS_ACTUAL_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

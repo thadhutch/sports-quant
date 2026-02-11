@@ -219,7 +219,7 @@ def _render_chart(
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.GRADES_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.FEATURE_IMPORTANCE_CHART,
         dpi=200,

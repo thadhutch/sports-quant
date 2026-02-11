@@ -142,7 +142,7 @@ def generate_off_vs_def_correlation():
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.GRADES_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.OFF_VS_DEF_CORRELATION_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

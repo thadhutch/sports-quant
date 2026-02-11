@@ -149,7 +149,7 @@ def generate_team_ranking_heatmap(season: int | None = None):
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.96])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.TEAMS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.TEAM_RANKING_HEATMAP_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

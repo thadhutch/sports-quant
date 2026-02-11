@@ -110,7 +110,7 @@ def generate_grade_differential_upsets(top_n: int = 20):
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.96])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.GRADES_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.GRADE_DIFFERENTIAL_UPSETS_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

@@ -123,7 +123,7 @@ def generate_ou_accuracy_by_line_range():
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.LINE_ANALYSIS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.OU_ACCURACY_BY_RANGE_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

@@ -182,7 +182,7 @@ def generate_upset_rate_chart():
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
     # Save
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.LINE_ANALYSIS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.UPSET_RATE_CHART,
         dpi=200,

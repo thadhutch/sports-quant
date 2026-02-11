@@ -130,7 +130,7 @@ def generate_team_performance_trajectory(
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.TEAMS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.TEAM_TRAJECTORY_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

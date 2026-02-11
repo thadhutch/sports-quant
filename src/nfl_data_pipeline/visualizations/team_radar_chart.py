@@ -134,7 +134,7 @@ def generate_team_radar_chart(team: str | None = None, season: int | None = None
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.TEAMS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.TEAM_RADAR_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

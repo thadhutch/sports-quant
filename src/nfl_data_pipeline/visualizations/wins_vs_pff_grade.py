@@ -123,7 +123,7 @@ def generate_wins_vs_pff_grade():
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.GRADES_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.WINS_VS_PFF_GRADE_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

@@ -185,7 +185,7 @@ def _render_chart(
 
     plt.tight_layout(rect=[0.08, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.LINE_ANALYSIS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=200, bbox_inches="tight", facecolor=bg_color)
     logger.info("Chart saved to %s", output_path)
     plt.close(fig)

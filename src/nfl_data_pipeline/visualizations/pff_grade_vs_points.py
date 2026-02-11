@@ -117,7 +117,7 @@ def generate_pff_grade_vs_points():
 
     plt.tight_layout(rect=[0.025, 0.04, 1, 0.94])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.GRADES_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.PFF_GRADE_VS_POINTS_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,

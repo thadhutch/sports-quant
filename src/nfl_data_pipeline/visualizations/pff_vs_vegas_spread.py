@@ -139,7 +139,7 @@ def generate_pff_vs_vegas_spread():
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
 
-    config.CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.LINE_ANALYSIS_CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(
         config.PFF_VS_VEGAS_SPREAD_CHART,
         dpi=200, bbox_inches="tight", facecolor=bg_color,
