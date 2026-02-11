@@ -24,6 +24,7 @@ An end-to-end data pipeline that combines [PFF](https://www.pff.com/) team grade
   - [Python API](#python-api)
   - [Make Targets](#make-targets)
 - [Pipeline Architecture](#pipeline-architecture)
+- [Modeling](#modeling)
 - [Project Structure](#project-structure)
 - [Development](#development)
 - [Contributing](#contributing)
@@ -41,6 +42,8 @@ An end-to-end data pipeline that combines [PFF](https://www.pff.com/) team grade
 - **Rolling Averages** &mdash; Pre-game cumulative stat averages per team per season
 - **Games Played Tracking** &mdash; Cumulative games played before each matchup
 - **Feature Rankings** &mdash; Per-date rankings across all teams
+- **Ensemble Training** &mdash; Trains 50 XGBoost models per game-day, selects top 3 by weighted seasonal accuracy, requires consensus agreement, and runs a financial simulation
+- **Walk-Forward Backtesting** &mdash; Trains 50 models across every historical date using walk-forward validation and averages metrics across all models
 - **CLI + Python API** &mdash; Run the full pipeline or any individual step
 
 ## Installation
@@ -84,6 +87,28 @@ cp .env.example .env
 | `NFL_MAX_WEEK` | `18` | Final week to scrape in the last season |
 | `NFL_DATA_DIR` | `data` | Base directory for all output files |
 | `NFL_PROXY_FILE` | `proxies/proxies.csv` | Path to proxy list (`address:port:user:password` per line) |
+| `NFL_MODEL_CONFIG` | `model_config.yaml` | Path to model configuration file |
+
+Model hyperparameters and training settings are configured in `model_config.yaml`:
+
+```yaml
+ou:
+  model_version: "v1"        # Version tag for output directories
+  models_to_train: 50        # Number of models per ensemble
+  top_models: 3              # Models kept after selection
+  accuracy_threshold: 0.50   # Minimum validation accuracy
+  model_weights: [0.4, 0.35, 0.25]  # Consensus weighting
+  starting_capital: 100.0    # Simulation starting capital ($)
+  hyperparameters:
+    objective: "multi:softprob"
+    num_class: 3
+    eval_metric: "mlogloss"
+  backtest:
+    min_training_seasons: 2
+    test_size: 0.8
+  train:
+    test_size: 0.2
+```
 
 ## Usage
 
@@ -111,6 +136,10 @@ nfl-pipeline process averages
 nfl-pipeline process games-played
 nfl-pipeline process rankings
 
+# Modeling
+nfl-pipeline model train       # Train ensemble O/U prediction model
+nfl-pipeline model backtest    # Run walk-forward backtesting
+
 # Check installed version
 nfl-pipeline --version
 ```
@@ -133,6 +162,10 @@ nfl_data_pipeline.process_over_under()
 nfl_data_pipeline.compute_rolling_averages()
 nfl_data_pipeline.add_games_played()
 nfl_data_pipeline.compute_rankings()
+
+# Modeling
+nfl_data_pipeline.run_training()
+nfl_data_pipeline.run_backtest()
 ```
 
 Or run an entire pipeline at once:
@@ -161,6 +194,8 @@ make pff            # PFF scraping + processing chain
 make pfr            # PFR scraping + processing chain
 make merge          # Merge PFF and PFR data (runs both chains first)
 make rankings       # Full postprocessing through rankings
+make model-train    # Train ensemble O/U prediction model
+make model-backtest # Run walk-forward backtesting
 make test           # Run the test suite
 make clean          # Remove all generated data files
 make dirs           # Create data directory structure
@@ -193,6 +228,12 @@ Normalize Names        Normalize Names
                 |
                 v
             Rankings
+                |
+       +--------+--------+
+       |                  |
+       v                  v
+  Model Train        Backtest
+  (ensemble)       (walk-forward)
 ```
 
 **Output files** are written to `NFL_DATA_DIR` (default: `data/`):
@@ -205,6 +246,42 @@ Normalize Names        Normalize Names
 | PFR normalized | `data/pfr/final_pfr_odds.csv` |
 | Merged | `data/pff_and_pfr_data.csv` |
 | Final dataset | `data/over-under/v1-dataset-gp-ranked.csv` |
+| Training output | `data/models/{version}/algorithm/` |
+| Backtest output | `data/backtest/{version}/` |
+
+## Modeling
+
+The `modeling` subpackage provides two pipelines built on top of the ranked dataset:
+
+### Ensemble Training (`nfl-pipeline model train`)
+
+For each game-day in the dataset:
+
+1. **Train 50 XGBoost models** using all data before that date
+2. **Filter** to models with validation accuracy > 50%
+3. **Select top 3** by weighted seasonal accuracy (current season vs. last season, weighted by how far into the NFL calendar we are)
+4. **Require consensus** &mdash; only keep picks where all 3 models agree
+5. **Score picks** with a weighted combination of per-model confidence-bin accuracy (weights: 0.4 / 0.35 / 0.25)
+6. **Simulate betting** on high-accuracy score bins using 1% Kelly criterion sizing
+
+Outputs to `data/models/{version}/algorithm/`:
+- `combined_picks.csv` &mdash; all consensus picks with algorithm scores
+- Accuracy-by-confidence and accuracy-by-algorithm-score charts
+- `cumulative_profit.png` &mdash; profit over time (units + dollars)
+- `performance_statistics.txt` &mdash; best/worst day/week/month/year
+
+### Walk-Forward Backtesting (`nfl-pipeline model backtest`)
+
+Evaluates model generalization using strict temporal separation:
+
+1. **Outer loop**: 50 models (each with a different random seed)
+2. **Inner loop**: for each test date, train on all prior data, predict the current date
+3. **Average** accuracy metrics across all 50 models
+
+Outputs to `data/backtest/{version}/`:
+- `average_season_accuracy.csv` + chart
+- `average_confidence_accuracy.csv` + chart
+- `average_confidence_accuracy_by_season.csv` + chart
 
 ## Project Structure
 
@@ -227,13 +304,24 @@ nfl-data-pipeline/
 │   │   ├── pff_teams.py      # PFF team name normalization
 │   │   ├── pfr_dates.py      # PFR date normalization
 │   │   └── pfr_teams.py      # PFR team name extraction
-│   └── processing/
-│       ├── merge.py          # Merge PFF + PFR datasets
-│       ├── over_under.py     # O/U betting line extraction
-│       ├── rolling_averages.py
-│       ├── games_played.py
-│       └── rankings.py
+│   ├── processing/
+│   │   ├── merge.py          # Merge PFF + PFR datasets
+│   │   ├── over_under.py     # O/U betting line extraction
+│   │   ├── rolling_averages.py
+│   │   ├── games_played.py
+│   │   └── rankings.py
+│   └── modeling/
+│       ├── __init__.py       # Public API (run_training, run_backtest)
+│       ├── _features.py      # Shared feature definitions
+│       ├── _data.py           # Data loading and preparation
+│       ├── _training.py      # Single-model and ensemble training
+│       ├── _scoring.py       # Season weighting, consensus, model selection
+│       ├── _simulation.py    # Financial simulation / profit tracking
+│       ├── train.py          # Ensemble training orchestrator
+│       ├── backtest.py       # Walk-forward backtesting orchestrator
+│       └── plots.py          # All modeling-related charts
 ├── tests/
+├── model_config.yaml
 ├── pyproject.toml
 ├── Makefile
 ├── LICENSE

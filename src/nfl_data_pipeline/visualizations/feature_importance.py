@@ -9,63 +9,12 @@ from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 
 from nfl_data_pipeline import _config as config
+from nfl_data_pipeline.modeling._features import ALL_FEATURES, DISPLAY_NAMES
 
 logger = logging.getLogger(__name__)
 
-# 11 PFF rank categories × home/away = 22 rank features + ou_line = 23
-_RANK_FEATURES = [
-    "home-off-avg-rank",
-    "away-off-avg-rank",
-    "home-pass-avg-rank",
-    "away-pass-avg-rank",
-    "home-pblk-avg-rank",
-    "away-pblk-avg-rank",
-    "home-recv-avg-rank",
-    "away-recv-avg-rank",
-    "home-run-avg-rank",
-    "away-run-avg-rank",
-    "home-rblk-avg-rank",
-    "away-rblk-avg-rank",
-    "home-def-avg-rank",
-    "away-def-avg-rank",
-    "home-rdef-avg-rank",
-    "away-rdef-avg-rank",
-    "home-tack-avg-rank",
-    "away-tack-avg-rank",
-    "home-prsh-avg-rank",
-    "away-prsh-avg-rank",
-    "home-cov-avg-rank",
-    "away-cov-avg-rank",
-]
-
-_ALL_FEATURES = _RANK_FEATURES + ["ou_line"]
-
-# Display name mapping for chart labels
-_DISPLAY_NAMES = {
-    "home-off-avg-rank": "Home Offense",
-    "away-off-avg-rank": "Away Offense",
-    "home-pass-avg-rank": "Home Passing",
-    "away-pass-avg-rank": "Away Passing",
-    "home-pblk-avg-rank": "Home Pass Block",
-    "away-pblk-avg-rank": "Away Pass Block",
-    "home-recv-avg-rank": "Home Receiving",
-    "away-recv-avg-rank": "Away Receiving",
-    "home-run-avg-rank": "Home Rushing",
-    "away-run-avg-rank": "Away Rushing",
-    "home-rblk-avg-rank": "Home Run Block",
-    "away-rblk-avg-rank": "Away Run Block",
-    "home-def-avg-rank": "Home Defense",
-    "away-def-avg-rank": "Away Defense",
-    "home-rdef-avg-rank": "Home Run Defense",
-    "away-rdef-avg-rank": "Away Run Defense",
-    "home-tack-avg-rank": "Home Tackling",
-    "away-tack-avg-rank": "Away Tackling",
-    "home-prsh-avg-rank": "Home Pass Rush",
-    "away-prsh-avg-rank": "Away Pass Rush",
-    "home-cov-avg-rank": "Home Coverage",
-    "away-cov-avg-rank": "Away Coverage",
-    "ou_line": "O/U Line",
-}
+_ALL_FEATURES = ALL_FEATURES
+_DISPLAY_NAMES = DISPLAY_NAMES
 
 
 def _load_training_data() -> tuple[pd.DataFrame, pd.Series, int, int, int]:

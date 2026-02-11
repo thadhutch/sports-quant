@@ -124,6 +124,25 @@ def feature_importance():
     generate_feature_importance()
 
 
+@cli.group()
+def model():
+    """Train and evaluate O/U prediction models."""
+
+
+@model.command()
+def train():
+    """Train the ensemble O/U prediction model."""
+    from nfl_data_pipeline.modeling.train import run_training
+    run_training()
+
+
+@model.command()
+def backtest():
+    """Run walk-forward backtesting on the O/U model."""
+    from nfl_data_pipeline.modeling.backtest import run_backtest
+    run_backtest()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
