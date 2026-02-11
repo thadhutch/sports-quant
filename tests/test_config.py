@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def test_config_paths_are_path_objects():
-    from nfl_data_pipeline import _config as config
+    from sports_quant import _config as config
 
     assert isinstance(config.DATA_DIR, Path)
     assert isinstance(config.PFF_DATA_DIR, Path)
@@ -12,7 +12,7 @@ def test_config_paths_are_path_objects():
 
 
 def test_config_default_values():
-    from nfl_data_pipeline import _config as config
+    from sports_quant import _config as config
 
     assert config.MAX_WEEK == int(os.environ.get("NFL_MAX_WEEK", "18"))
     assert isinstance(config.SEASONS, list)
@@ -24,7 +24,7 @@ def test_config_env_var_override(monkeypatch):
 
     # Force reimport to pick up new env vars
     import importlib
-    from nfl_data_pipeline import _config as config
+    from sports_quant import _config as config
 
     importlib.reload(config)
 

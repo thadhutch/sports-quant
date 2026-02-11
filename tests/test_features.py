@@ -1,6 +1,6 @@
 """Tests for shared feature definitions."""
 
-from nfl_data_pipeline.modeling._features import (
+from sports_quant.modeling._features import (
     ALL_FEATURES,
     DISPLAY_NAMES,
     DROP_COLUMNS,

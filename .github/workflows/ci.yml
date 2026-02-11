@@ -27,7 +27,7 @@ jobs:
         run: poetry install --no-interaction
 
       - name: CLI smoke test
-        run: poetry run nfl-pipeline --help
+        run: poetry run sports-quant --help
 
       - name: Run tests
         run: poetry run pytest -v

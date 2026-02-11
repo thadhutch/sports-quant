@@ -1,4 +1,4 @@
-from nfl_data_pipeline.processing.over_under import set_total, extract_ou_line
+from sports_quant.processing.over_under import set_total, extract_ou_line
 
 
 class TestSetTotal:

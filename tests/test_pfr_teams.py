@@ -1,4 +1,4 @@
-from nfl_data_pipeline.parsers.pfr_teams import extract_teams
+from sports_quant.parsers.pfr_teams import extract_teams
 
 
 def test_standard_away_at_home_format():

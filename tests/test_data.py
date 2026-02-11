@@ -4,14 +4,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from nfl_data_pipeline.modeling._data import DATE_COLUMN, TARGET_COLUMN, load_and_prepare
-from nfl_data_pipeline.modeling._features import ALL_FEATURES
+from sports_quant.modeling._data import DATE_COLUMN, TARGET_COLUMN, load_and_prepare
+from sports_quant.modeling._features import ALL_FEATURES
 
 
 @pytest.fixture()
 def synthetic_ranked_csv(tmp_path, monkeypatch):
     """Create a minimal synthetic ranked CSV and point config at it."""
-    import nfl_data_pipeline._config as config
+    import sports_quant._config as config
 
     rng = np.random.RandomState(42)
     n = 300
@@ -52,7 +52,7 @@ def test_load_and_prepare_filters_week1(synthetic_ranked_csv):
 
 def test_load_and_prepare_insufficient_seasons(tmp_path, monkeypatch):
     """Should raise ValueError if fewer seasons than required."""
-    import nfl_data_pipeline._config as config
+    import sports_quant._config as config
 
     rng = np.random.RandomState(0)
     n = 50

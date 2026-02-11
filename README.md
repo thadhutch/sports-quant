@@ -1,7 +1,7 @@
-# nfl-data-pipeline
+# sports-quant
 
-[![CI](https://github.com/thadhutch/nfl-data-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/thadhutch/nfl-data-pipeline/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/nfl-data-pipeline)](https://pypi.org/project/nfl-data-pipeline/)
+[![CI](https://github.com/thadhutch/sports-quant/actions/workflows/ci.yml/badge.svg)](https://github.com/thadhutch/sports-quant/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/sports-quant)](https://pypi.org/project/sports-quant/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -49,17 +49,17 @@ An end-to-end data pipeline that scrapes [PFF](https://www.pff.com/) team grades
 
 ## Installation
 
-Install from [PyPI](https://pypi.org/project/nfl-data-pipeline/):
+Install from [PyPI](https://pypi.org/project/sports-quant/):
 
 ```bash
-pip install nfl-data-pipeline
+pip install sports-quant
 ```
 
 Or install from source with [Poetry](https://python-poetry.org/):
 
 ```bash
-git clone https://github.com/thadhutch/nfl-data-pipeline.git
-cd nfl-data-pipeline
+git clone https://github.com/thadhutch/sports-quant.git
+cd sports-quant
 poetry install
 ```
 
@@ -115,34 +115,34 @@ ou:
 
 ### CLI
 
-The `nfl-pipeline` command is available after installation.
+The `sports-quant` command is available after installation.
 
-> **Note:** The first time you run `nfl-pipeline scrape pff`, a Chrome window will open for you to log in to PFF manually. After login, cookies are saved locally and reused for future runs.
+> **Note:** The first time you run `sports-quant scrape pff`, a Chrome window will open for you to log in to PFF manually. After login, cookies are saved locally and reused for future runs.
 
 ```bash
 # Full end-to-end pipeline
-nfl-pipeline pipeline
+sports-quant pipeline
 
 # Scrape from a single source
-nfl-pipeline scrape pff          # PFF grades (scrape + date parsing + name normalization)
-nfl-pipeline scrape pfr          # PFR game data (URLs + scrape + date/name normalization)
+sports-quant scrape pff          # PFF grades (scrape + date parsing + name normalization)
+sports-quant scrape pfr          # PFR game data (URLs + scrape + date/name normalization)
 
 # Run all post-processing steps
-nfl-pipeline process all
+sports-quant process all
 
 # Run individual processing steps
-nfl-pipeline process merge
-nfl-pipeline process over-under
-nfl-pipeline process averages
-nfl-pipeline process games-played
-nfl-pipeline process rankings
+sports-quant process merge
+sports-quant process over-under
+sports-quant process averages
+sports-quant process games-played
+sports-quant process rankings
 
 # Modeling
-nfl-pipeline model train       # Train ensemble O/U prediction model
-nfl-pipeline model backtest    # Run walk-forward backtesting
+sports-quant model train       # Train ensemble O/U prediction model
+sports-quant model backtest    # Run walk-forward backtesting
 
 # Check installed version
-nfl-pipeline --version
+sports-quant --version
 ```
 
 ### Python API
@@ -150,29 +150,29 @@ nfl-pipeline --version
 Every pipeline step is importable:
 
 ```python
-import nfl_data_pipeline
+import sports_quant
 
 # Scraping
-nfl_data_pipeline.scrape_pff_data()
-nfl_data_pipeline.collect_boxscore_urls()
-nfl_data_pipeline.scrape_all_game_info()
+sports_quant.scrape_pff_data()
+sports_quant.collect_boxscore_urls()
+sports_quant.scrape_all_game_info()
 
 # Processing
-nfl_data_pipeline.merge_datasets()
-nfl_data_pipeline.process_over_under()
-nfl_data_pipeline.compute_rolling_averages()
-nfl_data_pipeline.add_games_played()
-nfl_data_pipeline.compute_rankings()
+sports_quant.merge_datasets()
+sports_quant.process_over_under()
+sports_quant.compute_rolling_averages()
+sports_quant.add_games_played()
+sports_quant.compute_rankings()
 
 # Modeling
-nfl_data_pipeline.run_training()
-nfl_data_pipeline.run_backtest()
+sports_quant.run_training()
+sports_quant.run_backtest()
 ```
 
 Or run an entire pipeline at once:
 
 ```python
-from nfl_data_pipeline.pipeline import (
+from sports_quant.pipeline import (
     run_full_pipeline,
     run_pff_pipeline,
     run_pfr_pipeline,
@@ -292,7 +292,7 @@ The heatmap below shows that this isn't a one-season fluke. Higher algorithm-sco
 | Bet sizing | 1% Kelly criterion |
 | Starting simulation capital | $100 |
 
-### Ensemble Training (`nfl-pipeline model train`)
+### Ensemble Training (`sports-quant model train`)
 
 Outputs to `data/models/{version}/algorithm/`:
 - `combined_picks.csv` &mdash; all consensus picks with algorithm scores
@@ -300,7 +300,7 @@ Outputs to `data/models/{version}/algorithm/`:
 - `cumulative_profit.png` &mdash; profit over time (units + dollars)
 - `performance_statistics.txt` &mdash; best/worst day/week/month/year
 
-### Walk-Forward Backtesting (`nfl-pipeline model backtest`)
+### Walk-Forward Backtesting (`sports-quant model backtest`)
 
 Evaluates model generalization using strict temporal separation: for each test date, train on all prior data, predict the current date, repeat across 50 random seeds, and average the metrics.
 
@@ -354,8 +354,8 @@ Outputs to `data/backtest/{version}/`:
 ## Project Structure
 
 ```
-nfl-data-pipeline/
-├── src/nfl_data_pipeline/
+sports-quant/
+├── src/sports_quant/
 │   ├── __init__.py           # Public API re-exports
 │   ├── _config.py            # Paths, env vars, logging
 │   ├── cli.py                # Click CLI entry point
@@ -400,8 +400,8 @@ nfl-data-pipeline/
 
 ```bash
 # Clone and install with dev dependencies
-git clone https://github.com/thadhutch/nfl-data-pipeline.git
-cd nfl-data-pipeline
+git clone https://github.com/thadhutch/sports-quant.git
+cd sports-quant
 poetry install
 
 # Run the test suite
@@ -411,7 +411,7 @@ poetry run pytest -v
 poetry run pytest tests/test_rolling_averages.py -v
 ```
 
-CI runs automatically on every push to `master` and on pull requests via [GitHub Actions](https://github.com/thadhutch/nfl-data-pipeline/actions). Releases are published to PyPI through [Trusted Publishers](https://docs.pypi.org/trusted-publishers/).
+CI runs automatically on every push to `master` and on pull requests via [GitHub Actions](https://github.com/thadhutch/sports-quant/actions). Releases are published to PyPI through [Trusted Publishers](https://docs.pypi.org/trusted-publishers/).
 
 ## Contributing
 
@@ -442,7 +442,7 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 <p align="center">
-  <a href="https://pypi.org/project/nfl-data-pipeline/">PyPI</a> &middot;
-  <a href="https://github.com/thadhutch/nfl-data-pipeline/issues">Issues</a> &middot;
-  <a href="https://github.com/thadhutch/nfl-data-pipeline/actions">CI Status</a>
+  <a href="https://pypi.org/project/sports-quant/">PyPI</a> &middot;
+  <a href="https://github.com/thadhutch/sports-quant/issues">Issues</a> &middot;
+  <a href="https://github.com/thadhutch/sports-quant/actions">CI Status</a>
 </p>

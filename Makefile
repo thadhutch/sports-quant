@@ -1,4 +1,4 @@
-CLI = poetry run nfl-pipeline
+CLI = poetry run sports-quant
 
 .PHONY: dirs pff pfr merge over-under averages games-played rankings all pipeline model-train model-backtest test clean
 

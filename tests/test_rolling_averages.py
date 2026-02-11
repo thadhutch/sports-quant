@@ -1,4 +1,4 @@
-from nfl_data_pipeline.processing.rolling_averages import (
+from sports_quant.processing.rolling_averages import (
     initialize_team_stats,
     calculate_avg_stats,
     stat_columns,

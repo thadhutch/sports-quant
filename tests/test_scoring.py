@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from nfl_data_pipeline.modeling._scoring import compute_season_progress
+from sports_quant.modeling._scoring import compute_season_progress
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-from nfl_data_pipeline.parsers.pff_dates import extract_date_and_season
+from sports_quant.parsers.pff_dates import extract_date_and_season
 
 
 def test_regular_season_date():

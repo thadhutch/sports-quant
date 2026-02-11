@@ -1,4 +1,4 @@
-from nfl_data_pipeline.parsers.pff_teams import map_teams
+from sports_quant.parsers.pff_teams import map_teams
 
 
 def test_known_abbreviation_pair():

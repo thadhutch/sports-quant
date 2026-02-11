@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "nfl-data-pipeline"
+name = "sports-quant"
 version = "1.1.1"
 description = "NFL data pipeline combining PFF grades and PFR game data for over/under analysis"
 authors = ["Thad Hutcheson <thadhutch@gmail.com>"]
 readme = "README.md"
 license = "MIT"
-homepage = "https://github.com/thadhutch/nfl-data-pipeline"
-repository = "https://github.com/thadhutch/nfl-data-pipeline"
+homepage = "https://github.com/thadhutch/sports-quant"
+repository = "https://github.com/thadhutch/sports-quant"
 keywords = ["nfl", "football", "data-pipeline", "pff", "sports-analytics"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -15,10 +15,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.12",
 ]
-packages = [{include = "nfl_data_pipeline", from = "src"}]
+packages = [{include = "sports_quant", from = "src"}]
 
 [tool.poetry.scripts]
-nfl-pipeline = "nfl_data_pipeline.cli:cli"
+sports-quant = "sports_quant.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.12"
