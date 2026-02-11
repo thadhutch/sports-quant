@@ -1,0 +1,16 @@
+ou:
+  model_version: "v1"
+  models_to_train: 50
+  top_models: 3
+  accuracy_threshold: 0.50
+  model_weights: [0.4, 0.35, 0.25]
+  starting_capital: 100.0
+  hyperparameters:
+    objective: "multi:softprob"
+    num_class: 3
+    eval_metric: "mlogloss"
+  backtest:
+    min_training_seasons: 2
+    test_size: 0.8
+  train:
+    test_size: 0.2

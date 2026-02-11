@@ -1,0 +1,90 @@
+"""Shared feature definitions for O/U prediction models."""
+
+# 11 PFF rank categories x home/away = 22 rank features
+RANK_FEATURES: list[str] = [
+    "home-off-avg-rank",
+    "away-off-avg-rank",
+    "home-pass-avg-rank",
+    "away-pass-avg-rank",
+    "home-pblk-avg-rank",
+    "away-pblk-avg-rank",
+    "home-recv-avg-rank",
+    "away-recv-avg-rank",
+    "home-run-avg-rank",
+    "away-run-avg-rank",
+    "home-rblk-avg-rank",
+    "away-rblk-avg-rank",
+    "home-def-avg-rank",
+    "away-def-avg-rank",
+    "home-rdef-avg-rank",
+    "away-rdef-avg-rank",
+    "home-tack-avg-rank",
+    "away-tack-avg-rank",
+    "home-prsh-avg-rank",
+    "away-prsh-avg-rank",
+    "home-cov-avg-rank",
+    "away-cov-avg-rank",
+]
+
+ALL_FEATURES: list[str] = RANK_FEATURES + ["ou_line"]
+
+# Display name mapping for chart labels
+DISPLAY_NAMES: dict[str, str] = {
+    "home-off-avg-rank": "Home Offense",
+    "away-off-avg-rank": "Away Offense",
+    "home-pass-avg-rank": "Home Passing",
+    "away-pass-avg-rank": "Away Passing",
+    "home-pblk-avg-rank": "Home Pass Block",
+    "away-pblk-avg-rank": "Away Pass Block",
+    "home-recv-avg-rank": "Home Receiving",
+    "away-recv-avg-rank": "Away Receiving",
+    "home-run-avg-rank": "Home Rushing",
+    "away-run-avg-rank": "Away Rushing",
+    "home-rblk-avg-rank": "Home Run Block",
+    "away-rblk-avg-rank": "Away Run Block",
+    "home-def-avg-rank": "Home Defense",
+    "away-def-avg-rank": "Away Defense",
+    "home-rdef-avg-rank": "Home Run Defense",
+    "away-rdef-avg-rank": "Away Run Defense",
+    "home-tack-avg-rank": "Home Tackling",
+    "away-tack-avg-rank": "Away Tackling",
+    "home-prsh-avg-rank": "Home Pass Rush",
+    "away-prsh-avg-rank": "Away Pass Rush",
+    "home-cov-avg-rank": "Home Coverage",
+    "away-cov-avg-rank": "Away Coverage",
+    "ou_line": "O/U Line",
+}
+
+# Columns to exclude from model training (metadata / leaky columns).
+# These exist in the ranked dataset but should not be used as features.
+DROP_COLUMNS: list[str] = [
+    "Formatted Date",
+    "season",
+    "home_team",
+    "away_team",
+    "home_gp",
+    "away_gp",
+    # Raw PFF averages (we use ranks instead)
+    "home-off-avg",
+    "away-off-avg",
+    "home-pass-avg",
+    "away-pass-avg",
+    "home-pblk-avg",
+    "away-pblk-avg",
+    "home-recv-avg",
+    "away-recv-avg",
+    "home-run-avg",
+    "away-run-avg",
+    "home-rblk-avg",
+    "away-rblk-avg",
+    "home-def-avg",
+    "away-def-avg",
+    "home-rdef-avg",
+    "away-rdef-avg",
+    "home-tack-avg",
+    "away-tack-avg",
+    "home-prsh-avg",
+    "away-prsh-avg",
+    "home-cov-avg",
+    "away-cov-avg",
+]

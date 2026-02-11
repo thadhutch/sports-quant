@@ -1,6 +1,6 @@
 CLI = poetry run nfl-pipeline
 
-.PHONY: dirs pff pfr merge over-under averages games-played rankings all pipeline test clean
+.PHONY: dirs pff pfr merge over-under averages games-played rankings all pipeline model-train model-backtest test clean
 
 dirs:
 	mkdir -p data/pff data/pfr data/over-under
@@ -36,6 +36,14 @@ all: rankings
 
 pipeline: dirs
 	$(CLI) pipeline
+
+# --- Modeling ---
+
+model-train:
+	$(CLI) model train
+
+model-backtest:
+	$(CLI) model backtest
 
 test:
 	poetry run pytest -v
