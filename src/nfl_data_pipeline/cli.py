@@ -152,6 +152,13 @@ def vegas_line_accuracy():
     generate_vegas_line_accuracy()
 
 
+@chart.command(name="vegas-accuracy-conditions")
+def vegas_accuracy_conditions():
+    """Generate Vegas spread accuracy box plots by surface/roof type."""
+    from nfl_data_pipeline.visualizations.vegas_accuracy_by_conditions import generate_vegas_accuracy_by_conditions
+    generate_vegas_accuracy_by_conditions()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
