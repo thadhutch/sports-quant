@@ -117,6 +117,13 @@ def pff_grade_vs_points():
     generate_pff_grade_vs_points()
 
 
+@chart.command(name="feature-importance")
+def feature_importance():
+    """Generate feature importance for O/U prediction chart."""
+    from nfl_data_pipeline.visualizations.feature_importance import generate_feature_importance
+    generate_feature_importance()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
