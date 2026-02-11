@@ -103,6 +103,20 @@ def dogs_that_bite():
     generate_dogs_that_bite_chart()
 
 
+@chart.command(name="correlation-heatmap")
+def correlation_heatmap():
+    """Generate PFF grade correlation heatmap with scoring & O/U outcomes."""
+    from nfl_data_pipeline.visualizations.correlation_heatmap import generate_correlation_heatmap
+    generate_correlation_heatmap()
+
+
+@chart.command(name="pff-grade-vs-points")
+def pff_grade_vs_points():
+    """Generate PFF grade vs total points small multiples scatter plot."""
+    from nfl_data_pipeline.visualizations.pff_grade_vs_points import generate_pff_grade_vs_points
+    generate_pff_grade_vs_points()
+
+
 @cli.command()
 def pipeline():
     """Run the entire pipeline end-to-end."""
