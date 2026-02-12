@@ -50,25 +50,7 @@ def compute_rankings():
         # Get the subset of the DataFrame for the current date
         df_date = df[df['Formatted Date'] == date]
 
-        # **First, update the latest feature values for each team with the values from the games on that date**
-        for idx in df_date.index:
-            row = df.loc[idx]
-            home_team = row['home_team']
-            away_team = row['away_team']
-
-            for feature_name in feature_names:
-                home_feature_col = f'home-{feature_name}'
-                away_feature_col = f'away-{feature_name}'
-
-                home_feature_value = row[home_feature_col]
-                away_feature_value = row[away_feature_col]
-
-                if not np.isnan(home_feature_value):
-                    feature_values[feature_name][home_team] = home_feature_value
-                if not np.isnan(away_feature_value):
-                    feature_values[feature_name][away_team] = away_feature_value
-
-        # **Now, compute the rankings using the updated feature values**
+        # **First, compute the rankings using only prior data (before updating with today's values)**
         for feature_name in feature_names:
             # Get the latest feature values for all teams from feature_values
             team_feature = feature_values[feature_name]  # {team: feature_value}
@@ -106,6 +88,24 @@ def compute_rankings():
                 # Update the DataFrame with the ranks
                 df.at[idx, f'home-{feature_name}-rank'] = home_rank
                 df.at[idx, f'away-{feature_name}-rank'] = away_rank
+
+        # **Now, update the latest feature values with today's data for use in future dates**
+        for idx in df_date.index:
+            row = df.loc[idx]
+            home_team = row['home_team']
+            away_team = row['away_team']
+
+            for feature_name in feature_names:
+                home_feature_col = f'home-{feature_name}'
+                away_feature_col = f'away-{feature_name}'
+
+                home_feature_value = row[home_feature_col]
+                away_feature_value = row[away_feature_col]
+
+                if not np.isnan(home_feature_value):
+                    feature_values[feature_name][home_team] = home_feature_value
+                if not np.isnan(away_feature_value):
+                    feature_values[feature_name][away_team] = away_feature_value
 
     # Save the modified DataFrame to a new CSV file
     df.to_csv(config.OVERUNDER_RANKED, index=False)

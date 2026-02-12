@@ -123,7 +123,7 @@ def run_backtest() -> None:
 
         conf_acc = (
             results_df.groupby("Confidence Bin", observed=False)
-            .apply(lambda x: accuracy_score(x["Actual"], x["Predicted"]))
+            .apply(lambda x: accuracy_score(x["Actual"], x["Predicted"]) if len(x) > 0 else np.nan)
             .reset_index(name="Accuracy")
         )
         confidence_accuracy_list.append(conf_acc)
@@ -131,7 +131,7 @@ def run_backtest() -> None:
         # Accuracy by confidence bin + season
         conf_acc_season = (
             results_df.groupby(["Confidence Bin", "Season"], observed=False)
-            .apply(lambda x: accuracy_score(x["Actual"], x["Predicted"]))
+            .apply(lambda x: accuracy_score(x["Actual"], x["Predicted"]) if len(x) > 0 else np.nan)
             .reset_index(name="Accuracy")
         )
         confidence_accuracy_by_season_list.append(conf_acc_season)

@@ -1,5 +1,5 @@
 ou:
-  model_version: "v1"
+  model_version: "v2"
   models_to_train: 50
   top_models: 3
   accuracy_threshold: 0.50
