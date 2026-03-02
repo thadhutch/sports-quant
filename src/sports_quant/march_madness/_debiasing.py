@@ -1,0 +1,264 @@
+"""Debiasing algorithm for March Madness predictions.
+
+Addresses Team1 positional bias by predicting on both original and
+column-swapped data, then averaging the results.
+"""
+
+import logging
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+logger = logging.getLogger(__name__)
+
+
+def swap_team_columns(X: pd.DataFrame) -> pd.DataFrame:
+    """Swap Team1 and Team2 feature columns to address model bias.
+
+    Args:
+        X: DataFrame containing team features.
+
+    Returns:
+        DataFrame with Team1 and Team2 columns swapped.
+    """
+    X_swapped = X.copy()
+
+    column_mappings: dict[str, str] = {}
+    for column in X.columns:
+        if column.endswith("_Team2"):
+            base_column = column.replace("_Team2", "")
+            column_mappings[base_column] = column
+            column_mappings[column] = base_column
+        elif column == "Rank":
+            column_mappings[column] = "Rank_Team2"
+            column_mappings["Rank_Team2"] = column
+
+    for col1, col2 in column_mappings.items():
+        if col1 in X.columns and col2 in X.columns:
+            X_swapped[col1] = X[col2]
+            X_swapped[col2] = X[col1]
+
+    return X_swapped
+
+
+def run_debiased_prediction(
+    models: list,
+    X_original: pd.DataFrame,
+    equal_weights: bool = True,
+) -> np.ndarray:
+    """Run predictions on original and swapped data, then combine.
+
+    Args:
+        models: List of trained models to use for prediction.
+        X_original: Original feature data.
+        equal_weights: Whether to weight predictions equally.
+
+    Returns:
+        Combined probability predictions as numpy array.
+    """
+    X_swapped = swap_team_columns(X_original)
+
+    # Predictions on original data
+    original_probs = [
+        model.predict_proba(X_original)[:, 1] for model in models
+    ]
+    avg_original_probs = np.mean(original_probs, axis=0)
+
+    # Predictions on swapped data (invert probabilities)
+    swapped_probs = [
+        1 - model.predict_proba(X_swapped)[:, 1] for model in models
+    ]
+    avg_swapped_probs = np.mean(swapped_probs, axis=0)
+
+    # Combine with equal weights
+    combined_probs = (avg_original_probs + avg_swapped_probs) / 2
+    return combined_probs
+
+
+def evaluate_debiased_predictions(
+    debiased_probs: np.ndarray,
+    y_true: np.ndarray | pd.Series,
+    threshold: float = 0.5,
+) -> tuple[dict[str, float], np.ndarray]:
+    """Evaluate debiased predictions and return metrics.
+
+    Args:
+        debiased_probs: Combined probability predictions.
+        y_true: True labels.
+        threshold: Probability threshold for binary classification.
+
+    Returns:
+        Tuple of (metrics dict, binary predictions array).
+    """
+    y_pred = (debiased_probs >= threshold).astype(int)
+
+    metrics = {
+        "accuracy": accuracy_score(y_true, y_pred),
+        "precision": precision_score(y_true, y_pred),
+        "recall": recall_score(y_true, y_pred),
+        "f1": f1_score(y_true, y_pred),
+    }
+
+    return metrics, y_pred
+
+
+def process_backtest_results(
+    base_dir: str,
+    backtest_year: int,
+    top_n: int = 3,
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Apply debiased algorithm to backtest results for a given year.
+
+    Loads trained models and backtest data from the year directory, runs
+    debiased predictions, and saves results.
+
+    Args:
+        base_dir: Base directory containing backtest results.
+        backtest_year: Year being backtested.
+        top_n: Number of top models to use.
+
+    Returns:
+        Tuple of (results DataFrame, metrics dict).
+    """
+    import joblib
+    from pathlib import Path
+
+    year_dir = Path(base_dir) / str(backtest_year)
+    models_dir = year_dir / "models"
+
+    # Load top models
+    models = []
+    for i in range(1, top_n + 1):
+        model_path = models_dir / f"top_model_{i}.joblib"
+        try:
+            model = joblib.load(model_path)
+            models.append(model)
+        except FileNotFoundError:
+            logger.warning("Model %s not found", model_path)
+
+    if not models:
+        raise ValueError("No models found to make predictions")
+
+    # Load backtest data
+    X_backtest = pd.read_csv(year_dir / "X_backtest.csv")
+    y_backtest = pd.read_csv(year_dir / "y_backtest.csv")["Team1_Win"]
+    backtest_teams = pd.read_csv(year_dir / "backtest_teams.csv")
+
+    # Run debiased prediction
+    debiased_probs = run_debiased_prediction(models, X_backtest)
+    metrics, debiased_preds = evaluate_debiased_predictions(
+        debiased_probs, y_backtest
+    )
+
+    # Build results
+    results = backtest_teams.copy()
+    results["Debiased_Prob"] = debiased_probs
+    results["Debiased_Pred"] = debiased_preds
+    results["Correct_Prediction"] = results["Team1_Win"] == results["Debiased_Pred"]
+    results.to_csv(year_dir / "debiased_results.csv", index=False)
+
+    # Analyze upsets
+    from sports_quant.march_madness._upsets import analyze_upsets
+
+    upset_analysis = analyze_upsets(
+        results["Team1_Win"], results["Debiased_Pred"], results
+    )
+
+    # Mark upset predictions
+    all_predictions = results.copy()
+    all_predictions["Is_Upset_Predicted"] = False
+    for i, row in all_predictions.iterrows():
+        if (row["Seed1"] < row["Seed2"] and row["Debiased_Pred"] == 0) or (
+            row["Seed1"] > row["Seed2"] and row["Debiased_Pred"] == 1
+        ):
+            all_predictions.at[i, "Is_Upset_Predicted"] = True
+    all_predictions.to_csv(year_dir / "debiased_all_predictions.csv", index=False)
+
+    # Save upset predictions
+    upset_predictions = all_predictions[
+        all_predictions["Is_Upset_Predicted"]
+    ].copy()
+    upset_predictions["Seed_Difference"] = 0
+    for i, row in upset_predictions.iterrows():
+        if row["Seed1"] < row["Seed2"]:
+            upset_predictions.at[i, "Seed_Difference"] = (
+                row["Seed2"] - row["Seed1"]
+            )
+        else:
+            upset_predictions.at[i, "Seed_Difference"] = (
+                row["Seed1"] - row["Seed2"]
+            )
+    upset_predictions = upset_predictions.sort_values(
+        "Seed_Difference", ascending=False
+    )
+    upset_predictions.to_csv(
+        year_dir / "debiased_upset_predictions.csv", index=False
+    )
+
+    # Save upset analysis text
+    with open(year_dir / "debiased_upset_analysis.txt", "w") as f:
+        f.write(f"Debiased Algorithm Upset Analysis - Year {backtest_year}\n")
+        f.write("=" * 50 + "\n\n")
+        f.write(f"Total Games: {upset_analysis['total_games']}\n")
+        f.write(f"Total Actual Upsets: {upset_analysis['total_upsets_actual']}\n")
+        f.write(
+            f"Total Predicted Upsets: {upset_analysis['total_upsets_predicted']}\n"
+        )
+        f.write(
+            f"Correctly Predicted Upsets: {upset_analysis['correct_upset_predictions']}\n"
+        )
+        f.write(
+            f"Upset Seed Difference Sum: {upset_analysis['upset_seed_diff_sum']}\n"
+        )
+        f.write(
+            f"Biggest Upset Seed Difference: "
+            f"{upset_analysis['biggest_upset_seed_diff']}\n\n"
+        )
+
+        if upset_analysis["biggest_upset_details"]:
+            bd = upset_analysis["biggest_upset_details"]
+            f.write("Biggest Upset Details:\n")
+            f.write(f"  Year: {bd['year']}\n")
+            f.write(f"  Underdog: {bd['underdog']} (Seed {bd['underdog_seed']})\n")
+            f.write(f"  Favorite: {bd['favorite']} (Seed {bd['favorite_seed']})\n")
+            f.write(f"  Correctly Predicted: {bd['correctly_predicted']}\n\n")
+
+        f.write("All Predicted Upsets:\n")
+        f.write("-" * 50 + "\n")
+        for j, upset in enumerate(upset_analysis["upsets"]):
+            f.write(
+                f"{j+1}. {upset['year']} - {upset['underdog']} "
+                f"(Seed {upset['underdog_seed']}) vs. "
+                f"{upset['favorite']} (Seed {upset['favorite_seed']}), "
+                f"Correctly Predicted: {upset['correctly_predicted']}\n"
+            )
+
+    # Save metrics
+    with open(year_dir / "debiased_metrics.txt", "w") as f:
+        f.write(f"Debiased Algorithm Metrics - Year {backtest_year}\n")
+        f.write("=" * 50 + "\n\n")
+        f.write(f"Accuracy: {metrics['accuracy']:.4f}\n")
+        f.write(f"Precision: {metrics['precision']:.4f}\n")
+        f.write(f"Recall: {metrics['recall']:.4f}\n")
+        f.write(f"F1 Score: {metrics['f1']:.4f}\n")
+        f.write(
+            f"Total Predicted Upsets: "
+            f"{upset_analysis['total_upsets_predicted']}\n"
+        )
+        f.write(
+            f"Correctly Predicted Upsets: "
+            f"{upset_analysis['correct_upset_predictions']}\n"
+        )
+        correct = upset_analysis["correct_upset_predictions"]
+        total = max(1, upset_analysis["total_upsets_predicted"])
+        f.write(f"Upset Prediction Accuracy: {correct / total:.4f}\n")
+
+    logger.info(
+        "Debiased results for year %d: accuracy=%.4f, predicted_upsets=%d",
+        backtest_year,
+        metrics["accuracy"],
+        upset_analysis["total_upsets_predicted"],
+    )
+
+    return results, metrics

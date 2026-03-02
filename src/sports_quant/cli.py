@@ -8,7 +8,7 @@ from sports_quant import __version__
 @click.group()
 @click.version_option(version=__version__, prog_name="sports-quant")
 def cli():
-    """NFL data pipeline combining PFF grades and PFR game data."""
+    """Sports analytics pipeline for NFL and March Madness prediction."""
 
 
 @cli.group()
@@ -246,3 +246,60 @@ def pipeline():
     """Run the entire pipeline end-to-end."""
     from sports_quant.pipeline import run_full_pipeline
     run_full_pipeline()
+
+
+# -- March Madness commands ---------------------------------------------------
+
+
+@cli.group(name="march-madness")
+def march_madness():
+    """March Madness NCAA basketball prediction pipeline."""
+
+
+@march_madness.command()
+def scrape_kenpom():
+    """Scrape KenPom ratings from web archive."""
+    from sports_quant.march_madness.scrapers.kenpom import scrape_kenpom
+    scrape_kenpom()
+
+
+@march_madness.command(name="clean-kenpom")
+def clean_kenpom():
+    """Run the KenPom data cleaning pipeline."""
+    from sports_quant.march_madness.processing.clean_kenpom import run_kenpom_cleaning_pipeline
+    run_kenpom_cleaning_pipeline()
+
+
+@march_madness.command()
+def preprocess():
+    """Preprocess matchup data (pair rows into Team1 vs Team2)."""
+    from sports_quant.march_madness.processing.preprocess_matchups import preprocess_matchups
+    preprocess_matchups()
+
+
+@march_madness.command(name="merge-stats")
+def merge_stats():
+    """Merge matchups with KenPom statistics."""
+    from sports_quant.march_madness.processing.merge_matchups_stats import merge_matchups_stats
+    merge_matchups_stats()
+
+
+@march_madness.command()
+def train():
+    """Train LightGBM ensemble for March Madness prediction."""
+    from sports_quant.march_madness.train import run_training
+    run_training()
+
+
+@march_madness.command()
+def backtest():
+    """Run sequential year-by-year backtesting."""
+    from sports_quant.march_madness.backtest import run_backtest
+    run_backtest()
+
+
+@march_madness.command()
+def predict():
+    """Generate predictions for the current year."""
+    from sports_quant.march_madness.predict import run_prediction
+    run_prediction()

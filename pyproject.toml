@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "sports-quant"
 version = "2.0.0"
-description = "NFL data pipeline combining PFF grades and PFR game data for over/under analysis"
+description = "Sports analytics pipeline for NFL and NCAA March Madness prediction modeling"
 authors = ["Thad Hutcheson <thadhutch@gmail.com>"]
 readme = "README.md"
 license = "MIT"
 homepage = "https://github.com/thadhutch/sports-quant"
 repository = "https://github.com/thadhutch/sports-quant"
-keywords = ["nfl", "football", "data-pipeline", "pff", "sports-analytics"]
+keywords = ["nfl", "football", "data-pipeline", "pff", "sports-analytics", "ncaa", "march-madness", "basketball"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -38,6 +38,9 @@ seaborn = "^0.13.0"
 xgboost = ">=2.0.0,<3.0.0"
 scikit-learn = ">=1.4.0,<2.0.0"
 pyyaml = "^6.0"
+lightgbm = ">=4.0.0,<5.0.0"
+joblib = ">=1.3.0,<2.0.0"
+lxml = ">=4.9.0,<6.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"

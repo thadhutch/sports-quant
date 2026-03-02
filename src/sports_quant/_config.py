@@ -36,6 +36,8 @@ OVERUNDER_AVERAGES = OVERUNDER_DATA_DIR / "data-w-averages.csv"
 OVERUNDER_GP = OVERUNDER_DATA_DIR / "v1-dataset-gp.csv"
 OVERUNDER_RANKED = OVERUNDER_DATA_DIR / "v1-dataset-gp-ranked.csv"
 
+MM_DATA_DIR = DATA_DIR / "march-madness"
+
 MODELS_DIR = DATA_DIR / "models"
 BACKTEST_DIR = DATA_DIR / "backtest"
 MODEL_CONFIG_FILE = Path(os.environ.get("NFL_MODEL_CONFIG", "model_config.yaml"))
