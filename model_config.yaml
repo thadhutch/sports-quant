@@ -19,7 +19,7 @@ march_madness:
   model_version: "v1"
   models_to_train: 50
   top_models: 3
-  backtest_years: [2022, 2023, 2024]
+  backtest_years: [2022, 2023, 2024, 2025]
   hyperparameters:
     objective: "binary"
     metric: "binary_logloss"

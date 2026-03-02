@@ -71,6 +71,7 @@ TEAM_NAME_MAPPING: dict[str, str] = {
     "N.C. State": "North Carolina St.",
     "Louisiana Lafayette": "Louisiana",
     "College of Charleston": "Charleston",
+    "Mount St. Mary's MAAC": "Mount St. Mary's",
 }
 
 
