@@ -57,16 +57,18 @@ all three.
 |---------|------|-----|
 | **`drawsvg`** | Bracket rendering | Purpose-built for SVG — precise coordinate control, clean vector output, PNG/PDF export via `cairosvg`. Produces ESPN/CBS-quality bracket layouts. |
 | **`plotly`** | Accuracy-by-round chart | Modern, interactive, publication-quality analytical charts. HTML + static PNG export. |
-| **`cairosvg`** | SVG → PNG rasterization | High-quality rasterization of SVG brackets for static distribution. |
-| **`kaleido`** | Plotly static export | Renders Plotly charts to PNG without a browser. |
+| **`cairosvg`** _(optional)_ | SVG → PNG rasterization | High-quality rasterization of SVG brackets. Requires system Cairo lib. Falls back to SVG when unavailable. |
 
 ### New dependencies
 
 ```toml
+# Required (pure Python, no system deps)
 drawsvg = "^2.3"
-cairosvg = "^2.7"
-plotly = "^6.0"
-kaleido = "^0.2"
+plotly = "^5.0"
+
+# Optional (requires system Cairo lib: `brew install cairo` on macOS)
+# Enables PNG and PDF export from SVG brackets
+# cairosvg = "^2.7"
 ```
 
 ### Design System
