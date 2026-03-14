@@ -12,6 +12,7 @@ from sports_quant.march_madness._bracket import (
     determine_upset,
 )
 from sports_quant.march_madness._bracket_builder import (
+    _bracket_tree_order,
     build_actual_bracket,
     build_predicted_bracket,
     compare_brackets,
@@ -460,3 +461,181 @@ class TestCompareBrackets:
         comparison = compare_brackets(predicted=predicted, actual=actual)
         assert comparison.year == 2024
         assert comparison.source == "ensemble_vs_actual"
+
+
+# ---------------------------------------------------------------------------
+# Full 63-game fixture for bracket-tree ordering tests
+# ---------------------------------------------------------------------------
+
+_SEED_PAIRS = [(1, 16), (8, 9), (5, 12), (4, 13), (6, 11), (3, 14), (7, 10), (2, 15)]
+
+
+def _make_full_matchups_df(year=2024):
+    """Create a full 63-game matchups DataFrame with consistent bracket tree.
+
+    Team1 always wins.  Team names encode region and seed so assertions
+    can verify correct region assignment: ``R{region}S{seed}``.
+    """
+    rows: list[dict] = []
+
+    # R64: 4 regions × 8 games
+    r64_winners: list[list[str]] = []
+    for region in range(4):
+        region_winners: list[str] = []
+        for s1, s2 in _SEED_PAIRS:
+            t1, t2 = f"R{region}S{s1}", f"R{region}S{s2}"
+            rows.append({
+                "YEAR": year, "Team1": t1, "Seed1": s1,
+                "Team2": t2, "Seed2": s2, "CURRENT ROUND": 64,
+                "Score1": 80, "Score2": 60, "Team1_Win": 1,
+            })
+            region_winners.append(t1)
+        r64_winners.append(region_winners)
+
+    # R32: pair adjacent R64 winners within each region
+    r32_winners: list[list[str]] = []
+    for region in range(4):
+        rw = r64_winners[region]
+        region_r32: list[str] = []
+        for i in range(0, 8, 2):
+            t1, t2 = rw[i], rw[i + 1]
+            s1 = int(t1.split("S")[1])
+            s2 = int(t2.split("S")[1])
+            rows.append({
+                "YEAR": year, "Team1": t1, "Seed1": s1,
+                "Team2": t2, "Seed2": s2, "CURRENT ROUND": 32,
+                "Score1": 75, "Score2": 70, "Team1_Win": 1,
+            })
+            region_r32.append(t1)
+        r32_winners.append(region_r32)
+
+    # S16
+    s16_winners: list[list[str]] = []
+    for region in range(4):
+        rw = r32_winners[region]
+        region_s16: list[str] = []
+        for i in range(0, 4, 2):
+            t1, t2 = rw[i], rw[i + 1]
+            s1 = int(t1.split("S")[1])
+            s2 = int(t2.split("S")[1])
+            rows.append({
+                "YEAR": year, "Team1": t1, "Seed1": s1,
+                "Team2": t2, "Seed2": s2, "CURRENT ROUND": 16,
+                "Score1": 78, "Score2": 72, "Team1_Win": 1,
+            })
+            region_s16.append(t1)
+        s16_winners.append(region_s16)
+
+    # E8
+    e8_winners: list[str] = []
+    for region in range(4):
+        rw = s16_winners[region]
+        t1, t2 = rw[0], rw[1]
+        s1 = int(t1.split("S")[1])
+        s2 = int(t2.split("S")[1])
+        rows.append({
+            "YEAR": year, "Team1": t1, "Seed1": s1,
+            "Team2": t2, "Seed2": s2, "CURRENT ROUND": 8,
+            "Score1": 80, "Score2": 75, "Team1_Win": 1,
+        })
+        e8_winners.append(t1)
+
+    # F4
+    f4_winners: list[str] = []
+    for i in range(0, 4, 2):
+        t1, t2 = e8_winners[i], e8_winners[i + 1]
+        rows.append({
+            "YEAR": year, "Team1": t1, "Seed1": 1,
+            "Team2": t2, "Seed2": 1, "CURRENT ROUND": 4,
+            "Score1": 82, "Score2": 78, "Team1_Win": 1,
+        })
+        f4_winners.append(t1)
+
+    # NCG
+    rows.append({
+        "YEAR": year, "Team1": f4_winners[0], "Seed1": 1,
+        "Team2": f4_winners[1], "Seed2": 1, "CURRENT ROUND": 2,
+        "Score1": 76, "Score2": 72, "Team1_Win": 1,
+    })
+
+    return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------------------
+# Bracket-tree ordering
+# ---------------------------------------------------------------------------
+
+class TestBracketTreeOrder:
+    def test_returns_none_for_incomplete_data(self):
+        """The 17-game fixture should trigger the fallback."""
+        df = _make_matchups_df()
+        year_df = df[df["YEAR"] == 2024].copy()
+        assert _bracket_tree_order(year_df) is None
+
+    def test_returns_order_for_full_bracket(self):
+        df = _make_full_matchups_df()
+        year_df = df[df["YEAR"] == 2024].copy()
+        ordered = _bracket_tree_order(year_df)
+        assert ordered is not None
+        assert len(ordered["R64"]) == 32
+        assert len(ordered["NCG"]) == 1
+
+    def test_r64_regions_have_mixed_seeds(self):
+        """Each region of 8 R64 games should have one of each seed pair."""
+        df = _make_full_matchups_df()
+        bracket = build_actual_bracket(df, year=2024)
+        by_region = bracket.games_by_region()
+        for region_idx in range(4):
+            r64_in_region = [
+                g for g in by_region[region_idx] if g.round_name == "R64"
+            ]
+            seeds = sorted(g.team1.seed for g in r64_in_region)
+            assert seeds == [1, 2, 3, 4, 5, 6, 7, 8], (
+                f"Region {region_idx} has wrong seed distribution: {seeds}"
+            )
+
+    def test_scrambled_input_produces_same_bracket(self):
+        """Shuffling CSV rows should not change the bracket output."""
+        df_ordered = _make_full_matchups_df()
+        bracket_ordered = build_actual_bracket(df_ordered, year=2024)
+
+        # Scramble: sort by seed (mimics the 2024 bug)
+        df_scrambled = df_ordered.sort_values(
+            ["CURRENT ROUND", "Seed1"], ascending=[False, True],
+        ).reset_index(drop=True)
+        bracket_scrambled = build_actual_bracket(df_scrambled, year=2024)
+
+        # Same number of games
+        assert len(bracket_scrambled.games) == len(bracket_ordered.games)
+
+        # Same teams in each (round, game_index) slot
+        for g_ord, g_scr in zip(bracket_ordered.games, bracket_scrambled.games):
+            assert g_ord.round_name == g_scr.round_name
+            assert g_ord.game_index == g_scr.game_index
+            assert g_ord.team1.team == g_scr.team1.team
+            assert g_ord.team2.team == g_scr.team2.team
+
+    def test_r32_feeders_are_adjacent_r64_games(self):
+        """R32 game i's participants should be winners of R64 games 2i and 2i+1."""
+        df = _make_full_matchups_df()
+        bracket = build_actual_bracket(df, year=2024)
+
+        r64 = {g.game_index: g for g in bracket.games if g.round_name == "R64"}
+        r32 = {g.game_index: g for g in bracket.games if g.round_name == "R32"}
+
+        for gi, game in r32.items():
+            feeder_a = r64[2 * gi]
+            feeder_b = r64[2 * gi + 1]
+            participants = {game.team1.team, game.team2.team}
+            feeders = {feeder_a.winner.team, feeder_b.winner.team}
+            assert participants == feeders, (
+                f"R32 game {gi} participants {participants} "
+                f"don't match R64 feeders {feeders}"
+            )
+
+    def test_existing_partial_fixture_still_works(self):
+        """The 17-game fixture falls back to row-order — should still pass."""
+        df = _make_matchups_df()
+        bracket = build_actual_bracket(df, year=2024)
+        assert len(bracket.games) == 17
+        assert bracket.source == "actual"

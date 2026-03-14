@@ -12,6 +12,7 @@ import logging
 import pandas as pd
 
 from sports_quant.march_madness._bracket import (
+    GAMES_PER_ROUND,
     GAMES_PER_REGION_R64,
     ROUND_NAMES,
     ROUND_ORDER,
@@ -22,6 +23,127 @@ from sports_quant.march_madness._bracket import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Bracket-tree ordering
+# ---------------------------------------------------------------------------
+
+def _bracket_tree_order(
+    year_df: pd.DataFrame,
+) -> dict[str, list[int]] | None:
+    """Compute correct bracket-tree ordering from tournament results.
+
+    Walks from the championship game (NCG) backward to R64, matching
+    each game's participants to the winners of games in the previous round.
+    This makes ``game_index`` assignment independent of CSV row order.
+
+    Args:
+        year_df: Matchups DataFrame filtered to a single year.
+                 Must contain ``CURRENT ROUND``, ``Team1``, ``Team2``,
+                 and ``Team1_Win`` columns.
+
+    Returns:
+        A dict of ``round_name -> [DataFrame indices in bracket order]``,
+        or ``None`` if the data is incomplete and tree reconstruction
+        cannot proceed (callers should fall back to raw row order).
+    """
+
+    def _winner(row: pd.Series) -> str:
+        return row["Team1"] if row["Team1_Win"] == 1 else row["Team2"]
+
+    # Split into per-round DataFrames
+    round_dfs: dict[str, pd.DataFrame] = {}
+    for round_num in sorted(ROUND_NAMES.keys(), reverse=True):
+        round_name = ROUND_NAMES[round_num]
+        rdf = year_df[year_df["CURRENT ROUND"] == round_num]
+        if len(rdf) != GAMES_PER_ROUND[round_name]:
+            logger.debug(
+                "Incomplete round %s (%d/%d games) — skipping tree order",
+                round_name, len(rdf), GAMES_PER_ROUND[round_name],
+            )
+            return None
+        round_dfs[round_name] = rdf
+
+    # Seed with NCG (single game)
+    ordered: dict[str, list[int]] = {
+        "NCG": list(round_dfs["NCG"].index),
+    }
+
+    # Walk backward: for each parent game, locate the two child games
+    # whose winner matches the parent's Team1 and Team2.
+    for round_idx in range(len(ROUND_ORDER) - 1, 0, -1):
+        parent_round = ROUND_ORDER[round_idx]
+        child_round = ROUND_ORDER[round_idx - 1]
+
+        # Build lookup: winner team name → DataFrame index
+        child_df = round_dfs[child_round]
+        winner_to_idx: dict[str, int] = {}
+        for idx, row in child_df.iterrows():
+            winner_to_idx[_winner(row)] = idx
+
+        child_ordered: list[int] = []
+        for parent_idx in ordered[parent_round]:
+            parent_row = year_df.loc[parent_idx]
+
+            child1_idx = winner_to_idx.get(parent_row["Team1"])
+            child2_idx = winner_to_idx.get(parent_row["Team2"])
+
+            if child1_idx is None or child2_idx is None:
+                logger.debug(
+                    "Cannot trace tree: %s participants [%s, %s] "
+                    "not found as %s winners",
+                    parent_round, parent_row["Team1"],
+                    parent_row["Team2"], child_round,
+                )
+                return None
+
+            child_ordered.append(child1_idx)
+            child_ordered.append(child2_idx)
+
+        ordered[child_round] = child_ordered
+
+    return ordered
+
+
+def _build_games_ordered(
+    df: pd.DataFrame,
+    ordered: dict[str, list[int]],
+    *,
+    pred_col: str | None = None,
+    prob_col: str | None = None,
+) -> list[BracketGame]:
+    """Build ``BracketGame`` list using pre-computed bracket-tree order."""
+    games: list[BracketGame] = []
+    for round_name in ROUND_ORDER:
+        for game_idx, df_idx in enumerate(ordered[round_name]):
+            row = df.loc[df_idx]
+            game = _row_to_game(
+                row, round_name, game_idx,
+                pred_col=pred_col, prob_col=prob_col,
+            )
+            games.append(game)
+    return games
+
+
+def _build_games_fallback(
+    df: pd.DataFrame,
+    *,
+    pred_col: str | None = None,
+    prob_col: str | None = None,
+) -> list[BracketGame]:
+    """Build ``BracketGame`` list using raw CSV row order (legacy path)."""
+    games: list[BracketGame] = []
+    for round_num in sorted(ROUND_NAMES.keys(), reverse=True):
+        round_name = ROUND_NAMES[round_num]
+        round_df = df[df["CURRENT ROUND"] == round_num]
+        for game_idx, (_, row) in enumerate(round_df.iterrows()):
+            game = _row_to_game(
+                row, round_name, game_idx,
+                pred_col=pred_col, prob_col=prob_col,
+            )
+            games.append(game)
+    return games
 
 
 def _assign_region(round_name: str, game_index: int) -> int:
@@ -107,6 +229,10 @@ def _row_to_game(
 def build_actual_bracket(matchups_df: pd.DataFrame, year: int) -> Bracket:
     """Build a bracket from actual tournament results.
 
+    Uses bracket-tree reconstruction to assign correct ``game_index``
+    values regardless of CSV row ordering.  Falls back to raw row
+    order when the data is incomplete (< 63 games).
+
     Args:
         matchups_df: The restructured_matchups DataFrame (all years).
         year: The tournament year to build.
@@ -117,15 +243,12 @@ def build_actual_bracket(matchups_df: pd.DataFrame, year: int) -> Bracket:
     year_df = matchups_df[matchups_df["YEAR"] == year].copy()
     logger.info("Building actual bracket for %d: %d games", year, len(year_df))
 
-    games: list[BracketGame] = []
+    ordered = _bracket_tree_order(year_df)
 
-    for round_num in sorted(ROUND_NAMES.keys(), reverse=True):
-        round_name = ROUND_NAMES[round_num]
-        round_df = year_df[year_df["CURRENT ROUND"] == round_num]
-
-        for game_idx, (_, row) in enumerate(round_df.iterrows()):
-            game = _row_to_game(row, round_name, game_idx)
-            games.append(game)
+    if ordered is not None:
+        games = _build_games_ordered(year_df, ordered)
+    else:
+        games = _build_games_fallback(year_df)
 
     return Bracket(year=year, source="actual", games=tuple(games))
 
@@ -138,7 +261,9 @@ def build_predicted_bracket(
 ) -> Bracket:
     """Build a bracket from backtest prediction results.
 
-    Joins results back to matchups to recover round information.
+    Joins results back to matchups to recover round information, then
+    uses bracket-tree reconstruction (from the *actual* outcomes in
+    matchups) to assign correct ``game_index`` values.
 
     Args:
         results_df: Backtest results (ensemble_results.csv or debiased_results.csv).
@@ -181,18 +306,18 @@ def build_predicted_bracket(
         "Building %s bracket for %d: %d games", source, year, len(merged),
     )
 
-    games: list[BracketGame] = []
+    # Use actual outcomes (from matchups) to determine bracket tree order;
+    # apply the same ordering to the merged predictions DataFrame.
+    ordered = _bracket_tree_order(year_matchups)
 
-    for round_num in sorted(ROUND_NAMES.keys(), reverse=True):
-        round_name = ROUND_NAMES[round_num]
-        round_df = merged[merged["CURRENT ROUND"] == round_num]
-
-        for game_idx, (_, row) in enumerate(round_df.iterrows()):
-            game = _row_to_game(
-                row, round_name, game_idx,
-                pred_col=pred_col, prob_col=prob_col,
-            )
-            games.append(game)
+    if ordered is not None:
+        games = _build_games_ordered(
+            merged, ordered, pred_col=pred_col, prob_col=prob_col,
+        )
+    else:
+        games = _build_games_fallback(
+            merged, pred_col=pred_col, prob_col=prob_col,
+        )
 
     return Bracket(year=year, source=source, games=tuple(games))
 
