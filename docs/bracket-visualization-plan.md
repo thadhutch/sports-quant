@@ -1,14 +1,25 @@
 # Bracket Visualization Plan
 
-## New Files (3 source + 2 test)
+## New Files
+
+### Phase 1 — Data (complete)
 
 | File | Purpose | ~Lines |
 |------|---------|--------|
 | `_bracket.py` | Frozen dataclasses: `BracketSlot`, `BracketGame`, `Bracket` | ~200 |
 | `_bracket_builder.py` | Build `Bracket` objects from matchup CSVs and backtest result CSVs | ~250 |
-| `bracket_plots.py` | Matplotlib rendering — single bracket, comparison, per-round accuracy | ~400 |
 | `test_march_madness_bracket.py` | Unit tests for data structures + builder logic | ~200 |
-| `test_march_madness_bracket_plots.py` | Smoke tests for rendering (files created, no errors) | ~150 |
+
+### Phase 2 — Rendering
+
+| File | Purpose | ~Lines |
+|------|---------|--------|
+| `_bracket_theme.py` | Frozen theme dataclass — colors, fonts, dimensions, spacing constants | ~80 |
+| `_bracket_layout.py` | Pure coordinate math — slot positions, connector paths, recursive y-centering | ~150 |
+| `_bracket_render_svg.py` | SVG generation using `drawsvg` — team boxes, connectors, headers, legend | ~300 |
+| `_bracket_charts.py` | Plotly accuracy-by-round + round-over-round comparison charts | ~150 |
+| `bracket_plots.py` | Public API — `render_bracket()`, `render_comparison()`, `render_accuracy_chart()` | ~100 |
+| `test_march_madness_bracket_plots.py` | Smoke tests + layout math unit tests | ~200 |
 
 ## Data Structures (Immutable)
 
@@ -21,14 +32,72 @@ class Bracket:            # year, source label, tuple of 63 BracketGames
 
 ## Three Visualization Modes
 
-1. **Single bracket** — Full 64-team bracket with seeds, team names, and confidence. Color-coded
-   by upset status. Left two regions flow right, right two flow left, Final Four in center.
+1. **Single bracket** — Full 64-team SVG bracket. Left regions flow right, right regions flow
+   left, Final Four centered. Each team box shows `[seed] Team Name` with confidence bar.
+   Upsets highlighted with gold accent border.
 
-2. **Comparison bracket** — Predicted vs actual side-by-side. Green = correct pick, red = wrong.
-   Immediately shows where the model went off the rails by round.
+2. **Comparison bracket** — Two-tone overlay. Correct picks get green fill, incorrect get red
+   with strikethrough on the wrong team. Shows predicted winner vs actual winner side-by-side
+   within each game box.
 
-3. **Accuracy-by-round bar chart** — Simple and analytically powerful. Shows what % of picks were
-   correct in R64, R32, S16, E8, F4, NCG. This is the key analytical view.
+3. **Accuracy-by-round chart** — Plotly grouped bar chart. Shows correct/total per round with
+   percentage labels. Optional year-over-year overlay. Interactive HTML output + static PNG.
+
+## Rendering Stack
+
+### Why not matplotlib?
+
+Matplotlib's `FancyBboxPatch` approach produces charts that look like charts. Brackets need
+precise layout control, clean typography, and crisp vector output. Matplotlib fights you on
+all three.
+
+### Libraries
+
+| Library | Role | Why |
+|---------|------|-----|
+| **`drawsvg`** | Bracket rendering | Purpose-built for SVG — precise coordinate control, clean vector output, PNG/PDF export via `cairosvg`. Produces ESPN/CBS-quality bracket layouts. |
+| **`plotly`** | Accuracy-by-round chart | Modern, interactive, publication-quality analytical charts. HTML + static PNG export. |
+| **`cairosvg`** | SVG → PNG rasterization | High-quality rasterization of SVG brackets for static distribution. |
+| **`kaleido`** | Plotly static export | Renders Plotly charts to PNG without a browser. |
+
+### New dependencies
+
+```toml
+drawsvg = "^2.3"
+cairosvg = "^2.7"
+plotly = "^6.0"
+kaleido = "^0.2"
+```
+
+### Design System
+
+- **Color palette**: Dark slate background (`#1a1a2e`) with white text, green (`#00c853`) for
+  correct picks, red (`#ff1744`) for wrong, gold accent (`#ffd700`) for champions/upsets
+- **Typography**: Clean sans-serif (system fonts), seed numbers in bold monospace
+- **Team boxes**: Rounded rectangles with subtle drop shadows, seed badges on the left edge
+- **Connector lines**: Smooth bezier curves between rounds (not harsh right angles)
+- **Confidence**: Gradient fill intensity on team boxes (higher confidence = more saturated)
+- **Round headers**: Styled column headers with game counts
+
+### Rendering Pipeline
+
+```
+Bracket (data) → Layout (coordinates) → Render (SVG) → Export (PNG/PDF/SVG)
+```
+
+Each step is a pure function operating on immutable data:
+
+1. **Layout** — Takes a `Bracket` + `BracketTheme`, returns a frozen `BracketLayout` with
+   computed `(x, y)` for every game, connector paths, and bounding box
+2. **Render** — Takes `BracketLayout` + `Bracket` + `BracketTheme`, returns an SVG `Drawing`
+3. **Export** — `Drawing.save_svg()` or `cairosvg.svg2png()` for rasterization
+
+### Output Formats
+
+- **SVG** — Primary output. Scalable, embeddable, archivable.
+- **PNG** — Via `cairosvg`. For quick sharing, README embedding.
+- **HTML** — Plotly charts only. Interactive exploration.
+- **PDF** — Via `cairosvg`. Print-quality for reports.
 
 ## Key Technical Challenge: Recovering Round Info
 
@@ -48,24 +117,30 @@ sports-quant march-madness bracket --year 2024 --source debiased --compare
 ```
 
 Reads from existing backtest output dirs, renders to
-`data/march-madness/backtest/{version}/{year}/plots/bracket.png`.
+`data/march-madness/backtest/{version}/{year}/plots/bracket.{svg,png}`.
 
 ## Implementation Phases
 
-### Phase 1 — Data structures & builder (TDD)
+### Phase 1 — Data structures & builder (TDD) ✓
 
 - Tests first for dataclasses and bracket construction
 - `build_bracket_from_matchups()` for ground truth
 - `build_bracket_from_backtest()` for predictions (joins to recover rounds)
 - Upset detection and correctness flagging
 
-### Phase 2 — Rendering
+### Phase 2 — Professional rendering (SVG + Plotly)
 
-- Smoke tests first
-- Coordinate system: fixed x per round, y computed recursively (parent centered between children)
-- `matplotlib.patches.FancyBboxPatch` for team boxes
-- Color coding: green (correct), red (incorrect), white (no ground truth)
-- Confidence shown via opacity or annotation
+- TDD: unit tests for `_bracket_layout.py` coordinate math (deterministic, pure functions)
+- TDD: smoke tests for SVG rendering (file created, valid XML, expected elements present)
+- `_bracket_theme.py` — frozen theme dataclass with full design system constants
+- `_bracket_layout.py` — pure coordinate math, fixed x per round, recursive y-centering
+- `_bracket_render_svg.py` — `drawsvg`-based SVG generation with team boxes, bezier
+  connectors, round headers, legend, and confidence visualization
+- `_bracket_charts.py` — Plotly accuracy-by-round grouped bar chart with interactive HTML
+  and static PNG export
+- `bracket_plots.py` — public API surface: `render_bracket()`, `render_comparison()`,
+  `render_accuracy_chart()`
+- Visual regression baseline (save reference PNGs, compare dimensions)
 
 ### Phase 3 — CLI & integration
 
@@ -81,7 +156,6 @@ Reads from existing backtest output dirs, renders to
 
 ## Out of Scope
 
-- Web/HTML rendering (matplotlib only, matches existing stack)
-- Interactive features (static PNGs for now)
+- Interactive bracket features (click-to-expand, hover tooltips — future consideration)
 - Forward bracket simulation (Phase 4)
 - Modifying `backtest.py` or `predict.py`
