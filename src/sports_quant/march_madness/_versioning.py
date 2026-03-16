@@ -24,6 +24,7 @@ from sports_quant.march_madness._bracket_builder import (
 from sports_quant.march_madness._config import MM_BACKTEST_DIR, MM_MATCHUPS_RESTRUCTURED
 from sports_quant.march_madness._results import (
     BracketMetrics,
+    SimulationMetrics,
     SurvivorMetrics,
     VersionMetrics,
     load_metrics,
@@ -131,6 +132,87 @@ def _collect_survivor_metrics(
     return metrics
 
 
+def _collect_simulation_metrics(
+    version_dir: Path,
+    matchups_df: pd.DataFrame,
+    years: list[int],
+) -> list[SimulationMetrics]:
+    """Run forward bracket simulation for each year and collect metrics.
+
+    Loads trained models and KenPom data, then simulates from R64 forward
+    (winners cascade) to get realistic bracket accuracy.
+    """
+    import joblib
+
+    from sports_quant.march_madness._config import MM_KENPOM_DATA
+    from sports_quant.march_madness._bracket_builder import build_actual_bracket
+    from sports_quant.march_madness._feature_builder import FeatureLookup
+    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
+
+    kenpom_path = MM_KENPOM_DATA
+    if not kenpom_path.exists():
+        logger.warning(
+            "KenPom data not found at %s — skipping simulation metrics",
+            kenpom_path,
+        )
+        return []
+
+    kenpom_df = pd.read_csv(kenpom_path)
+    feature_lookup = FeatureLookup(kenpom_df)
+
+    metrics: list[SimulationMetrics] = []
+
+    for year in years:
+        models_dir = version_dir / str(year) / "models"
+        if not models_dir.is_dir():
+            logger.warning("Models dir not found for %d: %s", year, models_dir)
+            continue
+
+        # Load trained models
+        models = []
+        for i in range(1, 4):
+            model_path = models_dir / f"top_model_{i}.joblib"
+            if model_path.exists():
+                models.append(joblib.load(model_path))
+
+        if not models:
+            logger.warning("No models found for %d", year)
+            continue
+
+        actual = build_actual_bracket(matchups_df, year)
+
+        try:
+            result = simulate_bracket_deterministic(
+                year=year,
+                models=models,
+                feature_lookup=feature_lookup,
+                matchups_df=matchups_df,
+                actual_bracket=actual,
+            )
+        except (KeyError, ValueError) as exc:
+            logger.warning(
+                "Simulation failed for %d: %s", year, exc,
+            )
+            continue
+
+        correct, total = result.overall_accuracy
+        accuracy = correct / total if total > 0 else 0.0
+
+        acc_by_round: dict[str, float] = {}
+        for round_name, (rc, rt) in result.accuracy_by_round.items():
+            acc_by_round[round_name] = rc / rt if rt > 0 else 0.0
+
+        metrics.append(SimulationMetrics(
+            year=year,
+            overall_correct=correct,
+            overall_total=total,
+            overall_accuracy=round(accuracy, 4),
+            accuracy_by_round=acc_by_round,
+        ))
+
+    return metrics
+
+
 # ---------------------------------------------------------------------------
 # Version registry
 # ---------------------------------------------------------------------------
@@ -155,6 +237,7 @@ def _update_registry(
     version: str,
     description: str,
     avg_accuracy: float,
+    avg_simulation_accuracy: float,
     avg_survivor_rounds: float,
     created_at: str,
 ) -> list[dict]:
@@ -169,6 +252,7 @@ def _update_registry(
         "created_at": created_at,
         "description": description,
         "avg_bracket_accuracy": round(avg_accuracy, 4),
+        "avg_simulation_accuracy": round(avg_simulation_accuracy, 4),
         "avg_survivor_rounds": round(avg_survivor_rounds, 2),
     })
 
@@ -243,6 +327,9 @@ def save_version(
     survivor_metrics = _collect_survivor_metrics(
         version_dir, matchups_df, years,
     )
+    simulation_metrics = _collect_simulation_metrics(
+        version_dir, matchups_df, years,
+    )
 
     created_at = datetime.now(timezone.utc).isoformat()
 
@@ -252,6 +339,7 @@ def save_version(
         description=description,
         bracket_metrics=tuple(bracket_metrics),
         survivor_metrics=tuple(survivor_metrics),
+        simulation_metrics=tuple(simulation_metrics),
         config_snapshot=config_snapshot,
     )
 
@@ -263,14 +351,17 @@ def save_version(
         version=version,
         description=description,
         avg_accuracy=vm.avg_bracket_accuracy,
+        avg_simulation_accuracy=vm.avg_simulation_accuracy,
         avg_survivor_rounds=vm.avg_survivor_rounds,
         created_at=created_at,
     )
 
     logger.info(
-        "Version %s saved. Bracket avg: %.1f%%, Survivor avg: %.1f rounds",
+        "Version %s saved. Per-game: %.1f%%, Simulation: %.1f%%, "
+        "Survivor avg: %.1f rounds",
         version,
         vm.avg_bracket_accuracy * 100,
+        vm.avg_simulation_accuracy * 100,
         vm.avg_survivor_rounds,
     )
 
@@ -367,15 +458,42 @@ def compare_versions(
             "delta": delta,
         })
 
+    # Simulation comparison: match on year
+    a_sim = {m.year: m for m in ma.simulation_metrics}
+    b_sim = {m.year: m for m in mb.simulation_metrics}
+
+    simulation_rows = []
+    all_sim_years = sorted(set(a_sim.keys()) | set(b_sim.keys()))
+    for year in all_sim_years:
+        sa = a_sim.get(year)
+        sb = b_sim.get(year)
+        acc_a = sa.overall_accuracy if sa else None
+        acc_b = sb.overall_accuracy if sb else None
+        delta = None
+        if acc_a is not None and acc_b is not None:
+            delta = acc_b - acc_a
+        simulation_rows.append({
+            "year": year,
+            f"{version_a}_accuracy": acc_a,
+            f"{version_b}_accuracy": acc_b,
+            "delta": delta,
+        })
+
     return {
         "version_a": version_a,
         "version_b": version_b,
         "bracket": bracket_rows,
+        "simulation": simulation_rows,
         "survivor": survivor_rows,
         "summary": {
             f"{version_a}_avg_accuracy": ma.avg_bracket_accuracy,
             f"{version_b}_avg_accuracy": mb.avg_bracket_accuracy,
             "accuracy_delta": mb.avg_bracket_accuracy - ma.avg_bracket_accuracy,
+            f"{version_a}_avg_sim_accuracy": ma.avg_simulation_accuracy,
+            f"{version_b}_avg_sim_accuracy": mb.avg_simulation_accuracy,
+            "sim_accuracy_delta": (
+                mb.avg_simulation_accuracy - ma.avg_simulation_accuracy
+            ),
             f"{version_a}_avg_survivor_rounds": ma.avg_survivor_rounds,
             f"{version_b}_avg_survivor_rounds": mb.avg_survivor_rounds,
             "survivor_delta": mb.avg_survivor_rounds - ma.avg_survivor_rounds,

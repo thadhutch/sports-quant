@@ -315,8 +315,10 @@ def predict():
 @click.option(
     "--source", "-s",
     multiple=True,
-    type=click.Choice(["ensemble", "debiased"], case_sensitive=False),
-    help="Prediction source(s) to render. Default: both.",
+    type=click.Choice(
+        ["ensemble", "debiased", "simulation"], case_sensitive=False,
+    ),
+    help="Prediction source(s) to render. Default: ensemble + debiased.",
 )
 @click.option(
     "--version", "-v",
@@ -339,6 +341,89 @@ def bracket(year, source, version):
     click.echo(f"Rendered {len(outputs)} bracket files:")
     for path in outputs:
         click.echo(f"  {path}")
+
+
+@march_madness.command()
+@click.option(
+    "--year", "-y",
+    multiple=True,
+    type=int,
+    help="Tournament year(s) to simulate. Default: all backtest years.",
+)
+@click.option(
+    "--version", "-v",
+    default="v1",
+    help="Model version directory (default: v1).",
+)
+def simulate(year, version):
+    """Run forward bracket simulation (R64->NCG) and display results."""
+    import yaml
+
+    import joblib
+    import pandas as pd
+
+    from sports_quant._config import MODEL_CONFIG_FILE
+    from sports_quant.march_madness._config import (
+        MM_BACKTEST_DIR,
+        MM_KENPOM_DATA,
+        MM_MATCHUPS_RESTRUCTURED,
+    )
+    from sports_quant.march_madness._bracket_builder import build_actual_bracket
+    from sports_quant.march_madness._feature_builder import FeatureLookup
+    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
+    from sports_quant.march_madness.bracket_plots import (
+        render_bracket,
+        render_comparison,
+    )
+
+    if not year:
+        cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
+        year = cfg["march_madness"]["backtest_years"]
+
+    years = list(year)
+    matchups_df = pd.read_csv(MM_MATCHUPS_RESTRUCTURED)
+    kenpom_df = pd.read_csv(MM_KENPOM_DATA)
+    feature_lookup = FeatureLookup(kenpom_df)
+
+    for yr in years:
+        models_dir = MM_BACKTEST_DIR / version / str(yr) / "models"
+        models = [
+            joblib.load(models_dir / f"top_model_{i}.joblib")
+            for i in range(1, 4)
+            if (models_dir / f"top_model_{i}.joblib").exists()
+        ]
+
+        if not models:
+            click.echo(f"No models found for {yr}, skipping.")
+            continue
+
+        actual = build_actual_bracket(matchups_df, yr)
+        result = simulate_bracket_deterministic(
+            year=yr,
+            models=models,
+            feature_lookup=feature_lookup,
+            matchups_df=matchups_df,
+            actual_bracket=actual,
+        )
+
+        correct, total = result.overall_accuracy
+        click.echo(f"\n{yr}: {correct}/{total} ({correct/total:.1%})")
+
+        for rnd, (rc, rt) in result.accuracy_by_round.items():
+            click.echo(f"  {rnd}: {rc}/{rt} ({rc/rt:.0%})")
+
+        # Render SVGs
+        output_dir = MM_BACKTEST_DIR / version / str(yr) / "plots" / "brackets"
+        sim_path = render_bracket(
+            result.bracket, output_dir / f"{yr}_simulation.svg",
+        )
+        click.echo(f"  -> {sim_path}")
+
+        comp_path = render_comparison(
+            result.bracket, actual,
+            output_dir / f"{yr}_simulation_comparison.svg",
+        )
+        click.echo(f"  -> {comp_path}")
 
 
 @march_madness.command(name="save-version")
@@ -367,16 +452,29 @@ def save_version(version, description):
 
     click.echo(f"Version {vm.version} saved ({vm.created_at})")
     click.echo(f"  Description: {vm.description}")
-    click.echo(f"  Bracket accuracy (avg): {vm.avg_bracket_accuracy:.1%}")
-    click.echo(f"  Survivor rounds (avg):  {vm.avg_survivor_rounds:.1f}")
+    click.echo(f"  Per-game accuracy (avg):  {vm.avg_bracket_accuracy:.1%}")
+    click.echo(f"  Simulation accuracy (avg): {vm.avg_simulation_accuracy:.1%}")
+    click.echo(f"  Survivor rounds (avg):     {vm.avg_survivor_rounds:.1f}")
 
-    click.echo("\nBracket metrics:")
+    click.echo("\nPer-game bracket metrics:")
     for m in vm.bracket_metrics:
         click.echo(
             f"  {m.year} {m.source:>10s}: "
             f"{m.overall_accuracy:.1%} "
             f"({m.correct_games}/{m.total_games})"
         )
+
+    if vm.simulation_metrics:
+        click.echo("\nForward simulation metrics (R64→NCG):")
+        for m in vm.simulation_metrics:
+            click.echo(
+                f"  {m.year}: {m.overall_accuracy:.1%} "
+                f"({m.overall_correct}/{m.overall_total})"
+            )
+            rounds_str = "  ".join(
+                f"{r}={a:.0%}" for r, a in m.accuracy_by_round.items()
+            )
+            click.echo(f"    {rounds_str}")
 
     click.echo("\nSurvivor metrics:")
     for m in vm.survivor_metrics:
@@ -400,17 +498,19 @@ def list_versions_cmd():
 
     # Header
     click.echo(
-        f"{'Version':<10} {'Accuracy':>10} {'Survivor':>10} "
+        f"{'Version':<10} {'Per-game':>10} {'Sim':>10} {'Survivor':>10} "
         f"{'Created':>22}  Description"
     )
-    click.echo("-" * 80)
+    click.echo("-" * 90)
 
     for entry in registry:
         acc = entry.get("avg_bracket_accuracy", 0)
+        sim = entry.get("avg_simulation_accuracy", 0)
         surv = entry.get("avg_survivor_rounds", 0)
         click.echo(
             f"{entry['version']:<10} "
             f"{acc:>9.1%} "
+            f"{sim:>9.1%} "
             f"{surv:>8.1f}R "
             f"{entry['created_at'][:19]:>22}  "
             f"{entry.get('description', '')}"
@@ -429,8 +529,8 @@ def compare_versions_cmd(version_a, version_b):
 
     result = compare_versions(version_a, version_b)
 
-    # Bracket comparison
-    click.echo(f"\nBracket Accuracy: {version_a} vs {version_b}")
+    # Per-game bracket comparison
+    click.echo(f"\nPer-game Bracket Accuracy: {version_a} vs {version_b}")
     click.echo("-" * 65)
     click.echo(
         f"{'Year':<6} {'Source':<12} "
@@ -448,6 +548,28 @@ def compare_versions_cmd(version_a, version_b):
             f"{row['year']:<6} {row['source']:<12} "
             f"{acc_a:>10} {acc_b:>10} {delta:>10}"
         )
+
+    # Simulation comparison
+    if result.get("simulation"):
+        click.echo(
+            f"\nSimulation Accuracy (R64->NCG): {version_a} vs {version_b}"
+        )
+        click.echo("-" * 55)
+        click.echo(
+            f"{'Year':<6} "
+            f"{version_a:>10} {version_b:>10} {'Delta':>10}"
+        )
+        for row in result["simulation"]:
+            acc_a = f"{row[f'{version_a}_accuracy']:.1%}" if row[f"{version_a}_accuracy"] is not None else "  —"
+            acc_b = f"{row[f'{version_b}_accuracy']:.1%}" if row[f"{version_b}_accuracy"] is not None else "  —"
+            delta = ""
+            if row["delta"] is not None:
+                sign = "+" if row["delta"] >= 0 else ""
+                delta = f"{sign}{row['delta']:.1%}"
+            click.echo(
+                f"{row['year']:<6} "
+                f"{acc_a:>10} {acc_b:>10} {delta:>10}"
+            )
 
     # Survivor comparison
     click.echo(f"\nSurvivor Rounds: {version_a} vs {version_b}")
@@ -475,14 +597,21 @@ def compare_versions_cmd(version_a, version_b):
     acc_delta = s["accuracy_delta"]
     acc_sign = "+" if acc_delta >= 0 else ""
     click.echo(
-        f"  Bracket accuracy: {s[f'{version_a}_avg_accuracy']:.1%} → "
+        f"  Per-game accuracy: {s[f'{version_a}_avg_accuracy']:.1%} -> "
         f"{s[f'{version_b}_avg_accuracy']:.1%} "
         f"({acc_sign}{acc_delta:.1%})"
+    )
+    sim_delta = s.get("sim_accuracy_delta", 0)
+    sim_sign = "+" if sim_delta >= 0 else ""
+    click.echo(
+        f"  Simulation accuracy: {s.get(f'{version_a}_avg_sim_accuracy', 0):.1%} -> "
+        f"{s.get(f'{version_b}_avg_sim_accuracy', 0):.1%} "
+        f"({sim_sign}{sim_delta:.1%})"
     )
     surv_delta = s["survivor_delta"]
     surv_sign = "+" if surv_delta >= 0 else ""
     click.echo(
-        f"  Survivor rounds:  {s[f'{version_a}_avg_survivor_rounds']:.1f} → "
+        f"  Survivor rounds:  {s[f'{version_a}_avg_survivor_rounds']:.1f} -> "
         f"{s[f'{version_b}_avg_survivor_rounds']:.1f} "
         f"({surv_sign}{surv_delta:.1f})"
     )

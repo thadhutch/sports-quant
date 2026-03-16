@@ -30,6 +30,53 @@ from sports_quant.march_madness.bracket_plots import (
 
 logger = logging.getLogger(__name__)
 
+
+def _run_simulation_for_year(
+    *,
+    year: int,
+    version_dir: Path,
+    matchups_df: pd.DataFrame,
+    feature_lookup,
+) -> Bracket | None:
+    """Run forward bracket simulation for a single year.
+
+    Loads trained models and runs deterministic simulation from R64→NCG.
+    Returns the evaluated bracket or None on failure.
+    """
+    import joblib
+
+    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
+
+    models_dir = version_dir / str(year) / "models"
+    if not models_dir.is_dir():
+        logger.warning("Models dir not found for %d: %s", year, models_dir)
+        return None
+
+    models = [
+        joblib.load(models_dir / f"top_model_{i}.joblib")
+        for i in range(1, 4)
+        if (models_dir / f"top_model_{i}.joblib").exists()
+    ]
+    if not models:
+        logger.warning("No models found for %d", year)
+        return None
+
+    actual = build_actual_bracket(matchups_df, year)
+
+    try:
+        result = simulate_bracket_deterministic(
+            year=year,
+            models=models,
+            feature_lookup=feature_lookup,
+            matchups_df=matchups_df,
+            actual_bracket=actual,
+        )
+        return result.bracket
+    except (KeyError, ValueError) as exc:
+        logger.warning("Simulation failed for %d: %s", year, exc)
+        return None
+
+
 # Sources that map to specific backtest CSV filenames and column conventions
 _SOURCE_CSV: dict[str, str] = {
     "ensemble": "ensemble_results.csv",
@@ -87,12 +134,13 @@ def render_year_brackets(
     debiased_df: pd.DataFrame | None,
     output_dir: Path,
     sources: tuple[str, ...] = _DEFAULT_SOURCES,
+    simulation_bracket: "Bracket | None" = None,
 ) -> list[Path]:
     """Build and render all bracket visualisations for a single year.
 
     Renders:
     - Actual bracket (ground truth)
-    - Predicted bracket for each source (ensemble, debiased)
+    - Predicted bracket for each source (ensemble, debiased, simulation)
     - Comparison bracket for each source vs actual
 
     Args:
@@ -102,6 +150,7 @@ def render_year_brackets(
         debiased_df: Debiased backtest results (None to skip).
         output_dir: Directory to write output files.
         sources: Which prediction sources to render.
+        simulation_bracket: Pre-computed forward-sim bracket (None to skip).
 
     Returns:
         List of output file paths.
@@ -124,6 +173,26 @@ def render_year_brackets(
     }
 
     for source in sources:
+        if source == "simulation":
+            # Handle simulation bracket separately
+            if simulation_bracket is None:
+                logger.info("Skipping simulation for %d (not available)", year)
+                continue
+
+            sim_path = render_bracket(
+                simulation_bracket, output_dir / f"{year}_simulation.svg",
+            )
+            outputs.append(sim_path)
+            logger.info("Rendered simulation bracket: %s", sim_path)
+
+            comp_path = render_comparison(
+                simulation_bracket, actual,
+                output_dir / f"{year}_simulation_comparison.svg",
+            )
+            outputs.append(comp_path)
+            logger.info("Rendered simulation comparison: %s", comp_path)
+            continue
+
         df = source_data.get(source)
         if df is None:
             logger.info("Skipping %s for %d (no data)", source, year)
@@ -234,6 +303,18 @@ def run_bracket_visualisation(
     logger.info("Loading matchups from %s", matchups_path)
     matchups_df = pd.read_csv(matchups_path)
 
+    # Load simulation resources lazily (only if "simulation" source requested)
+    feature_lookup = None
+    if "simulation" in source_tuple:
+        try:
+            from sports_quant.march_madness._config import MM_KENPOM_DATA
+            from sports_quant.march_madness._feature_builder import FeatureLookup
+
+            kenpom_df = pd.read_csv(MM_KENPOM_DATA)
+            feature_lookup = FeatureLookup(kenpom_df)
+        except (FileNotFoundError, ImportError) as exc:
+            logger.warning("Cannot load simulation resources: %s", exc)
+
     all_outputs: list[Path] = []
     compared_brackets: dict[int, Bracket] = {}
     output_dirs: dict[int, Path] = {}
@@ -257,6 +338,16 @@ def run_bracket_visualisation(
         output_dir = paths["output_dir"]
         output_dirs[year] = output_dir
 
+        # Run forward simulation if requested and resources are available
+        simulation_bracket = None
+        if "simulation" in source_tuple and feature_lookup is not None:
+            simulation_bracket = _run_simulation_for_year(
+                year=year,
+                version_dir=backtest_dir / version,
+                matchups_df=matchups_df,
+                feature_lookup=feature_lookup,
+            )
+
         # Render brackets for this year
         year_outputs = render_year_brackets(
             year=year,
@@ -265,20 +356,26 @@ def run_bracket_visualisation(
             debiased_df=debiased_df,
             output_dir=output_dir,
             sources=source_tuple,
+            simulation_bracket=simulation_bracket,
         )
         all_outputs.extend(year_outputs)
 
         # Build compared bracket for accuracy charts
         # Use first available source for accuracy tracking
         primary_source = source_tuple[0]
-        primary_df = ensemble_df if primary_source == "ensemble" else debiased_df
-        if primary_df is not None:
-            actual = build_actual_bracket(matchups_df, year)
-            predicted = build_predicted_bracket(
-                primary_df, matchups_df, year, source=primary_source,
+        if primary_source == "simulation" and simulation_bracket is not None:
+            compared_brackets[year] = simulation_bracket
+        else:
+            primary_df = (
+                ensemble_df if primary_source == "ensemble" else debiased_df
             )
-            compared = compare_brackets(predicted, actual)
-            compared_brackets[year] = compared
+            if primary_df is not None:
+                actual = build_actual_bracket(matchups_df, year)
+                predicted = build_predicted_bracket(
+                    primary_df, matchups_df, year, source=primary_source,
+                )
+                compared = compare_brackets(predicted, actual)
+                compared_brackets[year] = compared
 
     # Render accuracy charts
     if compared_brackets:

@@ -12,6 +12,7 @@ MM_PLOTS_DIR = MM_DATA_DIR / "plots"
 MM_CLEANING_DIR = MM_KENPOM_DIR / "cleaning_steps"
 
 # Key files
+MM_KENPOM_DATA = MM_KENPOM_DIR / "kenpom_data.csv"
 MM_KENPOM_RAW = MM_KENPOM_DIR / "kenpom_data.csv"
 MM_KENPOM_HISTORICAL = MM_KENPOM_DIR / "kenpom_2017_2024.csv"
 MM_MATCHUPS_RAW = MM_MATCHUPS_DIR / "matchups.csv"

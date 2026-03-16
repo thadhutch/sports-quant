@@ -12,6 +12,7 @@ from sports_quant.march_madness._bracket import (
 )
 from sports_quant.march_madness._results import (
     BracketMetrics,
+    SimulationMetrics,
     SurvivorMetrics,
     VersionMetrics,
     load_metrics,
@@ -113,6 +114,24 @@ class TestSurvivorMetrics:
 
 
 # ---------------------------------------------------------------------------
+# SimulationMetrics
+# ---------------------------------------------------------------------------
+
+
+class TestSimulationMetrics:
+    def test_round_trip(self):
+        metrics = SimulationMetrics(
+            year=2024,
+            overall_correct=42,
+            overall_total=63,
+            overall_accuracy=0.6667,
+            accuracy_by_round={"R64": 0.75, "R32": 0.625},
+        )
+        restored = SimulationMetrics.from_dict(metrics.to_dict())
+        assert restored == metrics
+
+
+# ---------------------------------------------------------------------------
 # VersionMetrics
 # ---------------------------------------------------------------------------
 
@@ -136,6 +155,7 @@ class TestVersionMetrics:
                 ),
             ),
             survivor_metrics=(),
+            simulation_metrics=(),
             config_snapshot={},
         )
         assert vm.avg_bracket_accuracy == pytest.approx(0.75)
@@ -156,6 +176,7 @@ class TestVersionMetrics:
                     survived_all=False, survival_probability=0.3, picks=(),
                 ),
             ),
+            simulation_metrics=(),
             config_snapshot={},
         )
         assert vm.avg_survivor_rounds == pytest.approx(4.0)
@@ -179,6 +200,7 @@ class TestVersionMetrics:
                     picks=({"round": "R64", "team": "Duke"},),
                 ),
             ),
+            simulation_metrics=(),
             config_snapshot={"march_madness": {"model_version": "v2"}},
         )
         restored = VersionMetrics.from_dict(vm.to_dict())
@@ -192,6 +214,7 @@ class TestVersionMetrics:
             description="empty",
             bracket_metrics=(),
             survivor_metrics=(),
+            simulation_metrics=(),
             config_snapshot={},
         )
         assert vm.avg_bracket_accuracy == 0.0
@@ -217,6 +240,7 @@ class TestPersistence:
                 ),
             ),
             survivor_metrics=(),
+            simulation_metrics=(),
             config_snapshot={"march_madness": {"model_version": "v1"}},
         )
 
@@ -233,7 +257,8 @@ class TestPersistence:
         path = tmp_path / "nested" / "deep" / "metrics.json"
         vm = VersionMetrics(
             version="v1", created_at="", description="",
-            bracket_metrics=(), survivor_metrics=(), config_snapshot={},
+            bracket_metrics=(), survivor_metrics=(), simulation_metrics=(),
+            config_snapshot={},
         )
         save_metrics(vm, path)
         assert path.exists()

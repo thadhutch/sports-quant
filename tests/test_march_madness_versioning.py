@@ -42,6 +42,7 @@ class TestRegistry:
             version="v1",
             description="baseline",
             avg_accuracy=0.73,
+            avg_simulation_accuracy=0.65,
             avg_survivor_rounds=3.5,
             created_at="2026-03-15T00:00:00",
         )
@@ -52,12 +53,12 @@ class TestRegistry:
     def test_update_replaces_existing(self, tmp_path: Path):
         _update_registry(
             tmp_path, version="v1", description="first",
-            avg_accuracy=0.70, avg_survivor_rounds=3.0,
+            avg_accuracy=0.70, avg_simulation_accuracy=0.60, avg_survivor_rounds=3.0,
             created_at="2026-03-15T00:00:00",
         )
         registry = _update_registry(
             tmp_path, version="v1", description="updated",
-            avg_accuracy=0.75, avg_survivor_rounds=4.0,
+            avg_accuracy=0.75, avg_simulation_accuracy=0.68, avg_survivor_rounds=4.0,
             created_at="2026-03-15T01:00:00",
         )
         assert len(registry) == 1
@@ -67,12 +68,12 @@ class TestRegistry:
     def test_update_sorts_by_version(self, tmp_path: Path):
         _update_registry(
             tmp_path, version="v2", description="second",
-            avg_accuracy=0.75, avg_survivor_rounds=4.0,
+            avg_accuracy=0.75, avg_simulation_accuracy=0.68, avg_survivor_rounds=4.0,
             created_at="2026-03-15T00:00:00",
         )
         registry = _update_registry(
             tmp_path, version="v1", description="first",
-            avg_accuracy=0.70, avg_survivor_rounds=3.0,
+            avg_accuracy=0.70, avg_simulation_accuracy=0.60, avg_survivor_rounds=3.0,
             created_at="2026-03-15T01:00:00",
         )
         assert registry[0]["version"] == "v1"
@@ -115,6 +116,7 @@ def _save_test_metrics(
                 picks=(),
             ),
         ),
+        simulation_metrics=(),
         config_snapshot={},
     )
     version_dir = tmp_path / version
@@ -170,7 +172,7 @@ class TestListVersions:
     def test_with_entries(self, tmp_path: Path):
         _update_registry(
             tmp_path, version="v1", description="test",
-            avg_accuracy=0.7, avg_survivor_rounds=3.0,
+            avg_accuracy=0.7, avg_simulation_accuracy=0.6, avg_survivor_rounds=3.0,
             created_at="2026-03-15T00:00:00",
         )
         result = list_versions(backtest_dir=tmp_path)

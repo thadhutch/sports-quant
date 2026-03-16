@@ -112,6 +112,46 @@ class SurvivorMetrics:
 
 
 # ---------------------------------------------------------------------------
+# Simulation metrics (forward R64→NCG)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SimulationMetrics:
+    """Accuracy metrics from forward bracket simulation (R64→NCG).
+
+    Unlike BracketMetrics which evaluates per-game predictions on known
+    matchups, this captures the realistic bracket accuracy where wrong
+    picks cascade into wrong future matchups.
+    """
+
+    year: int
+    overall_correct: int
+    overall_total: int
+    overall_accuracy: float
+    accuracy_by_round: dict[str, float]
+
+    def to_dict(self) -> dict:
+        return {
+            "year": self.year,
+            "overall_correct": self.overall_correct,
+            "overall_total": self.overall_total,
+            "overall_accuracy": self.overall_accuracy,
+            "accuracy_by_round": self.accuracy_by_round,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> SimulationMetrics:
+        return cls(
+            year=d["year"],
+            overall_correct=d["overall_correct"],
+            overall_total=d["overall_total"],
+            overall_accuracy=d["overall_accuracy"],
+            accuracy_by_round=d["accuracy_by_round"],
+        )
+
+
+# ---------------------------------------------------------------------------
 # Version metrics (aggregated)
 # ---------------------------------------------------------------------------
 
@@ -125,6 +165,7 @@ class VersionMetrics:
     description: str
     bracket_metrics: tuple[BracketMetrics, ...]
     survivor_metrics: tuple[SurvivorMetrics, ...]
+    simulation_metrics: tuple[SimulationMetrics, ...]
     config_snapshot: dict
 
     @property
@@ -135,6 +176,15 @@ class VersionMetrics:
         return sum(
             m.overall_accuracy for m in self.bracket_metrics
         ) / len(self.bracket_metrics)
+
+    @property
+    def avg_simulation_accuracy(self) -> float:
+        """Average forward-simulation accuracy across all years."""
+        if not self.simulation_metrics:
+            return 0.0
+        return sum(
+            m.overall_accuracy for m in self.simulation_metrics
+        ) / len(self.simulation_metrics)
 
     @property
     def avg_survivor_rounds(self) -> float:
@@ -152,6 +202,7 @@ class VersionMetrics:
             "description": self.description,
             "bracket": [m.to_dict() for m in self.bracket_metrics],
             "survivor": [m.to_dict() for m in self.survivor_metrics],
+            "simulation": [m.to_dict() for m in self.simulation_metrics],
             "config": self.config_snapshot,
         }
 
@@ -166,6 +217,10 @@ class VersionMetrics:
             ),
             survivor_metrics=tuple(
                 SurvivorMetrics.from_dict(s) for s in d.get("survivor", [])
+            ),
+            simulation_metrics=tuple(
+                SimulationMetrics.from_dict(s)
+                for s in d.get("simulation", [])
             ),
             config_snapshot=d.get("config", {}),
         )
