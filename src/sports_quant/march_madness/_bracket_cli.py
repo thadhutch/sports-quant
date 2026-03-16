@@ -44,6 +44,7 @@ def _run_simulation_for_year(
     version_dir: Path,
     matchups_df: pd.DataFrame,
     feature_lookup,
+    feature_mode: str = "difference",
 ) -> Bracket | None:
     """Run forward bracket simulation for a single year.
 
@@ -71,9 +72,10 @@ def _run_simulation_for_year(
             feature_lookup=feature_lookup,
             matchups_df=matchups_df,
             actual_bracket=actual,
+            feature_mode=feature_mode,
         )
         return result.bracket
-    except (KeyError, ValueError) as exc:
+    except Exception as exc:
         logger.warning("Simulation failed for %d: %s", year, exc)
         return None
 
@@ -394,13 +396,25 @@ def run_bracket_visualisation(
 
     # Load simulation resources lazily (only if "simulation" source requested)
     feature_lookup = None
+    feature_mode = "difference"
     if "simulation" in source_tuple:
         try:
-            from sports_quant.march_madness._config import MM_KENPOM_DATA
+            from sports_quant.march_madness._config import (
+                MM_BARTTORVIK_DATA,
+                MM_KENPOM_DATA,
+                load_mm_config,
+            )
             from sports_quant.march_madness._feature_builder import FeatureLookup
 
+            cfg = load_mm_config()
+            feature_mode = cfg.get("feature_mode", "difference")
+
             kenpom_df = pd.read_csv(MM_KENPOM_DATA)
-            feature_lookup = FeatureLookup(kenpom_df)
+            barttorvik_df = None
+            bart_path = MM_BARTTORVIK_DATA
+            if bart_path.exists() and feature_mode == "combined":
+                barttorvik_df = pd.read_csv(bart_path)
+            feature_lookup = FeatureLookup(kenpom_df, barttorvik_df=barttorvik_df)
         except (FileNotFoundError, ImportError) as exc:
             logger.warning("Cannot load simulation resources: %s", exc)
 
@@ -435,6 +449,7 @@ def run_bracket_visualisation(
                 version_dir=backtest_dir / version,
                 matchups_df=matchups_df,
                 feature_lookup=feature_lookup,
+                feature_mode=feature_mode,
             )
 
         # Render brackets for this year

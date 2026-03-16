@@ -36,7 +36,9 @@ from sports_quant.march_madness._results import (
 )
 from sports_quant.march_madness.survivor import (
     prepare_game_probs,
+    run_survivor_bracket_aware,
     run_survivor_greedy,
+    run_survivor_mc_optimal,
     run_survivor_optimal,
 )
 
@@ -85,12 +87,46 @@ def _collect_bracket_metrics(
     return metrics
 
 
+def _survivor_result_to_metrics(result) -> SurvivorMetrics:
+    """Convert a SurvivorResult into a SurvivorMetrics for persistence."""
+    picks = tuple(
+        {
+            "round": p.round_name,
+            "team": p.team,
+            "seed": p.seed,
+            "opponent": p.opponent,
+            "win_prob": round(p.win_probability, 4),
+            "survived": p.survived,
+        }
+        for p in result.picks
+    )
+    return SurvivorMetrics(
+        year=result.year,
+        strategy=result.strategy,
+        rounds_survived=result.rounds_survived,
+        survived_all=result.survived_all,
+        survival_probability=round(result.survival_probability, 6),
+        picks=picks,
+        total_rounds=result.total_rounds,
+        exhausted=result.exhausted,
+    )
+
+
 def _collect_survivor_metrics(
     version_dir: Path,
     matchups_df: pd.DataFrame,
     years: list[int],
+    *,
+    feature_lookup=None,
+    feature_mode: str = "difference",
 ) -> list[SurvivorMetrics]:
-    """Run survivor strategies for each year and collect metrics."""
+    """Run survivor strategies for each year and collect metrics.
+
+    When ``feature_lookup`` is provided, also runs bracket-aware and
+    MC-optimal strategies that depend on forward simulation.
+    """
+    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
+
     metrics: list[SurvivorMetrics] = []
 
     for year in years:
@@ -108,62 +144,92 @@ def _collect_survivor_metrics(
             logger.warning("Cannot prepare game probs for %d: %s", year, exc)
             continue
 
+        # Classic strategies (work with actual matchups only)
         for strategy_name, runner in [
             ("greedy", run_survivor_greedy),
             ("optimal", run_survivor_optimal),
         ]:
             result = runner(year, game_probs)
-            picks = tuple(
-                {
-                    "round": p.round_name,
-                    "team": p.team,
-                    "seed": p.seed,
-                    "opponent": p.opponent,
-                    "win_prob": round(p.win_probability, 4),
-                    "survived": p.survived,
-                }
-                for p in result.picks
-            )
-            metrics.append(SurvivorMetrics(
+            metrics.append(_survivor_result_to_metrics(result))
+
+        # Bracket-aware strategies (require simulation resources)
+        if feature_lookup is None:
+            continue
+
+        models_dir = version_dir / str(year) / "models"
+        if not models_dir.is_dir():
+            logger.info("No models for %d, skipping bracket-aware survivor", year)
+            continue
+
+        models = load_models(models_dir)
+        if not models:
+            logger.warning("No models found for %d", year)
+            continue
+
+        actual = build_actual_bracket(matchups_df, year)
+
+        try:
+            sim_result = simulate_bracket_deterministic(
                 year=year,
-                strategy=strategy_name,
-                rounds_survived=result.rounds_survived,
-                survived_all=result.survived_all,
-                survival_probability=round(result.survival_probability, 6),
-                picks=picks,
-                total_rounds=result.total_rounds,
-                exhausted=result.exhausted,
-            ))
+                models=models,
+                feature_lookup=feature_lookup,
+                matchups_df=matchups_df,
+                actual_bracket=actual,
+                feature_mode=feature_mode,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Simulation failed for %d, skipping bracket-aware: %s",
+                year, exc,
+            )
+            continue
+
+        # Bracket-aware (deterministic simulation)
+        ba_result = run_survivor_bracket_aware(year, sim_result.bracket, actual)
+        metrics.append(_survivor_result_to_metrics(ba_result))
+
+        # MC optimal (averaged across N simulated brackets)
+        try:
+            mc_result = run_survivor_mc_optimal(
+                year=year,
+                models=models,
+                feature_lookup=feature_lookup,
+                matchups_df=matchups_df,
+                actual_bracket=actual,
+                n_simulations=1000,
+                feature_mode=feature_mode,
+            )
+        except Exception as exc:
+            logger.warning(
+                "MC optimal failed for %d: %s", year, exc,
+            )
+            continue
+        metrics.append(_survivor_result_to_metrics(mc_result))
 
     return metrics
 
 
-def _collect_simulation_metrics(
-    version_dir: Path,
-    matchups_df: pd.DataFrame,
-    years: list[int],
-) -> list[SimulationMetrics]:
-    """Run forward bracket simulation for each year and collect metrics.
+def _load_simulation_resources(
+) -> tuple | None:
+    """Load KenPom/Barttorvik data and build a FeatureLookup.
 
-    Loads trained models and KenPom data, then simulates from R64 forward
-    (winners cascade) to get realistic bracket accuracy.
+    Returns:
+        (feature_lookup, feature_mode) or None if KenPom data missing.
     """
     from sports_quant.march_madness._config import (
         MM_BARTTORVIK_DATA,
         MM_KENPOM_DATA,
         load_mm_config,
     )
-    from sports_quant.march_madness._bracket_builder import build_actual_bracket
     from sports_quant.march_madness._feature_builder import FeatureLookup
-    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
 
     kenpom_path = MM_KENPOM_DATA
     if not kenpom_path.exists():
         logger.warning(
-            "KenPom data not found at %s — skipping simulation metrics",
+            "KenPom data not found at %s — skipping simulation",
             kenpom_path,
         )
-        return []
+        return None
 
     cfg = load_mm_config()
     feature_mode = cfg.get("feature_mode", "difference")
@@ -176,6 +242,26 @@ def _collect_simulation_metrics(
         barttorvik_df = pd.read_csv(bart_path)
 
     feature_lookup = FeatureLookup(kenpom_df, barttorvik_df=barttorvik_df)
+    return feature_lookup, feature_mode
+
+
+def _collect_simulation_metrics(
+    version_dir: Path,
+    matchups_df: pd.DataFrame,
+    years: list[int],
+    *,
+    feature_lookup=None,
+    feature_mode: str = "difference",
+) -> list[SimulationMetrics]:
+    """Run forward bracket simulation for each year and collect metrics.
+
+    Loads trained models and KenPom data, then simulates from R64 forward
+    (winners cascade) to get realistic bracket accuracy.
+    """
+    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
+
+    if feature_lookup is None:
+        return []
 
     metrics: list[SimulationMetrics] = []
 
@@ -203,7 +289,7 @@ def _collect_simulation_metrics(
                 actual_bracket=actual,
                 feature_mode=feature_mode,
             )
-        except (KeyError, ValueError) as exc:
+        except Exception as exc:
             logger.warning(
                 "Simulation failed for %d: %s", year, exc,
             )
@@ -336,13 +422,22 @@ def save_version(
     # Load matchups
     matchups_df = pd.read_csv(matchups_path)
 
+    # Load simulation resources once (shared by simulation + survivor)
+    sim_resources = _load_simulation_resources()
+    feature_lookup = sim_resources[0] if sim_resources else None
+    feature_mode = sim_resources[1] if sim_resources else "difference"
+
     # Collect metrics
     bracket_metrics = _collect_bracket_metrics(version_dir, matchups_df, years)
     survivor_metrics = _collect_survivor_metrics(
         version_dir, matchups_df, years,
+        feature_lookup=feature_lookup,
+        feature_mode=feature_mode,
     )
     simulation_metrics = _collect_simulation_metrics(
         version_dir, matchups_df, years,
+        feature_lookup=feature_lookup,
+        feature_mode=feature_mode,
     )
 
     created_at = datetime.now(timezone.utc).isoformat()
