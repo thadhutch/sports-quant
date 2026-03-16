@@ -21,6 +21,7 @@ from sports_quant.march_madness._bracket import (
     BracketSlot,
     determine_upset,
 )
+from sports_quant.march_madness._features import standardize_team_name
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +58,13 @@ def _canonicalize_order(
        by mapping each game to the position of its feeder games.
     """
 
+    def _clean(name: str) -> str:
+        return standardize_team_name(str(name).strip())
+
     def _winner_name(df_idx: int) -> str:
         row = year_df.loc[df_idx]
-        return row["Team1"] if row["Team1_Win"] == 1 else row["Team2"]
+        raw = row["Team1"] if row["Team1_Win"] == 1 else row["Team2"]
+        return _clean(raw)
 
     # Step 1 — Sort R64 within each region (groups of 8)
     r64 = list(ordered["R64"])
@@ -89,8 +94,8 @@ def _canonicalize_order(
         games_with_target: list[tuple[int, int]] = []
         for idx in ordered[round_name]:
             row = year_df.loc[idx]
-            pos1 = winner_pos.get(row["Team1"], 999)
-            pos2 = winner_pos.get(row["Team2"], 999)
+            pos1 = winner_pos.get(_clean(row["Team1"]), 999)
+            pos2 = winner_pos.get(_clean(row["Team2"]), 999)
             target = min(pos1, pos2) // 2
             games_with_target.append((target, idx))
 
@@ -123,8 +128,12 @@ def _bracket_tree_order(
         cannot proceed (callers should fall back to raw row order).
     """
 
+    def _clean(name: str) -> str:
+        return standardize_team_name(str(name).strip())
+
     def _winner(row: pd.Series) -> str:
-        return row["Team1"] if row["Team1_Win"] == 1 else row["Team2"]
+        raw = row["Team1"] if row["Team1_Win"] == 1 else row["Team2"]
+        return _clean(raw)
 
     # Split into per-round DataFrames
     round_dfs: dict[str, pd.DataFrame] = {}
@@ -158,8 +167,8 @@ def _bracket_tree_order(
         for parent_idx in ordered[parent_round]:
             parent_row = year_df.loc[parent_idx]
 
-            child1_idx = winner_to_idx.get(parent_row["Team1"])
-            child2_idx = winner_to_idx.get(parent_row["Team2"])
+            child1_idx = winner_to_idx.get(_clean(parent_row["Team1"]))
+            child2_idx = winner_to_idx.get(_clean(parent_row["Team2"]))
 
             if child1_idx is None or child2_idx is None:
                 logger.debug(
@@ -259,8 +268,14 @@ def _row_to_game(
         prob_col: Column name for the win probability (None for actual bracket).
         actual_col: Column name for the actual outcome.
     """
-    team1 = BracketSlot(team=row["Team1"], seed=int(row["Seed1"]))
-    team2 = BracketSlot(team=row["Team2"], seed=int(row["Seed2"]))
+    team1 = BracketSlot(
+        team=standardize_team_name(str(row["Team1"]).strip()),
+        seed=int(row["Seed1"]),
+    )
+    team2 = BracketSlot(
+        team=standardize_team_name(str(row["Team2"]).strip()),
+        seed=int(row["Seed2"]),
+    )
 
     # Determine winner
     if pred_col is not None and pred_col in row.index:

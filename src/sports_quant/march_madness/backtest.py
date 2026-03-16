@@ -44,18 +44,28 @@ from sports_quant.march_madness import plots
 logger = logging.getLogger(__name__)
 
 
-def _get_val_year(
-    backtest_year: int, available_years: list[int],
-) -> int | None:
-    """Find the most recent year before backtest_year that has data.
+def _get_val_years(
+    backtest_year: int, available_years: list[int], n: int = 2,
+) -> list[int]:
+    """Find the most recent N years before backtest_year that have data.
+
+    Using multiple validation years produces a larger, more stable
+    validation set for early stopping (vs. a single 63-game year).
 
     Handles gaps (e.g., COVID 2020 with no tournament data).
 
+    Args:
+        backtest_year: The year being backtested.
+        available_years: All years with data.
+        n: Number of validation years to use.
+
     Returns:
-        The validation year, or None if no prior year is available.
+        Up to *n* most recent years before backtest_year (may be empty).
     """
-    candidates = [y for y in available_years if y < backtest_year]
-    return max(candidates) if candidates else None
+    candidates = sorted(
+        [y for y in available_years if y < backtest_year], reverse=True,
+    )
+    return candidates[:n]
 
 
 def _prepare_features(
@@ -98,6 +108,8 @@ def run_backtest() -> None:
     feature_mode = cfg.get("feature_mode", "raw")
     do_symmetrize = cfg.get("train", {}).get("symmetrize", False)
     early_stop_rounds = cfg.get("train", {}).get("early_stopping_rounds", 50)
+    val_n_years = cfg.get("backtest", {}).get("val_years", 2)
+    min_boosting_rounds = cfg.get("train", {}).get("min_boosting_rounds", 50)
 
     base_dir = MM_BACKTEST_DIR / model_version
     base_dir.mkdir(parents=True, exist_ok=True)
@@ -137,21 +149,22 @@ def run_backtest() -> None:
         all_prior = matchups[matchups[YEAR_COLUMN] < backtest_year]
         backtest_data = matchups[matchups[YEAR_COLUMN] == backtest_year]
 
-        # Temporal validation split: use most recent available year as val
-        val_year = _get_val_year(backtest_year, all_years)
-        if val_year is not None:
-            train_data = all_prior[all_prior[YEAR_COLUMN] < val_year]
-            val_data = all_prior[all_prior[YEAR_COLUMN] == val_year]
+        # Temporal validation split: use most recent N years as val
+        val_years = _get_val_years(backtest_year, all_years, n=val_n_years)
+        if val_years:
+            earliest_val = min(val_years)
+            train_data = all_prior[all_prior[YEAR_COLUMN] < earliest_val]
+            val_data = all_prior[all_prior[YEAR_COLUMN].isin(val_years)]
         else:
-            # Fallback: no prior year available — use all prior data
             train_data = all_prior
             val_data = pd.DataFrame(columns=all_prior.columns)
 
         logger.info(
-            "Training: %d games (years < %d), Val: %d games (year %s), "
+            "Training: %d games (years < %d), Val: %d games (years %s), "
             "Backtest: %d games (year %d)",
-            len(train_data), val_year or backtest_year,
-            len(val_data), val_year,
+            len(train_data),
+            earliest_val if val_years else backtest_year,
+            len(val_data), val_years,
             len(backtest_data), backtest_year,
         )
 
@@ -196,7 +209,9 @@ def run_backtest() -> None:
 
             if has_val:
                 eval_set = [(X_train_full, y_train_full), (X_val, y_val)]
-                callbacks = [early_stopping(early_stop_rounds)]
+                callbacks = [
+                    early_stopping(early_stop_rounds, first_metric_only=True),
+                ]
             else:
                 eval_set = [(X_train_full, y_train_full)]
                 callbacks = None
@@ -206,6 +221,29 @@ def run_backtest() -> None:
                 eval_set=eval_set,
                 eval_metric=["binary_logloss", "auc"],
                 callbacks=callbacks,
+            )
+
+            # Guard against under-trained models from early stopping
+            actual_iters = model.best_iteration_ if has_val else model.n_estimators
+            if has_val and actual_iters < min_boosting_rounds:
+                logger.warning(
+                    "Model %d stopped at %d iterations (min=%d). "
+                    "Retraining with floor.",
+                    model_num, actual_iters, min_boosting_rounds,
+                )
+                model = build_lgbm(
+                    {**hyperparams, "n_estimators": min_boosting_rounds},
+                    random_seed,
+                )
+                model.fit(
+                    X_train_full, y_train_full,
+                    eval_set=eval_set,
+                    eval_metric=["binary_logloss", "auc"],
+                )
+                actual_iters = min_boosting_rounds
+
+            logger.debug(
+                "Model %d trained %d iterations", model_num, actual_iters,
             )
 
             results = model.evals_result_
@@ -468,7 +506,7 @@ def run_backtest() -> None:
             f.write(f"Feature Mode: {feature_mode}\n")
             f.write(f"Symmetrized: {do_symmetrize}\n")
             f.write(f"Training on years up to: {backtest_year - 1}\n")
-            f.write(f"Validation year: {val_year}\n")
+            f.write(f"Validation years: {val_years}\n")
             f.write(f"Number of Models: {num_models}\n")
             f.write(f"Models selected by: Validation F1 Score\n\n")
 

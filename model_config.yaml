@@ -18,7 +18,7 @@ ou:
   train:
     test_size: 0.2
 march_madness:
-  model_version: v2
+  model_version: v3
   models_to_train: 50
   top_models: 3
   backtest_years:
@@ -44,10 +44,12 @@ march_madness:
     min_split_gain: 0.204541747379676
   backtest:
     min_training_years: 3
+    val_years: 2
   train:
     test_size: 0.2
     symmetrize: true
     early_stopping_rounds: 50
+    min_boosting_rounds: 50
   tuning:
     n_trials: 200
     cv_folds:
