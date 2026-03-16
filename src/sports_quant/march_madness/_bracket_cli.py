@@ -20,7 +20,11 @@ from sports_quant.march_madness._bracket_builder import (
     build_predicted_bracket,
     compare_brackets,
 )
-from sports_quant.march_madness._config import MM_BACKTEST_DIR, MM_MATCHUPS_RESTRUCTURED
+from sports_quant.march_madness._config import (
+    MM_BACKTEST_DIR,
+    MM_MATCHUPS_RESTRUCTURED,
+    load_models,
+)
 from sports_quant.march_madness.bracket_plots import (
     render_accuracy,
     render_accuracy_comparison,
@@ -43,8 +47,6 @@ def _run_simulation_for_year(
     Loads trained models and runs deterministic simulation from R64→NCG.
     Returns the evaluated bracket or None on failure.
     """
-    import joblib
-
     from sports_quant.march_madness.simulate import simulate_bracket_deterministic
 
     models_dir = version_dir / str(year) / "models"
@@ -52,11 +54,7 @@ def _run_simulation_for_year(
         logger.warning("Models dir not found for %d: %s", year, models_dir)
         return None
 
-    models = [
-        joblib.load(models_dir / f"top_model_{i}.joblib")
-        for i in range(1, 4)
-        if (models_dir / f"top_model_{i}.joblib").exists()
-    ]
+    models = load_models(models_dir)
     if not models:
         logger.warning("No models found for %d", year)
         return None

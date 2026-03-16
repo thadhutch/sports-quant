@@ -256,19 +256,25 @@ def run_backtest() -> None:
                 model_data["backtest_log_loss"],
             )
 
-        # Select top models by validation F1
-        top_models = sorted(
-            all_model_data, key=lambda x: x["val_f1"], reverse=True
-        )[:top_n]
+        # Rank all models by validation F1
+        ranked_models = sorted(
+            all_model_data, key=lambda x: x["val_f1"], reverse=True,
+        )
+
+        # Save ALL models for full ensemble
+        for i, md in enumerate(ranked_models):
+            model_path = models_dir / f"top_model_{i + 1}.joblib"
+            joblib.dump(md["model"], model_path)
+        logger.info("Saved all %d models for year %d", len(ranked_models), backtest_year)
+
+        # Use top_n for detailed per-model analysis (plots, upset reports)
+        top_models = ranked_models[:top_n]
 
         all_years_results["years"].append(backtest_year)
 
-        # Save top models, results, and plots
+        # Save per-model results and plots for top models
         for i, md in enumerate(top_models):
             rank = i + 1
-
-            model_path = models_dir / f"top_model_{rank}.joblib"
-            joblib.dump(md["model"], model_path)
 
             # Backtest results for this model
             bt_results = backtest_teams.copy()
@@ -386,9 +392,9 @@ def run_backtest() -> None:
         ])
         top_df.to_csv(year_dir / "top_models_metrics.csv", index=False)
 
-        # Ensemble predictions
+        # Ensemble predictions (average ALL models, not just top_n)
         ensemble_preds = np.mean(
-            [md["y_backtest_proba"] for md in top_models], axis=0
+            [md["y_backtest_proba"] for md in ranked_models], axis=0
         )
         ensemble_binary = (ensemble_preds > 0.5).astype(int)
         ensemble_accuracy = accuracy_score(y_backtest, ensemble_binary)
@@ -419,7 +425,7 @@ def run_backtest() -> None:
 
         with open(year_dir / "ensemble_upset_analysis.txt", "w") as f:
             f.write(
-                f"Ensemble Upset Analysis (Top {top_n} by Val F1) "
+                f"Ensemble Upset Analysis (All {num_models} models) "
                 f"- Year {backtest_year}\n"
             )
             f.write("=" * 50 + "\n\n")

@@ -1,9 +1,15 @@
 """March Madness path configuration and shared utilities."""
 
+import logging
+from pathlib import Path
+
+import joblib
 import yaml
 from lightgbm import LGBMClassifier
 
 from sports_quant import _config as config
+
+logger = logging.getLogger(__name__)
 
 MM_DATA_DIR = config.MM_DATA_DIR
 MM_KENPOM_DIR = MM_DATA_DIR / "kenpom"
@@ -42,6 +48,26 @@ def load_mm_config() -> dict:
     if "march_madness" not in full:
         raise KeyError("Missing 'march_madness' section in model config")
     return full["march_madness"]
+
+
+def load_models(models_dir: Path) -> list:
+    """Load all saved model files from a directory.
+
+    Discovers all top_model_*.joblib files and loads them in order.
+
+    Args:
+        models_dir: Directory containing model .joblib files.
+
+    Returns:
+        List of loaded model objects, sorted by model number.
+    """
+    model_paths = sorted(
+        models_dir.glob("top_model_*.joblib"),
+        key=lambda p: int(p.stem.split("_")[-1]),
+    )
+    models = [joblib.load(p) for p in model_paths]
+    logger.info("Loaded %d models from %s", len(models), models_dir)
+    return models
 
 
 def build_lgbm(hyperparams: dict, random_seed: int) -> LGBMClassifier:

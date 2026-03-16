@@ -47,7 +47,9 @@ class SurvivorResult:
     picks: tuple[SurvivorPick, ...]
     survived_all: bool
     rounds_survived: int
+    total_rounds: int
     survival_probability: float
+    exhausted: bool  # True when no candidate was available for a round
 
 
 @dataclass(frozen=True)
@@ -142,6 +144,8 @@ def _result_from_picks(
     year: int,
     strategy: str,
     picks: list[SurvivorPick],
+    total_rounds: int = len(ROUND_ORDER),
+    exhausted: bool = False,
 ) -> SurvivorResult:
     """Build a SurvivorResult from a list of picks."""
     rounds_survived = 0
@@ -155,13 +159,21 @@ def _result_from_picks(
     for p in picks[:rounds_survived + 1]:
         prob *= p.win_probability
 
+    # Only truly survived if every round had a pick and all were correct
+    survived_all = (
+        not exhausted
+        and rounds_survived == total_rounds
+    )
+
     return SurvivorResult(
         year=year,
         strategy=strategy,
         picks=tuple(picks),
-        survived_all=rounds_survived == len(picks),
+        survived_all=survived_all,
         rounds_survived=rounds_survived,
+        total_rounds=total_rounds,
         survival_probability=prob,
+        exhausted=exhausted,
     )
 
 
@@ -184,6 +196,7 @@ def run_survivor_greedy(
     candidates = _build_round_candidates(game_probs)
     used: set[str] = set()
     picks: list[SurvivorPick] = []
+    exhausted = False
 
     for round_name in ROUND_ORDER:
         round_cands = candidates.get(round_name, [])
@@ -193,6 +206,7 @@ def run_survivor_greedy(
             logger.warning(
                 "No available candidates for %s in %d", round_name, year,
             )
+            exhausted = True
             break
 
         best = max(available, key=lambda c: c["win_prob"])
@@ -203,7 +217,7 @@ def run_survivor_greedy(
         if not pick.survived:
             break
 
-    return _result_from_picks(year, "greedy", picks)
+    return _result_from_picks(year, "greedy", picks, exhausted=exhausted)
 
 
 # ---------------------------------------------------------------------------
@@ -223,8 +237,12 @@ def run_survivor_optimal(
     candidates = _build_round_candidates(game_probs)
     rounds = [r for r in ROUND_ORDER if r in candidates]
 
-    best_prob: list[float] = [0.0]
-    best_picks: list[list[dict]] = [[]]
+    # Search for best complete sequence (all rounds filled)
+    best_complete_prob: list[float] = [0.0]
+    best_complete_picks: list[list[dict]] = [[]]
+    # Track best partial as fallback (when no complete path exists)
+    best_partial_picks: list[list[dict]] = [[]]
+    best_partial_len: list[int] = [0]
 
     def _search(
         round_idx: int,
@@ -233,14 +251,21 @@ def run_survivor_optimal(
         current_prob: float,
     ) -> None:
         if round_idx == len(rounds):
-            if current_prob > best_prob[0]:
-                best_prob[0] = current_prob
-                best_picks[0] = list(current_picks)
+            if current_prob > best_complete_prob[0]:
+                best_complete_prob[0] = current_prob
+                best_complete_picks[0] = list(current_picks)
             return
 
         round_name = rounds[round_idx]
         round_cands = candidates[round_name]
         available = [c for c in round_cands if c["team"] not in used]
+
+        if not available:
+            # Track longest partial sequence as fallback
+            if len(current_picks) > best_partial_len[0]:
+                best_partial_len[0] = len(current_picks)
+                best_partial_picks[0] = list(current_picks)
+            return
 
         # Sort descending by win_prob for better pruning
         available.sort(key=lambda c: c["win_prob"], reverse=True)
@@ -249,7 +274,7 @@ def run_survivor_optimal(
             new_prob = current_prob * cand["win_prob"]
 
             # Prune: even if all future picks are 1.0, can't beat best
-            if new_prob <= best_prob[0]:
+            if new_prob <= best_complete_prob[0]:
                 continue
 
             used.add(cand["team"])
@@ -262,12 +287,24 @@ def run_survivor_optimal(
 
     _search(0, set(), [], 1.0)
 
+    # Prefer complete paths; fall back to longest partial
+    if best_complete_picks[0]:
+        final_picks = best_complete_picks[0]
+        exhausted = False
+    else:
+        final_picks = best_partial_picks[0]
+        exhausted = True
+
     picks = [
         _make_pick(cand, rounds[i])
-        for i, cand in enumerate(best_picks[0])
+        for i, cand in enumerate(final_picks)
     ]
 
-    return _result_from_picks(year, "optimal", picks)
+    # Also exhausted if data is missing rounds
+    if len(rounds) < len(ROUND_ORDER):
+        exhausted = True
+
+    return _result_from_picks(year, "optimal", picks, exhausted=exhausted)
 
 
 # ---------------------------------------------------------------------------

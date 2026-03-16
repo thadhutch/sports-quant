@@ -7,7 +7,6 @@ for a target year. Supports difference features and probability calibration.
 import logging
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -16,6 +15,7 @@ from sports_quant.march_madness._config import (
     MM_MODELS_DIR,
     MM_PREDICTIONS_DIR,
     load_mm_config,
+    load_models,
 )
 from sports_quant.march_madness._data import load_prediction_data
 from sports_quant.march_madness._debiasing import (
@@ -28,28 +28,26 @@ logger = logging.getLogger(__name__)
 
 def run_prediction(
     model_version: str | None = None,
-    model_rank: int = 1,
 ) -> None:
-    """Generate predictions for the current year using a trained model.
+    """Generate predictions using the full ensemble of trained models.
 
-    Produces both standard and debiased prediction CSVs. Applies
+    Loads all saved models, averages their predicted probabilities,
+    then produces both standard and debiased prediction CSVs. Applies
     probability calibration if a calibrator is available.
 
     Args:
         model_version: Model version to load. Defaults to config value.
-        model_rank: Which top model to use (1, 2, or 3). Defaults to 1.
     """
     cfg = load_mm_config()
     model_version = model_version or cfg["model_version"]
     feature_mode = cfg.get("feature_mode", "raw")
     cal_cfg = cfg.get("calibration", {})
 
-    # Load model
-    model_path = (
-        MM_MODELS_DIR / model_version / f"top_model_{model_rank}.joblib"
-    )
-    model = joblib.load(model_path)
-    logger.info("Loaded model from %s", model_path)
+    # Load all models for ensemble
+    models_dir = MM_MODELS_DIR / model_version
+    models = load_models(models_dir)
+    if not models:
+        raise FileNotFoundError(f"No models found in {models_dir}")
 
     # Load calibrator if available
     calibrator_path = MM_MODELS_DIR / model_version / "calibrator.joblib"
@@ -61,15 +59,17 @@ def run_prediction(
     # Load prediction data
     X_pred, team_info = load_prediction_data(feature_mode=feature_mode)
 
-    # Standard predictions
-    y_pred_proba = model.predict_proba(X_pred)[:, 1]
+    # Ensemble predictions: average probabilities across all models
+    all_probas = np.array([m.predict_proba(X_pred)[:, 1] for m in models])
+    y_pred_proba = np.mean(all_probas, axis=0)
 
-    # Debiased predictions
+    # Debiased predictions (ensemble of debiased per-model predictions)
     if feature_mode == "difference":
         X_swapped = swap_difference_features(X_pred)
     else:
         X_swapped = swap_team_columns(X_pred)
-    swapped_proba = model.predict_proba(X_swapped)[:, 1]
+    all_swapped = np.array([m.predict_proba(X_swapped)[:, 1] for m in models])
+    swapped_proba = np.mean(all_swapped, axis=0)
     debiased_proba = (y_pred_proba + (1.0 - swapped_proba)) / 2.0
 
     # Apply calibration

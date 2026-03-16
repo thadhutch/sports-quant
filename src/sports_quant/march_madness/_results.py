@@ -88,6 +88,8 @@ class SurvivorMetrics:
     survived_all: bool
     survival_probability: float
     picks: tuple[dict, ...]
+    total_rounds: int = 6
+    exhausted: bool = False  # True when no candidate was available
 
     def to_dict(self) -> dict:
         return {
@@ -97,6 +99,8 @@ class SurvivorMetrics:
             "survived_all": self.survived_all,
             "survival_probability": self.survival_probability,
             "picks": list(self.picks),
+            "total_rounds": self.total_rounds,
+            "exhausted": self.exhausted,
         }
 
     @classmethod
@@ -108,6 +112,8 @@ class SurvivorMetrics:
             survived_all=d["survived_all"],
             survival_probability=d["survival_probability"],
             picks=tuple(d["picks"]),
+            total_rounds=d.get("total_rounds", 6),
+            exhausted=d.get("exhausted", False),
         )
 
 

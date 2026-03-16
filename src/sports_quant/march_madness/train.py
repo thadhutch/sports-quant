@@ -124,18 +124,23 @@ def run_training() -> None:
             model_data["log_loss"],
         )
 
-    # Select top models by F1
-    top_models = sorted(all_model_data, key=lambda x: x["f1"], reverse=True)[
-        :top_n
-    ]
+    # Sort all models by F1 for ranking
+    ranked_models = sorted(
+        all_model_data, key=lambda x: x["f1"], reverse=True,
+    )
 
-    # Save top models and generate plots
-    for i, md in enumerate(top_models):
+    # Save ALL models (full ensemble)
+    for i, md in enumerate(ranked_models):
         rank = i + 1
         model_path = models_dir / f"top_model_{rank}.joblib"
         joblib.dump(md["model"], model_path)
-        logger.info("Saved model #%d to %s", rank, model_path)
 
+    logger.info("Saved all %d models to %s", len(ranked_models), models_dir)
+
+    # Generate plots for only the top few
+    top_models = ranked_models[:top_n]
+    for i, md in enumerate(top_models):
+        rank = i + 1
         plots.plot_learning_curve(
             md["results"], rank, str(plots_dir / f"learning_curve_top_{rank}.png")
         )

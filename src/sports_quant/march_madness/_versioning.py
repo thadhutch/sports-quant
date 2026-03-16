@@ -21,7 +21,11 @@ from sports_quant.march_madness._bracket_builder import (
     build_predicted_bracket,
     compare_brackets,
 )
-from sports_quant.march_madness._config import MM_BACKTEST_DIR, MM_MATCHUPS_RESTRUCTURED
+from sports_quant.march_madness._config import (
+    MM_BACKTEST_DIR,
+    MM_MATCHUPS_RESTRUCTURED,
+    load_models,
+)
 from sports_quant.march_madness._results import (
     BracketMetrics,
     SimulationMetrics,
@@ -127,6 +131,8 @@ def _collect_survivor_metrics(
                 survived_all=result.survived_all,
                 survival_probability=round(result.survival_probability, 6),
                 picks=picks,
+                total_rounds=result.total_rounds,
+                exhausted=result.exhausted,
             ))
 
     return metrics
@@ -142,8 +148,6 @@ def _collect_simulation_metrics(
     Loads trained models and KenPom data, then simulates from R64 forward
     (winners cascade) to get realistic bracket accuracy.
     """
-    import joblib
-
     from sports_quant.march_madness._config import MM_KENPOM_DATA
     from sports_quant.march_madness._bracket_builder import build_actual_bracket
     from sports_quant.march_madness._feature_builder import FeatureLookup
@@ -168,12 +172,8 @@ def _collect_simulation_metrics(
             logger.warning("Models dir not found for %d: %s", year, models_dir)
             continue
 
-        # Load trained models
-        models = []
-        for i in range(1, 4):
-            model_path = models_dir / f"top_model_{i}.joblib"
-            if model_path.exists():
-                models.append(joblib.load(model_path))
+        # Load all trained models for ensemble
+        models = load_models(models_dir)
 
         if not models:
             logger.warning("No models found for %d", year)

@@ -138,39 +138,30 @@ def evaluate_debiased_predictions(
 def process_backtest_results(
     base_dir: str,
     backtest_year: int,
-    top_n: int = 3,
+    top_n: int | None = None,
 ) -> tuple[pd.DataFrame, dict[str, float]]:
     """Apply debiased algorithm to backtest results for a given year.
 
-    Loads trained models and backtest data from the year directory, runs
-    debiased predictions, and saves results.
+    Loads all trained models from the year directory, runs debiased
+    predictions using the full ensemble, and saves results.
 
     Args:
         base_dir: Base directory containing backtest results.
         backtest_year: Year being backtested.
-        top_n: Number of top models to use.
+        top_n: Deprecated, ignored. All available models are loaded.
 
     Returns:
         Tuple of (results DataFrame, metrics dict).
     """
-    import joblib
     from pathlib import Path
+    from sports_quant.march_madness._config import load_models
 
     year_dir = Path(base_dir) / str(backtest_year)
     models_dir = year_dir / "models"
 
-    # Load top models
-    models = []
-    for i in range(1, top_n + 1):
-        model_path = models_dir / f"top_model_{i}.joblib"
-        try:
-            model = joblib.load(model_path)
-            models.append(model)
-        except FileNotFoundError:
-            logger.warning("Model %s not found", model_path)
-
+    models = load_models(models_dir)
     if not models:
-        raise ValueError("No models found to make predictions")
+        raise ValueError(f"No models found in {models_dir}")
 
     # Load backtest data
     X_backtest = pd.read_csv(year_dir / "X_backtest.csv")

@@ -359,7 +359,6 @@ def simulate(year, version):
     """Run forward bracket simulation (R64->NCG) and display results."""
     import yaml
 
-    import joblib
     import pandas as pd
 
     from sports_quant._config import MODEL_CONFIG_FILE
@@ -367,6 +366,7 @@ def simulate(year, version):
         MM_BACKTEST_DIR,
         MM_KENPOM_DATA,
         MM_MATCHUPS_RESTRUCTURED,
+        load_models,
     )
     from sports_quant.march_madness._bracket_builder import build_actual_bracket
     from sports_quant.march_madness._feature_builder import FeatureLookup
@@ -384,11 +384,7 @@ def simulate(year, version):
 
     for yr in years:
         models_dir = MM_BACKTEST_DIR / version / str(yr) / "models"
-        models = [
-            joblib.load(models_dir / f"top_model_{i}.joblib")
-            for i in range(1, 4)
-            if (models_dir / f"top_model_{i}.joblib").exists()
-        ]
+        models = load_models(models_dir)
 
         if not models:
             click.echo(f"No models found for {yr}, skipping.")
@@ -471,10 +467,15 @@ def save_version(version, description):
 
     click.echo("\nSurvivor metrics:")
     for m in vm.survivor_metrics:
-        status = "SURVIVED" if m.survived_all else f"out R{m.rounds_survived + 1}"
+        if m.survived_all:
+            status = "SURVIVED"
+        elif m.exhausted:
+            status = "no picks left"
+        else:
+            status = f"out R{m.rounds_survived + 1}"
         click.echo(
             f"  {m.year} {m.strategy:>8s}: "
-            f"{m.rounds_survived}/6 rounds ({status})"
+            f"{m.rounds_survived}/{m.total_rounds} rounds ({status})"
         )
 
 
