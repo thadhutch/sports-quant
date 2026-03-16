@@ -371,10 +371,7 @@ def simulate(year, version):
     from sports_quant.march_madness._bracket_builder import build_actual_bracket
     from sports_quant.march_madness._feature_builder import FeatureLookup
     from sports_quant.march_madness.simulate import simulate_bracket_deterministic
-    from sports_quant.march_madness.bracket_plots import (
-        render_bracket,
-        render_comparison,
-    )
+    from sports_quant.march_madness.bracket_plots import render_bracket
 
     if not year:
         cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
@@ -412,18 +409,14 @@ def simulate(year, version):
         for rnd, (rc, rt) in result.accuracy_by_round.items():
             click.echo(f"  {rnd}: {rc}/{rt} ({rc/rt:.0%})")
 
-        # Render SVGs
+        # Render SVG — the simulation bracket already has is_correct
+        # set via position-based matching, so render it directly
+        # (compare_brackets would break it by matching on team names)
         output_dir = MM_BACKTEST_DIR / version / str(yr) / "plots" / "brackets"
         sim_path = render_bracket(
             result.bracket, output_dir / f"{yr}_simulation.svg",
         )
         click.echo(f"  -> {sim_path}")
-
-        comp_path = render_comparison(
-            result.bracket, actual,
-            output_dir / f"{yr}_simulation_comparison.svg",
-        )
-        click.echo(f"  -> {comp_path}")
 
 
 @march_madness.command(name="save-version")

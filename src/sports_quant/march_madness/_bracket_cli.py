@@ -174,7 +174,11 @@ def render_year_brackets(
 
     for source in sources:
         if source == "simulation":
-            # Handle simulation bracket separately
+            # Handle simulation bracket separately.
+            # The simulation bracket already has is_correct set via
+            # position-based matching in simulate.py — do NOT call
+            # compare_brackets (which matches by team names and would
+            # set is_correct=None for games with wrong advancing teams).
             if simulation_bracket is None:
                 logger.info("Skipping simulation for %d (not available)", year)
                 continue
@@ -184,13 +188,6 @@ def render_year_brackets(
             )
             outputs.append(sim_path)
             logger.info("Rendered simulation bracket: %s", sim_path)
-
-            comp_path = render_comparison(
-                simulation_bracket, actual,
-                output_dir / f"{year}_simulation_comparison.svg",
-            )
-            outputs.append(comp_path)
-            logger.info("Rendered simulation comparison: %s", comp_path)
             continue
 
         df = source_data.get(source)
