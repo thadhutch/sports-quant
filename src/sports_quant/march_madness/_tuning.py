@@ -29,15 +29,17 @@ logger = logging.getLogger(__name__)
 def run_optuna_study(
     matchups_df: None | "pd.DataFrame" = None,
     n_trials: int | None = None,
-) -> dict:
+    return_study: bool = False,
+) -> dict | tuple[dict, "optuna.Study"]:
     """Run Bayesian hyperparameter optimization with temporal CV.
 
     Args:
         matchups_df: Full matchup DataFrame. If None, loads from CSV.
         n_trials: Number of Optuna trials. If None, uses config value.
+        return_study: If True, return (best_params, study) tuple.
 
     Returns:
-        Dict of best hyperparameters.
+        Dict of best hyperparameters, or (dict, Study) if return_study=True.
     """
     import pandas as pd
     from sports_quant.march_madness import _config as mm_config
@@ -71,14 +73,14 @@ def run_optuna_study(
 
     def objective(trial: optuna.Trial) -> float:
         params = {
-            "num_leaves": trial.suggest_int("num_leaves", 8, 32),
-            "max_depth": trial.suggest_int("max_depth", 3, 8),
+            "num_leaves": trial.suggest_int("num_leaves", 8, 64),
+            "max_depth": trial.suggest_int("max_depth", 3, 10),
             "learning_rate": trial.suggest_float(
-                "learning_rate", 0.01, 0.3, log=True,
+                "learning_rate", 0.005, 0.3, log=True,
             ),
-            "n_estimators": trial.suggest_int("n_estimators", 100, 1000),
+            "n_estimators": trial.suggest_int("n_estimators", 50, 1500),
             "min_child_samples": trial.suggest_int(
-                "min_child_samples", 20, 100,
+                "min_child_samples", 10, 100,
             ),
             "reg_alpha": trial.suggest_float("reg_alpha", 0.0, 10.0),
             "reg_lambda": trial.suggest_float("reg_lambda", 0.0, 10.0),
@@ -150,6 +152,8 @@ def run_optuna_study(
     )
     logger.info("Best params: %s", study.best_params)
 
+    if return_study:
+        return study.best_params, study
     return study.best_params
 
 
