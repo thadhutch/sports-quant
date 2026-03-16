@@ -339,3 +339,150 @@ def bracket(year, source, version):
     click.echo(f"Rendered {len(outputs)} bracket files:")
     for path in outputs:
         click.echo(f"  {path}")
+
+
+@march_madness.command(name="save-version")
+@click.option(
+    "--version", "-v",
+    default=None,
+    help="Version identifier (default: from model_config.yaml).",
+)
+@click.option(
+    "--description", "-d",
+    required=True,
+    help="Short description of what changed in this version.",
+)
+def save_version(version, description):
+    """Snapshot current backtest results as a named version with metrics."""
+    import yaml
+
+    from sports_quant._config import MODEL_CONFIG_FILE
+    from sports_quant.march_madness._versioning import save_version as _save
+
+    if version is None:
+        cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
+        version = cfg["march_madness"]["model_version"]
+
+    vm = _save(version=version, description=description)
+
+    click.echo(f"Version {vm.version} saved ({vm.created_at})")
+    click.echo(f"  Description: {vm.description}")
+    click.echo(f"  Bracket accuracy (avg): {vm.avg_bracket_accuracy:.1%}")
+    click.echo(f"  Survivor rounds (avg):  {vm.avg_survivor_rounds:.1f}")
+
+    click.echo("\nBracket metrics:")
+    for m in vm.bracket_metrics:
+        click.echo(
+            f"  {m.year} {m.source:>10s}: "
+            f"{m.overall_accuracy:.1%} "
+            f"({m.correct_games}/{m.total_games})"
+        )
+
+    click.echo("\nSurvivor metrics:")
+    for m in vm.survivor_metrics:
+        status = "SURVIVED" if m.survived_all else f"out R{m.rounds_survived + 1}"
+        click.echo(
+            f"  {m.year} {m.strategy:>8s}: "
+            f"{m.rounds_survived}/6 rounds ({status})"
+        )
+
+
+@march_madness.command(name="list-versions")
+def list_versions_cmd():
+    """List all saved model versions."""
+    from sports_quant.march_madness._versioning import list_versions
+
+    registry = list_versions()
+
+    if not registry:
+        click.echo("No saved versions. Run save-version first.")
+        return
+
+    # Header
+    click.echo(
+        f"{'Version':<10} {'Accuracy':>10} {'Survivor':>10} "
+        f"{'Created':>22}  Description"
+    )
+    click.echo("-" * 80)
+
+    for entry in registry:
+        acc = entry.get("avg_bracket_accuracy", 0)
+        surv = entry.get("avg_survivor_rounds", 0)
+        click.echo(
+            f"{entry['version']:<10} "
+            f"{acc:>9.1%} "
+            f"{surv:>8.1f}R "
+            f"{entry['created_at'][:19]:>22}  "
+            f"{entry.get('description', '')}"
+        )
+
+
+@march_madness.command(name="compare-versions")
+@click.argument("version_a")
+@click.argument("version_b")
+def compare_versions_cmd(version_a, version_b):
+    """Compare two saved versions side by side.
+
+    VERSION_A is the baseline, VERSION_B is the candidate.
+    """
+    from sports_quant.march_madness._versioning import compare_versions
+
+    result = compare_versions(version_a, version_b)
+
+    # Bracket comparison
+    click.echo(f"\nBracket Accuracy: {version_a} vs {version_b}")
+    click.echo("-" * 65)
+    click.echo(
+        f"{'Year':<6} {'Source':<12} "
+        f"{version_a:>10} {version_b:>10} {'Delta':>10}"
+    )
+
+    for row in result["bracket"]:
+        acc_a = f"{row[f'{version_a}_accuracy']:.1%}" if row[f"{version_a}_accuracy"] is not None else "  —"
+        acc_b = f"{row[f'{version_b}_accuracy']:.1%}" if row[f"{version_b}_accuracy"] is not None else "  —"
+        delta = ""
+        if row["delta"] is not None:
+            sign = "+" if row["delta"] >= 0 else ""
+            delta = f"{sign}{row['delta']:.1%}"
+        click.echo(
+            f"{row['year']:<6} {row['source']:<12} "
+            f"{acc_a:>10} {acc_b:>10} {delta:>10}"
+        )
+
+    # Survivor comparison
+    click.echo(f"\nSurvivor Rounds: {version_a} vs {version_b}")
+    click.echo("-" * 65)
+    click.echo(
+        f"{'Year':<6} {'Strategy':<12} "
+        f"{version_a:>10} {version_b:>10} {'Delta':>10}"
+    )
+
+    for row in result["survivor"]:
+        ra = f"{row[f'{version_a}_rounds']}/6" if row[f"{version_a}_rounds"] is not None else "—"
+        rb = f"{row[f'{version_b}_rounds']}/6" if row[f"{version_b}_rounds"] is not None else "—"
+        delta = ""
+        if row["delta"] is not None:
+            sign = "+" if row["delta"] >= 0 else ""
+            delta = f"{sign}{row['delta']}"
+        click.echo(
+            f"{row['year']:<6} {row['strategy']:<12} "
+            f"{ra:>10} {rb:>10} {delta:>10}"
+        )
+
+    # Summary
+    s = result["summary"]
+    click.echo(f"\nSummary:")
+    acc_delta = s["accuracy_delta"]
+    acc_sign = "+" if acc_delta >= 0 else ""
+    click.echo(
+        f"  Bracket accuracy: {s[f'{version_a}_avg_accuracy']:.1%} → "
+        f"{s[f'{version_b}_avg_accuracy']:.1%} "
+        f"({acc_sign}{acc_delta:.1%})"
+    )
+    surv_delta = s["survivor_delta"]
+    surv_sign = "+" if surv_delta >= 0 else ""
+    click.echo(
+        f"  Survivor rounds:  {s[f'{version_a}_avg_survivor_rounds']:.1f} → "
+        f"{s[f'{version_b}_avg_survivor_rounds']:.1f} "
+        f"({surv_sign}{surv_delta:.1f})"
+    )
