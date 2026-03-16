@@ -116,7 +116,6 @@ TEAM_NAME_MAPPING: dict[str, str] = {
     "N.C. State": "North Carolina St.",
     "Louisiana Lafayette": "Louisiana",
     "College of Charleston": "Charleston",
-    "Mount St. Mary's MAAC": "Mount St. Mary's",
     # Historical KenPom (2011-2016) uses full "State" instead of "St."
     "Michigan State": "Michigan St.",
     "Ohio State": "Ohio St.",

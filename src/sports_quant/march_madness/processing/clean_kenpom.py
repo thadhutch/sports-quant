@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 KNOWN_CONFERENCES = [
     "ACC", "SEC", "B10", "B12", "BE", "Amer", "A10", "WCC", "MWC", "MVC",
     "Ivy", "SB", "CUSA", "ASun", "BW", "CAA", "Horz", "BSth", "SC", "WAC",
-    "Slnd", "AE", "MAC", "OVC", "BSky", "Sum", "PL", "MEAC", "SWAC", "NEC",
+    "Slnd", "AE", "MAC", "MAAC", "OVC", "BSky", "Sum", "PL", "MEAC", "SWAC",
+    "NEC",
 ]
 
 
@@ -106,13 +107,23 @@ def _is_text(value: str) -> bool:
 
 
 def merge_school_names(input_path: Path, output_path: Path) -> None:
-    """Merge consecutive text columns that represent split school names."""
+    """Merge consecutive text columns that represent split school names.
+
+    Skips merging when the second text column is a known conference
+    abbreviation (e.g., "MAAC"), since that indicates a correctly
+    parsed team + conference pair, not a split name.
+    """
     with open(input_path, "r") as infile:
         rows = list(csv.reader(infile))
 
     processed_rows = []
     for row in rows:
-        if len(row) >= 3 and _is_text(row[1]) and _is_text(row[2]):
+        if (
+            len(row) >= 3
+            and _is_text(row[1])
+            and _is_text(row[2])
+            and row[2] not in KNOWN_CONFERENCES
+        ):
             merged_name = f"{row[1]} {row[2]}"
             new_row = [row[0], merged_name] + row[3:]
         else:
