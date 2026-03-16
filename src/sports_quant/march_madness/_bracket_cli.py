@@ -1,0 +1,293 @@
+"""Bracket visualisation orchestration for CLI integration.
+
+Loads backtest results, builds brackets, and renders all outputs
+(SVG brackets, comparison brackets, accuracy charts) for one or
+more tournament years.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
+
+from sports_quant.march_madness._bracket import Bracket
+from sports_quant.march_madness._bracket_builder import (
+    build_actual_bracket,
+    build_predicted_bracket,
+    compare_brackets,
+)
+from sports_quant.march_madness._config import MM_BACKTEST_DIR, MM_MATCHUPS_RESTRUCTURED
+from sports_quant.march_madness.bracket_plots import (
+    render_accuracy,
+    render_accuracy_comparison,
+    render_bracket,
+    render_comparison,
+)
+
+logger = logging.getLogger(__name__)
+
+# Sources that map to specific backtest CSV filenames and column conventions
+_SOURCE_CSV: dict[str, str] = {
+    "ensemble": "ensemble_results.csv",
+    "debiased": "debiased_results.csv",
+}
+
+_DEFAULT_SOURCES = ("ensemble", "debiased")
+
+
+def resolve_backtest_paths(
+    *,
+    backtest_dir: Path,
+    version: str,
+    year: int,
+) -> dict[str, Any]:
+    """Resolve and validate file paths for a single backtest year.
+
+    Args:
+        backtest_dir: Root backtest directory (e.g. ``data/march-madness/backtest``).
+        version: Model version (e.g. ``"v1"``).
+        year: Tournament year.
+
+    Returns:
+        Dictionary with keys ``year``, ``ensemble``, ``debiased``, ``output_dir``.
+
+    Raises:
+        FileNotFoundError: If the year directory or required CSVs are missing.
+    """
+    year_dir = backtest_dir / version / str(year)
+    if not year_dir.is_dir():
+        msg = f"Backtest directory not found for {year}: {year_dir}"
+        raise FileNotFoundError(msg)
+
+    ensemble_path = year_dir / "ensemble_results.csv"
+    if not ensemble_path.exists():
+        msg = f"ensemble_results.csv not found in {year_dir}"
+        raise FileNotFoundError(msg)
+
+    debiased_path = year_dir / "debiased_results.csv"
+    output_dir = year_dir / "plots" / "brackets"
+
+    return {
+        "year": year,
+        "ensemble": ensemble_path,
+        "debiased": debiased_path if debiased_path.exists() else None,
+        "output_dir": output_dir,
+    }
+
+
+def render_year_brackets(
+    *,
+    year: int,
+    matchups_df: pd.DataFrame,
+    ensemble_df: pd.DataFrame,
+    debiased_df: pd.DataFrame | None,
+    output_dir: Path,
+    sources: tuple[str, ...] = _DEFAULT_SOURCES,
+) -> list[Path]:
+    """Build and render all bracket visualisations for a single year.
+
+    Renders:
+    - Actual bracket (ground truth)
+    - Predicted bracket for each source (ensemble, debiased)
+    - Comparison bracket for each source vs actual
+
+    Args:
+        year: Tournament year.
+        matchups_df: Full restructured matchups DataFrame.
+        ensemble_df: Ensemble backtest results for this year.
+        debiased_df: Debiased backtest results (None to skip).
+        output_dir: Directory to write output files.
+        sources: Which prediction sources to render.
+
+    Returns:
+        List of output file paths.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    outputs: list[Path] = []
+
+    # 1. Actual bracket
+    actual = build_actual_bracket(matchups_df, year)
+    actual_path = render_bracket(
+        actual, output_dir / f"{year}_actual.svg",
+    )
+    outputs.append(actual_path)
+    logger.info("Rendered actual bracket: %s", actual_path)
+
+    # 2. Predicted brackets + comparisons
+    source_data: dict[str, pd.DataFrame | None] = {
+        "ensemble": ensemble_df,
+        "debiased": debiased_df,
+    }
+
+    for source in sources:
+        df = source_data.get(source)
+        if df is None:
+            logger.info("Skipping %s for %d (no data)", source, year)
+            continue
+
+        predicted = build_predicted_bracket(df, matchups_df, year, source=source)
+
+        predicted_path = render_bracket(
+            predicted, output_dir / f"{year}_{source}.svg",
+        )
+        outputs.append(predicted_path)
+        logger.info("Rendered %s bracket: %s", source, predicted_path)
+
+        comparison_path = render_comparison(
+            predicted, actual, output_dir / f"{year}_{source}_comparison.svg",
+        )
+        outputs.append(comparison_path)
+        logger.info("Rendered %s comparison: %s", source, comparison_path)
+
+    return outputs
+
+
+def render_multi_year_accuracy(
+    *,
+    compared_brackets: dict[int, Bracket],
+    output_dirs: dict[int, Path],
+    multi_year_output_dir: Path,
+) -> list[Path]:
+    """Render per-year accuracy charts and a multi-year comparison.
+
+    Args:
+        compared_brackets: Year → compared bracket (with is_correct flags).
+        output_dirs: Year → output directory for per-year charts.
+        multi_year_output_dir: Directory for the combined chart.
+
+    Returns:
+        List of output file paths.
+    """
+    outputs: list[Path] = []
+
+    # Per-year accuracy charts
+    for year, bracket in sorted(compared_brackets.items()):
+        out_dir = output_dirs[year]
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = render_accuracy(
+            bracket, out_dir / f"{year}_accuracy.html",
+        )
+        outputs.append(path)
+        logger.info("Rendered accuracy chart: %s", path)
+
+    # Multi-year comparison
+    if len(compared_brackets) > 1:
+        multi_year_output_dir.mkdir(parents=True, exist_ok=True)
+        brackets_list = [
+            compared_brackets[y] for y in sorted(compared_brackets)
+        ]
+        path = render_accuracy_comparison(
+            brackets_list,
+            multi_year_output_dir / "multi_year_accuracy.html",
+        )
+        outputs.append(path)
+        logger.info("Rendered multi-year accuracy: %s", path)
+
+    return outputs
+
+
+def run_bracket_visualisation(
+    *,
+    years: list[int] | None = None,
+    sources: list[str] | None = None,
+    version: str = "v1",
+    backtest_dir: Path | None = None,
+    matchups_path: Path | None = None,
+) -> list[Path]:
+    """Run the full bracket visualisation pipeline.
+
+    This is the main entry point called by the CLI command.
+
+    Args:
+        years: Tournament years to render (default: all from config).
+        sources: Prediction sources to render (default: ensemble + debiased).
+        version: Model version directory name.
+        backtest_dir: Override backtest directory (default: from config).
+        matchups_path: Override matchups CSV path (default: from config).
+
+    Returns:
+        List of all output file paths.
+    """
+    import yaml
+
+    from sports_quant._config import MODEL_CONFIG_FILE
+
+    backtest_dir = backtest_dir or MM_BACKTEST_DIR
+    matchups_path = matchups_path or MM_MATCHUPS_RESTRUCTURED
+
+    # Load config for default years
+    if years is None:
+        config = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
+        years = config["march_madness"]["backtest_years"]
+
+    source_tuple = tuple(sources) if sources else _DEFAULT_SOURCES
+
+    # Validate matchups file
+    if not matchups_path.exists():
+        msg = f"Matchups file not found: {matchups_path}"
+        raise FileNotFoundError(msg)
+
+    logger.info("Loading matchups from %s", matchups_path)
+    matchups_df = pd.read_csv(matchups_path)
+
+    all_outputs: list[Path] = []
+    compared_brackets: dict[int, Bracket] = {}
+    output_dirs: dict[int, Path] = {}
+
+    for year in years:
+        logger.info("Processing year %d", year)
+
+        # Resolve and validate paths
+        paths = resolve_backtest_paths(
+            backtest_dir=backtest_dir, version=version, year=year,
+        )
+
+        # Load backtest results
+        ensemble_df = pd.read_csv(paths["ensemble"])
+        debiased_df = (
+            pd.read_csv(paths["debiased"])
+            if paths["debiased"] is not None
+            else None
+        )
+
+        output_dir = paths["output_dir"]
+        output_dirs[year] = output_dir
+
+        # Render brackets for this year
+        year_outputs = render_year_brackets(
+            year=year,
+            matchups_df=matchups_df,
+            ensemble_df=ensemble_df,
+            debiased_df=debiased_df,
+            output_dir=output_dir,
+            sources=source_tuple,
+        )
+        all_outputs.extend(year_outputs)
+
+        # Build compared bracket for accuracy charts
+        # Use first available source for accuracy tracking
+        primary_source = source_tuple[0]
+        primary_df = ensemble_df if primary_source == "ensemble" else debiased_df
+        if primary_df is not None:
+            actual = build_actual_bracket(matchups_df, year)
+            predicted = build_predicted_bracket(
+                primary_df, matchups_df, year, source=primary_source,
+            )
+            compared = compare_brackets(predicted, actual)
+            compared_brackets[year] = compared
+
+    # Render accuracy charts
+    if compared_brackets:
+        accuracy_outputs = render_multi_year_accuracy(
+            compared_brackets=compared_brackets,
+            output_dirs=output_dirs,
+            multi_year_output_dir=backtest_dir / version,
+        )
+        all_outputs.extend(accuracy_outputs)
+
+    logger.info("Bracket visualisation complete: %d files", len(all_outputs))
+    return all_outputs

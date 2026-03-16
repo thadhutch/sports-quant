@@ -303,3 +303,39 @@ def predict():
     """Generate predictions for the current year."""
     from sports_quant.march_madness.predict import run_prediction
     run_prediction()
+
+
+@march_madness.command()
+@click.option(
+    "--year", "-y",
+    multiple=True,
+    type=int,
+    help="Tournament year(s) to render. Repeatable. Default: all backtest years.",
+)
+@click.option(
+    "--source", "-s",
+    multiple=True,
+    type=click.Choice(["ensemble", "debiased"], case_sensitive=False),
+    help="Prediction source(s) to render. Default: both.",
+)
+@click.option(
+    "--version", "-v",
+    default="v1",
+    help="Model version directory (default: v1).",
+)
+def bracket(year, source, version):
+    """Render bracket visualisations from backtest results."""
+    from sports_quant.march_madness._bracket_cli import run_bracket_visualisation
+
+    years = list(year) if year else None
+    sources = list(source) if source else None
+
+    outputs = run_bracket_visualisation(
+        years=years,
+        sources=sources,
+        version=version,
+    )
+
+    click.echo(f"Rendered {len(outputs)} bracket files:")
+    for path in outputs:
+        click.echo(f"  {path}")

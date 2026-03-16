@@ -144,7 +144,7 @@ Reads from existing backtest output dirs, renders to
   `render_accuracy_chart()`
 - Visual regression baseline (save reference PNGs, compare dimensions)
 
-### Phase 3 — CLI & integration
+### Phase 3 — CLI & integration ✓
 
 - Add `bracket` subcommand
 - Wire to backtest output paths
