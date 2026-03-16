@@ -2,6 +2,9 @@
 
 Addresses Team1 positional bias by predicting on both original and
 column-swapped data, then averaging the results.
+
+Supports both raw 36-column features (column swap) and difference
+21-column features (simple negation).
 """
 
 import logging
@@ -10,36 +13,59 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
+from sports_quant.march_madness._features import DIFF_FEATURE_COLUMNS
+
 logger = logging.getLogger(__name__)
 
 
 def swap_team_columns(X: pd.DataFrame) -> pd.DataFrame:
     """Swap Team1 and Team2 feature columns to address model bias.
 
+    For raw 36-column features only. For difference features, use
+    swap_difference_features() instead.
+
     Args:
-        X: DataFrame containing team features.
+        X: DataFrame containing raw team features.
 
     Returns:
-        DataFrame with Team1 and Team2 columns swapped.
+        New DataFrame with Team1 and Team2 columns swapped.
     """
-    X_swapped = X.copy()
-
-    column_mappings: dict[str, str] = {}
+    # Build unique (col1, col2) pairs — each pair swapped exactly once.
+    # Read from the original X to avoid overwrite-then-read bugs.
+    pairs: list[tuple[str, str]] = []
     for column in X.columns:
         if column.endswith("_Team2"):
-            base_column = column.replace("_Team2", "")
-            column_mappings[base_column] = column
-            column_mappings[column] = base_column
-        elif column == "Rank":
-            column_mappings[column] = "Rank_Team2"
-            column_mappings["Rank_Team2"] = column
+            base = column[: -len("_Team2")]
+            if base in X.columns:
+                pairs.append((base, column))
 
-    for col1, col2 in column_mappings.items():
-        if col1 in X.columns and col2 in X.columns:
-            X_swapped[col1] = X[col2]
-            X_swapped[col2] = X[col1]
+    swapped_data: dict[str, pd.Series] = {}
+    for col1, col2 in pairs:
+        swapped_data[col1] = X[col2]
+        swapped_data[col2] = X[col1]
 
-    return X_swapped
+    return X.assign(**swapped_data)
+
+
+def swap_difference_features(X: pd.DataFrame) -> pd.DataFrame:
+    """Swap teams by negating all difference features.
+
+    For difference features, swapping Team1 and Team2 is simply
+    negation: diff(A,B) = -diff(B,A). This is much simpler than
+    the raw column swap approach.
+
+    Args:
+        X: DataFrame with difference feature columns.
+
+    Returns:
+        New DataFrame with all values negated.
+    """
+    return X * -1
+
+
+def _is_difference_features(X: pd.DataFrame) -> bool:
+    """Check if a DataFrame uses difference feature columns."""
+    return set(X.columns) == set(DIFF_FEATURE_COLUMNS)
 
 
 def run_debiased_prediction(
@@ -49,6 +75,9 @@ def run_debiased_prediction(
 ) -> np.ndarray:
     """Run predictions on original and swapped data, then combine.
 
+    Automatically detects whether X_original uses difference features
+    or raw features and dispatches to the correct swap function.
+
     Args:
         models: List of trained models to use for prediction.
         X_original: Original feature data.
@@ -57,7 +86,10 @@ def run_debiased_prediction(
     Returns:
         Combined probability predictions as numpy array.
     """
-    X_swapped = swap_team_columns(X_original)
+    if _is_difference_features(X_original):
+        X_swapped = swap_difference_features(X_original)
+    else:
+        X_swapped = swap_team_columns(X_original)
 
     # Predictions on original data
     original_probs = [

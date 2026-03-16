@@ -25,7 +25,10 @@ from sports_quant.march_madness._bracket_builder import (
     _assign_region,
     _bracket_tree_order,
 )
-from sports_quant.march_madness._debiasing import swap_team_columns
+from sports_quant.march_madness._debiasing import (
+    swap_difference_features,
+    swap_team_columns,
+)
 from sports_quant.march_madness._feature_builder import (
     FeatureLookup,
     TeamStats,
@@ -70,17 +73,29 @@ def _predict_game(
     team2: TeamStats,
     models: list,
     feature_lookup: FeatureLookup,
+    feature_mode: str = "difference",
 ) -> float:
     """Predict Team1 win probability with debiasing.
 
     Builds feature vectors for original and swapped team orderings,
     averages probabilities across all models and both orderings.
 
+    Args:
+        team1: First team.
+        team2: Second team.
+        models: Trained ensemble models.
+        feature_lookup: For building feature vectors.
+        feature_mode: "difference" or "raw".
+
     Returns:
         Debiased probability that team1 wins.
     """
-    features = feature_lookup.build_matchup_features(team1, team2)
-    features_swapped = swap_team_columns(features)
+    if feature_mode == "difference":
+        features = feature_lookup.build_difference_features(team1, team2)
+        features_swapped = swap_difference_features(features)
+    else:
+        features = feature_lookup.build_matchup_features(team1, team2)
+        features_swapped = swap_team_columns(features)
 
     original_probs = [
         m.predict_proba(features)[:, 1][0] for m in models
@@ -150,6 +165,7 @@ def _simulate_single_bracket(
     models: list,
     feature_lookup: FeatureLookup,
     rng: np.random.Generator | None,
+    feature_mode: str = "difference",
 ) -> tuple[list[BracketGame], dict[str, list[float]]]:
     """Simulate one complete bracket from R64 through NCG.
 
@@ -160,6 +176,7 @@ def _simulate_single_bracket(
         feature_lookup: For building feature vectors.
         rng: If provided, sample outcomes from probabilities (MC mode).
              If None, always pick the higher-probability team (deterministic).
+        feature_mode: "difference" or "raw".
 
     Returns:
         Tuple of (list of 63 BracketGames, dict of round -> probabilities).
@@ -173,7 +190,9 @@ def _simulate_single_bracket(
         winners: list[TeamStats] = []
 
         for game_idx, (t1, t2) in enumerate(current_matchups):
-            prob = _predict_game(t1, t2, models, feature_lookup)
+            prob = _predict_game(
+                t1, t2, models, feature_lookup, feature_mode,
+            )
             round_probs[round_name].append(prob)
 
             if rng is not None:
@@ -277,6 +296,7 @@ def simulate_bracket_deterministic(
     feature_lookup: FeatureLookup,
     matchups_df: pd.DataFrame,
     actual_bracket: Bracket,
+    feature_mode: str = "difference",
 ) -> SimulationResult:
     """Simulate a full bracket by always picking the higher-probability team.
 
@@ -286,6 +306,7 @@ def simulate_bracket_deterministic(
         feature_lookup: For building feature vectors.
         matchups_df: Restructured matchups (for extracting R64).
         actual_bracket: Ground truth bracket for evaluation.
+        feature_mode: "difference" or "raw".
 
     Returns:
         SimulationResult with predicted bracket and accuracy.
@@ -293,6 +314,7 @@ def simulate_bracket_deterministic(
     r64 = _extract_r64_matchups(matchups_df, year, feature_lookup)
     games, _ = _simulate_single_bracket(
         year, r64, models, feature_lookup, rng=None,
+        feature_mode=feature_mode,
     )
 
     actual_winners = _build_actual_winners(actual_bracket)
@@ -328,6 +350,7 @@ def simulate_bracket_monte_carlo(
     actual_bracket: Bracket,
     n_simulations: int = 1000,
     rng_seed: int = 42,
+    feature_mode: str = "difference",
 ) -> MonteCarloResult:
     """Run N bracket simulations, sampling outcomes from model probabilities.
 
@@ -339,6 +362,7 @@ def simulate_bracket_monte_carlo(
         actual_bracket: Ground truth bracket for evaluation.
         n_simulations: Number of simulations to run.
         rng_seed: Random seed for reproducibility.
+        feature_mode: "difference" or "raw".
 
     Returns:
         MonteCarloResult with aggregated statistics.
@@ -349,7 +373,7 @@ def simulate_bracket_monte_carlo(
 
     # Pre-compute all game probabilities once (they don't change between sims)
     probabilities = _precompute_probabilities(
-        year, r64, models, feature_lookup,
+        year, r64, models, feature_lookup, feature_mode=feature_mode,
     )
 
     # Accumulators
@@ -437,6 +461,7 @@ def _precompute_probabilities(
     r64_matchups: list[tuple[TeamStats, TeamStats]],
     models: list,
     feature_lookup: FeatureLookup,
+    feature_mode: str = "difference",
 ) -> dict[tuple[str, str], float]:
     """Precompute win probability for every possible team pairing.
 
@@ -466,7 +491,9 @@ def _precompute_probabilities(
     probs: dict[tuple[str, str], float] = {}
     for i, t1 in enumerate(all_teams):
         for t2 in all_teams[i + 1:]:
-            p = _predict_game(t1, t2, models, feature_lookup)
+            p = _predict_game(
+                t1, t2, models, feature_lookup, feature_mode,
+            )
             probs[(t1.team, t2.team)] = p
             probs[(t2.team, t1.team)] = 1.0 - p
 

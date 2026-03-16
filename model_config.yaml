@@ -1,29 +1,64 @@
 ou:
-  model_version: "v2"
+  model_version: v2
   models_to_train: 50
   top_models: 3
-  accuracy_threshold: 0.50
-  model_weights: [0.4, 0.35, 0.25]
+  accuracy_threshold: 0.5
+  model_weights:
+  - 0.4
+  - 0.35
+  - 0.25
   starting_capital: 100.0
   hyperparameters:
-    objective: "multi:softprob"
+    objective: multi:softprob
     num_class: 3
-    eval_metric: "mlogloss"
+    eval_metric: mlogloss
   backtest:
     min_training_seasons: 2
     test_size: 0.8
   train:
     test_size: 0.2
-
 march_madness:
-  model_version: "v1"
+  model_version: v2
   models_to_train: 50
   top_models: 3
-  backtest_years: [2022, 2023, 2024, 2025]
+  backtest_years:
+  - 2022
+  - 2023
+  - 2024
+  - 2025
+  feature_mode: difference
   hyperparameters:
-    objective: "binary"
-    metric: "binary_logloss"
+    objective: binary
+    metric: binary_logloss
+    num_leaves: 11
+    max_depth: 6
+    learning_rate: 0.17997139385638763
+    n_estimators: 123
+    min_child_samples: 33
+    reg_alpha: 0.7365997192521206
+    reg_lambda: 2.3236883471898326
+    subsample: 0.7205727713471942
+    colsample_bytree: 0.7516754218969777
+    min_split_gain: 0.05425051820105283
   backtest:
     min_training_years: 3
   train:
     test_size: 0.2
+    symmetrize: true
+    early_stopping_rounds: 50
+  tuning:
+    n_trials: 100
+    cv_folds:
+    - train_end: 2018
+      val_year: 2019
+    - train_end: 2021
+      val_year: 2022
+    - train_end: 2022
+      val_year: 2023
+    - train_end: 2023
+      val_year: 2024
+  calibration:
+    enabled: true
+    method: isotonic
+    clip_min: 0.025
+    clip_max: 0.975

@@ -11,15 +11,32 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-import yaml
-from lightgbm import LGBMClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from lightgbm import early_stopping
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    f1_score,
+    log_loss,
+    precision_score,
+    recall_score,
+)
 
-from sports_quant import _config as config
-from sports_quant.march_madness import _config as mm_config
-from sports_quant.march_madness._data import load_and_prepare
-from sports_quant.march_madness._features import DROP_COLUMNS
+from sports_quant.march_madness._config import (
+    MM_BACKTEST_DIR,
+    build_lgbm,
+    load_mm_config,
+)
+from sports_quant.march_madness._data import (
+    compute_difference_features,
+    load_and_prepare,
+    symmetrize_training_data,
+)
+from sports_quant.march_madness._features import (
+    DIFF_FEATURE_COLUMNS,
+    DROP_COLUMNS,
+    TARGET_COLUMN,
+    YEAR_COLUMN,
+)
 from sports_quant.march_madness._upsets import analyze_upsets, track_popular_upsets
 from sports_quant.march_madness._debiasing import process_backtest_results
 from sports_quant.march_madness import plots
@@ -27,11 +44,38 @@ from sports_quant.march_madness import plots
 logger = logging.getLogger(__name__)
 
 
-def _load_config() -> dict:
-    """Load the 'march_madness' section from model_config.yaml."""
-    with open(config.MODEL_CONFIG_FILE) as f:
-        full = yaml.safe_load(f)
-    return full["march_madness"]
+def _get_val_year(
+    backtest_year: int, available_years: list[int],
+) -> int | None:
+    """Find the most recent year before backtest_year that has data.
+
+    Handles gaps (e.g., COVID 2020 with no tournament data).
+
+    Returns:
+        The validation year, or None if no prior year is available.
+    """
+    candidates = [y for y in available_years if y < backtest_year]
+    return max(candidates) if candidates else None
+
+
+def _prepare_features(
+    df: pd.DataFrame, feature_mode: str,
+) -> pd.DataFrame:
+    """Extract feature matrix from a raw matchup DataFrame.
+
+    Args:
+        df: Raw matchup data with all columns.
+        feature_mode: "difference" or "raw".
+
+    Returns:
+        Feature-only DataFrame.
+    """
+    if feature_mode == "difference":
+        return compute_difference_features(df)
+
+    drop_cols = [c for c in DROP_COLUMNS if c in df.columns]
+    filtered = df.drop(columns=drop_cols)
+    return filtered.drop(columns=[TARGET_COLUMN], errors="ignore")
 
 
 def run_backtest() -> None:
@@ -45,30 +89,37 @@ def run_backtest() -> None:
     5. Apply debiased algorithm.
     6. Save all results, plots, and metrics.
     """
-    cfg = _load_config()
+    cfg = load_mm_config()
     model_version = cfg["model_version"]
     num_models = cfg["models_to_train"]
     top_n = cfg["top_models"]
     backtest_years = sorted(cfg["backtest_years"])
     hyperparams = cfg["hyperparameters"]
-    test_size = cfg["train"]["test_size"]
+    feature_mode = cfg.get("feature_mode", "raw")
+    do_symmetrize = cfg.get("train", {}).get("symmetrize", False)
+    early_stop_rounds = cfg.get("train", {}).get("early_stopping_rounds", 50)
 
-    base_dir = mm_config.MM_BACKTEST_DIR / model_version
+    base_dir = MM_BACKTEST_DIR / model_version
     base_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load full dataset
-    data = load_and_prepare()
+    # Load full dataset (raw — we'll compute features per-split)
+    data = load_and_prepare(feature_mode="raw")
     matchups = data.df
 
+    # All available years for temporal split lookups
+    all_years = sorted(matchups[YEAR_COLUMN].unique().tolist())
+
     logger.info(
-        "Full dataset: %d games. Backtesting years: %s",
-        len(matchups), backtest_years,
+        "Full dataset: %d games. Backtesting years: %s (feature_mode=%s)",
+        len(matchups), backtest_years, feature_mode,
     )
 
     # Aggregate results across years
     all_years_results: dict[str, list] = {
         "years": [],
         "ensemble_accuracies": [],
+        "ensemble_log_losses": [],
+        "ensemble_brier_scores": [],
         "debiased_accuracies": [],
     }
 
@@ -83,18 +134,26 @@ def run_backtest() -> None:
         models_dir.mkdir(parents=True, exist_ok=True)
 
         # Split data: train on prior years, test on backtest year
-        train_data = matchups[matchups["YEAR"] < backtest_year]
-        backtest_data = matchups[matchups["YEAR"] == backtest_year]
+        all_prior = matchups[matchups[YEAR_COLUMN] < backtest_year]
+        backtest_data = matchups[matchups[YEAR_COLUMN] == backtest_year]
+
+        # Temporal validation split: use most recent available year as val
+        val_year = _get_val_year(backtest_year, all_years)
+        if val_year is not None:
+            train_data = all_prior[all_prior[YEAR_COLUMN] < val_year]
+            val_data = all_prior[all_prior[YEAR_COLUMN] == val_year]
+        else:
+            # Fallback: no prior year available — use all prior data
+            train_data = all_prior
+            val_data = pd.DataFrame(columns=all_prior.columns)
 
         logger.info(
-            "Training: %d games (years < %d), Backtest: %d games",
-            len(train_data), backtest_year, len(backtest_data),
+            "Training: %d games (years < %d), Val: %d games (year %s), "
+            "Backtest: %d games (year %d)",
+            len(train_data), val_year or backtest_year,
+            len(val_data), val_year,
+            len(backtest_data), backtest_year,
         )
-
-        # Drop non-feature columns
-        drop_cols = [c for c in DROP_COLUMNS if c in train_data.columns]
-        train_filtered = train_data.drop(columns=drop_cols)
-        backtest_filtered = backtest_data.drop(columns=drop_cols)
 
         # Save backtest team info
         backtest_teams = backtest_data[
@@ -102,53 +161,85 @@ def run_backtest() -> None:
         ].copy()
         backtest_teams.to_csv(year_dir / "backtest_teams.csv", index=False)
 
-        # Split features and target
-        X_train_full = train_filtered.drop("Team1_Win", axis=1)
-        y_train_full = train_filtered["Team1_Win"]
-        X_backtest = backtest_filtered.drop("Team1_Win", axis=1)
-        y_backtest = backtest_filtered["Team1_Win"]
+        # Prepare features for each split
+        X_train_full = _prepare_features(train_data, feature_mode)
+        y_train_full = train_data[TARGET_COLUMN].reset_index(drop=True)
+
+        X_val = _prepare_features(val_data, feature_mode) if len(val_data) > 0 else None
+        y_val = val_data[TARGET_COLUMN].reset_index(drop=True) if len(val_data) > 0 else None
+
+        X_backtest = _prepare_features(backtest_data, feature_mode)
+        y_backtest = backtest_data[TARGET_COLUMN].reset_index(drop=True)
+
+        # Apply symmetrization to training data only
+        if do_symmetrize and feature_mode == "difference":
+            X_train_full, y_train_full = symmetrize_training_data(
+                X_train_full, y_train_full,
+            )
+            logger.info(
+                "Symmetrized training data: %d rows", len(X_train_full),
+            )
 
         X_backtest.to_csv(year_dir / "X_backtest.csv", index=False)
-        pd.DataFrame(y_backtest).to_csv(year_dir / "y_backtest.csv", index=False)
+        pd.DataFrame(y_backtest).to_csv(
+            year_dir / "y_backtest.csv", index=False,
+        )
 
         # Train N models
+        has_val = X_val is not None and len(X_val) > 0
         all_model_data = []
+
         for model_num in range(num_models):
             random_seed = np.random.randint(1, 10000)
 
-            X_train, X_val, y_train, y_val = train_test_split(
-                X_train_full, y_train_full,
-                test_size=test_size, random_state=random_seed,
-            )
+            model = build_lgbm(hyperparams, random_seed)
 
-            model = LGBMClassifier(
-                objective=hyperparams["objective"],
-                metric=hyperparams["metric"],
-            )
+            if has_val:
+                eval_set = [(X_train_full, y_train_full), (X_val, y_val)]
+                callbacks = [early_stopping(early_stop_rounds)]
+            else:
+                eval_set = [(X_train_full, y_train_full)]
+                callbacks = None
 
-            evalset = [(X_train, y_train), (X_val, y_val)]
             model.fit(
-                X_train, y_train,
-                eval_set=evalset,
+                X_train_full, y_train_full,
+                eval_set=eval_set,
                 eval_metric=["binary_logloss", "auc"],
+                callbacks=callbacks,
             )
 
             results = model.evals_result_
-            y_val_pred = model.predict(X_val)
+
+            # Validation metrics
+            if has_val:
+                y_val_pred = model.predict(X_val)
+                y_val_proba = model.predict_proba(X_val)[:, 1]
+                val_f1 = f1_score(y_val, y_val_pred)
+                val_accuracy = accuracy_score(y_val, y_val_pred)
+                val_log_loss = log_loss(y_val, y_val_proba)
+            else:
+                val_f1 = 0.0
+                val_accuracy = 0.0
+                val_log_loss = float("inf")
+
+            # Backtest metrics
             y_backtest_pred = model.predict(X_backtest)
             y_backtest_proba = model.predict_proba(X_backtest)[:, 1]
 
             model_data = {
                 "model_num": model_num,
                 "seed": random_seed,
-                "val_accuracy": accuracy_score(y_val, y_val_pred),
-                "val_precision": precision_score(y_val, y_val_pred),
-                "val_recall": recall_score(y_val, y_val_pred),
-                "val_f1": f1_score(y_val, y_val_pred),
+                "val_accuracy": val_accuracy,
+                "val_precision": precision_score(y_val, y_val_pred) if has_val else 0.0,
+                "val_recall": recall_score(y_val, y_val_pred) if has_val else 0.0,
+                "val_f1": val_f1,
+                "val_log_loss": val_log_loss,
                 "backtest_accuracy": accuracy_score(y_backtest, y_backtest_pred),
                 "backtest_precision": precision_score(y_backtest, y_backtest_pred),
                 "backtest_recall": recall_score(y_backtest, y_backtest_pred),
                 "backtest_f1": f1_score(y_backtest, y_backtest_pred),
+                "backtest_log_loss": log_loss(y_backtest, y_backtest_proba),
+                "backtest_brier": brier_score_loss(y_backtest, y_backtest_proba),
                 "model": model,
                 "results": results,
                 "feature_importances": model.feature_importances_,
@@ -158,9 +249,11 @@ def run_backtest() -> None:
             all_model_data.append(model_data)
 
             logger.info(
-                "Model %d/%d (year %d) - Val F1: %.4f, Backtest Acc: %.4f",
+                "Model %d/%d (year %d) - Val F1: %.4f, "
+                "Backtest Acc: %.4f, Log Loss: %.4f",
                 model_num + 1, num_models, backtest_year,
                 model_data["val_f1"], model_data["backtest_accuracy"],
+                model_data["backtest_log_loss"],
             )
 
         # Select top models by validation F1
@@ -243,9 +336,14 @@ def run_backtest() -> None:
                 str(plots_dir / f"learning_curve_top_{rank}.png"),
                 year=backtest_year,
             )
+            feature_names = list(
+                DIFF_FEATURE_COLUMNS
+                if feature_mode == "difference"
+                else X_train_full.columns
+            )
             plots.plot_feature_importance(
                 md["feature_importances"],
-                X_train_full.columns.tolist(),
+                feature_names,
                 rank,
                 str(plots_dir / f"feature_importance_top_{rank}.png"),
                 year=backtest_year,
@@ -263,10 +361,13 @@ def run_backtest() -> None:
                 "Seed": d["seed"],
                 "Validation_Accuracy": d["val_accuracy"],
                 "Validation_F1": d["val_f1"],
+                "Validation_LogLoss": d["val_log_loss"],
                 "Backtest_Accuracy": d["backtest_accuracy"],
                 "Backtest_Precision": d["backtest_precision"],
                 "Backtest_Recall": d["backtest_recall"],
                 "Backtest_F1": d["backtest_f1"],
+                "Backtest_LogLoss": d["backtest_log_loss"],
+                "Backtest_Brier": d["backtest_brier"],
             }
             for i, d in enumerate(all_model_data)
         ])
@@ -279,6 +380,7 @@ def run_backtest() -> None:
                 "Seed": d["seed"],
                 "Validation_F1": d["val_f1"],
                 "Backtest_Accuracy": d["backtest_accuracy"],
+                "Backtest_LogLoss": d["backtest_log_loss"],
             }
             for i, d in enumerate(top_models)
         ])
@@ -293,8 +395,12 @@ def run_backtest() -> None:
         ensemble_precision = precision_score(y_backtest, ensemble_binary)
         ensemble_recall = recall_score(y_backtest, ensemble_binary)
         ensemble_f1 = f1_score(y_backtest, ensemble_binary)
+        ensemble_log_loss = log_loss(y_backtest, ensemble_preds)
+        ensemble_brier = brier_score_loss(y_backtest, ensemble_preds)
 
         all_years_results["ensemble_accuracies"].append(ensemble_accuracy)
+        all_years_results["ensemble_log_losses"].append(ensemble_log_loss)
+        all_years_results["ensemble_brier_scores"].append(ensemble_brier)
 
         ensemble_results = backtest_teams.copy()
         ensemble_results["Ensemble_Pred"] = ensemble_binary
@@ -353,7 +459,10 @@ def run_backtest() -> None:
             f.write(f"Backtest Statistics - Year {backtest_year}\n")
             f.write("=" * 50 + "\n\n")
             f.write(f"Model Version: {model_version}\n")
+            f.write(f"Feature Mode: {feature_mode}\n")
+            f.write(f"Symmetrized: {do_symmetrize}\n")
             f.write(f"Training on years up to: {backtest_year - 1}\n")
+            f.write(f"Validation year: {val_year}\n")
             f.write(f"Number of Models: {num_models}\n")
             f.write(f"Models selected by: Validation F1 Score\n\n")
 
@@ -363,13 +472,19 @@ def run_backtest() -> None:
             mean_bt_acc = np.mean(
                 [d["backtest_accuracy"] for d in all_model_data]
             )
+            mean_bt_ll = np.mean(
+                [d["backtest_log_loss"] for d in all_model_data]
+            )
             f.write(f"Mean Validation F1: {mean_f1:.4f}\n")
-            f.write(f"Mean Backtest Accuracy: {mean_bt_acc:.4f}\n\n")
+            f.write(f"Mean Backtest Accuracy: {mean_bt_acc:.4f}\n")
+            f.write(f"Mean Backtest Log Loss: {mean_bt_ll:.4f}\n\n")
 
             f.write(f"Ensemble Accuracy: {ensemble_accuracy:.4f}\n")
             f.write(f"Ensemble Precision: {ensemble_precision:.4f}\n")
             f.write(f"Ensemble Recall: {ensemble_recall:.4f}\n")
-            f.write(f"Ensemble F1: {ensemble_f1:.4f}\n\n")
+            f.write(f"Ensemble F1: {ensemble_f1:.4f}\n")
+            f.write(f"Ensemble Log Loss: {ensemble_log_loss:.4f}\n")
+            f.write(f"Ensemble Brier Score: {ensemble_brier:.4f}\n\n")
 
             # Favorites benchmark
             favorites_correct = sum(
@@ -430,8 +545,10 @@ def run_backtest() -> None:
         )
 
         logger.info(
-            "Year %d complete. Ensemble accuracy: %.4f",
-            backtest_year, ensemble_accuracy,
+            "Year %d complete. Ensemble acc: %.4f, log_loss: %.4f, "
+            "brier: %.4f",
+            backtest_year, ensemble_accuracy, ensemble_log_loss,
+            ensemble_brier,
         )
 
     # Multi-year summary
@@ -439,17 +556,26 @@ def run_backtest() -> None:
         f.write("Multi-Year Backtest Summary\n")
         f.write("=" * 50 + "\n\n")
         f.write(f"Model Version: {model_version}\n")
+        f.write(f"Feature Mode: {feature_mode}\n")
+        f.write(f"Symmetrized: {do_symmetrize}\n")
         f.write(f"Backtest Years: {backtest_years}\n\n")
 
         f.write("Ensemble Performance By Year:\n")
-        f.write("-" * 50 + "\n")
+        f.write("-" * 60 + "\n")
+        f.write(f"{'Year':<8}{'Accuracy':<12}{'Log Loss':<12}{'Brier':<12}\n")
+        f.write("-" * 60 + "\n")
         for i, year in enumerate(all_years_results["years"]):
             acc = all_years_results["ensemble_accuracies"][i]
-            f.write(f"Year {year} - Ensemble Accuracy: {acc:.4f}\n")
+            ll = all_years_results["ensemble_log_losses"][i]
+            bs = all_years_results["ensemble_brier_scores"][i]
+            f.write(f"{year:<8}{acc:<12.4f}{ll:<12.4f}{bs:<12.4f}\n")
 
         if len(backtest_years) > 1:
-            avg = np.mean(all_years_results["ensemble_accuracies"])
-            f.write(f"\nAverage Ensemble Accuracy: {avg:.4f}\n")
+            avg_acc = np.mean(all_years_results["ensemble_accuracies"])
+            avg_ll = np.mean(all_years_results["ensemble_log_losses"])
+            avg_bs = np.mean(all_years_results["ensemble_brier_scores"])
+            f.write("-" * 60 + "\n")
+            f.write(f"{'Avg':<8}{avg_acc:<12.4f}{avg_ll:<12.4f}{avg_bs:<12.4f}\n")
 
     # Multi-year plot
     if len(backtest_years) > 1:
@@ -499,8 +625,11 @@ def run_backtest() -> None:
         )
 
     logger.info(
-        "Backtesting complete. Avg ensemble: %.4f, Avg debiased: %.4f",
+        "Backtesting complete. Avg ensemble: acc=%.4f, log_loss=%.4f, "
+        "brier=%.4f. Avg debiased: %.4f",
         np.mean(all_years_results["ensemble_accuracies"]),
+        np.mean(all_years_results["ensemble_log_losses"]),
+        np.mean(all_years_results["ensemble_brier_scores"]),
         np.mean(all_years_results["debiased_accuracies"]),
     )
 

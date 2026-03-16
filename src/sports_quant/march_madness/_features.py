@@ -66,6 +66,48 @@ KENPOM_COLUMNS: list[str] = [
     "Year",
 ]
 
+# ---------------------------------------------------------------------------
+# Difference feature definitions
+# ---------------------------------------------------------------------------
+
+# Mapping of (team1_col, team2_col, diff_name) for pairwise difference features.
+# Column names match the merged training_data.csv (Team2 cols use _Team2 suffix).
+STAT_PAIRS: tuple[tuple[str, str, str], ...] = (
+    ("Rank", "Rank_Team2", "rank_diff"),
+    ("AdjEM", "AdjEM_Team2", "adjEM_diff"),
+    ("AdjustO", "AdjustO_Team2", "adjO_diff"),
+    ("AdjustO Rank", "AdjustO Rank_Team2", "adjO_rank_diff"),
+    ("AdjustD", "AdjustD_Team2", "adjD_diff"),
+    ("AdjustD Rank", "AdjustD Rank_Team2", "adjD_rank_diff"),
+    ("AdjustT", "AdjustT_Team2", "adjT_diff"),
+    ("AdjustT Rank", "AdjustT Rank_Team2", "adjT_rank_diff"),
+    ("Luck", "Luck_Team2", "luck_diff"),
+    ("Luck Rank", "Luck Rank_Team2", "luck_rank_diff"),
+    ("SOS AdjEM", "SOS AdjEM_Team2", "sos_adjEM_diff"),
+    ("SOS AdjEM Rank", "SOS AdjEM Rank_Team2", "sos_adjEM_rank_diff"),
+    ("SOS OppO", "SOS OppO_Team2", "sos_oppO_diff"),
+    ("SOS OppO Rank", "SOS OppO Rank_Team2", "sos_oppO_rank_diff"),
+    ("SOS OppD", "SOS OppD_Team2", "sos_oppD_diff"),
+    ("SOS OppD Rank", "SOS OppD Rank_Team2", "sos_oppD_rank_diff"),
+    ("NCSOS AdjEM", "NCSOS AdjEM_Team2", "ncsos_adjEM_diff"),
+    ("NCSOS AdjEM Rank", "NCSOS AdjEM Rank_Team2", "ncsos_adjEM_rank_diff"),
+)
+
+SEED_DIFF_COLUMN = "seed_diff"
+
+# Derived features computed from differences
+DERIVED_FEATURES: tuple[str, ...] = (
+    "efficiency_ratio_diff",
+    "seed_x_adjEM_interaction",
+)
+
+# Complete ordered list of difference feature columns (21 total)
+DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
+    *(diff_name for _, _, diff_name in STAT_PAIRS),
+    SEED_DIFF_COLUMN,
+    *DERIVED_FEATURES,
+)
+
 # Team name normalization mapping
 TEAM_NAME_MAPPING: dict[str, str] = {
     "N.C. State": "North Carolina St.",

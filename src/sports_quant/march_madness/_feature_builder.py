@@ -1,7 +1,8 @@
 """Build feature vectors for arbitrary team pairings from KenPom data.
 
-Provides a lookup that constructs the exact 36-column feature vectors
-that trained LightGBM models expect, for any two teams in a given year.
+Provides a lookup that constructs feature vectors (either 36-column raw
+or 21-column difference) that trained LightGBM models expect, for any
+two teams in a given year.
 """
 
 from __future__ import annotations
@@ -11,7 +12,11 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from sports_quant.march_madness._features import standardize_team_name
+from sports_quant.march_madness._features import (
+    DIFF_FEATURE_COLUMNS,
+    STAT_PAIRS,
+    standardize_team_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +63,9 @@ class TeamStats:
 class FeatureLookup:
     """Lookup for constructing matchup feature vectors from KenPom data.
 
-    Indexes KenPom statistics by (team_name, year) and builds the exact
-    36-column feature DataFrames that trained models expect.
+    Indexes KenPom statistics by (team_name, year) and builds feature
+    DataFrames (raw 36-column or difference 21-column) that trained
+    models expect.
     """
 
     def __init__(self, kenpom_df: pd.DataFrame) -> None:
@@ -101,14 +107,16 @@ class FeatureLookup:
                 f"No KenPom data for team={name!r}, year={year}. "
                 f"Check team name standardization."
             )
-        return TeamStats(team=name, year=year, seed=seed, features=features)
+        return TeamStats(
+            team=name, year=year, seed=seed, features=dict(features),
+        )
 
     def build_matchup_features(
         self,
         team1: TeamStats,
         team2: TeamStats,
     ) -> pd.DataFrame:
-        """Build a single-row feature DataFrame for a matchup.
+        """Build a single-row raw feature DataFrame for a matchup.
 
         Column layout matches the exact 36-column order that trained
         LightGBM models expect after DROP_COLUMNS are removed.
@@ -127,3 +135,41 @@ class FeatureLookup:
             row[f"{col}_Team2"] = team2.features[col]
 
         return pd.DataFrame([row], columns=list(FEATURE_COLUMNS))
+
+    def build_difference_features(
+        self,
+        team1: TeamStats,
+        team2: TeamStats,
+    ) -> pd.DataFrame:
+        """Build a single-row difference feature DataFrame for a matchup.
+
+        Computes 21 pairwise difference features: 18 stat diffs +
+        seed_diff + 2 derived features.
+
+        Args:
+            team1: First team.
+            team2: Second team.
+
+        Returns:
+            Single-row DataFrame with 21 float64 difference feature columns.
+        """
+        row: dict[str, float] = {}
+
+        # 18 stat differences (using the base stat column names)
+        for team1_col, _, diff_name in STAT_PAIRS:
+            # STAT_PAIRS team1_col matches STAT_COLUMNS names
+            base_col = team1_col
+            row[diff_name] = team1.features[base_col] - team2.features[base_col]
+
+        # Seed difference
+        row["seed_diff"] = float(team1.seed - team2.seed)
+
+        # Derived: efficiency ratio diff
+        ratio_t1 = team1.features["AdjustO"] / team1.features["AdjustD"]
+        ratio_t2 = team2.features["AdjustO"] / team2.features["AdjustD"]
+        row["efficiency_ratio_diff"] = ratio_t1 - ratio_t2
+
+        # Derived: seed x adjEM interaction
+        row["seed_x_adjEM_interaction"] = row["seed_diff"] * row["adjEM_diff"]
+
+        return pd.DataFrame([row], columns=list(DIFF_FEATURE_COLUMNS))

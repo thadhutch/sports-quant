@@ -1,7 +1,7 @@
 """March Madness prediction generator.
 
 Loads trained models and generates both standard and debiased predictions
-for a target year.
+for a target year. Supports difference features and probability calibration.
 """
 
 import logging
@@ -10,21 +10,20 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-import yaml
 
-from sports_quant import _config as config
-from sports_quant.march_madness import _config as mm_config
+from sports_quant.march_madness._calibration import calibrate_probabilities
+from sports_quant.march_madness._config import (
+    MM_MODELS_DIR,
+    MM_PREDICTIONS_DIR,
+    load_mm_config,
+)
 from sports_quant.march_madness._data import load_prediction_data
-from sports_quant.march_madness._debiasing import swap_team_columns
+from sports_quant.march_madness._debiasing import (
+    swap_difference_features,
+    swap_team_columns,
+)
 
 logger = logging.getLogger(__name__)
-
-
-def _load_config() -> dict:
-    """Load the 'march_madness' section from model_config.yaml."""
-    with open(config.MODEL_CONFIG_FILE) as f:
-        full = yaml.safe_load(f)
-    return full["march_madness"]
 
 
 def run_prediction(
@@ -33,28 +32,63 @@ def run_prediction(
 ) -> None:
     """Generate predictions for the current year using a trained model.
 
-    Produces both standard and debiased prediction CSVs.
+    Produces both standard and debiased prediction CSVs. Applies
+    probability calibration if a calibrator is available.
 
     Args:
         model_version: Model version to load. Defaults to config value.
         model_rank: Which top model to use (1, 2, or 3). Defaults to 1.
     """
-    cfg = _load_config()
+    cfg = load_mm_config()
     model_version = model_version or cfg["model_version"]
+    feature_mode = cfg.get("feature_mode", "raw")
+    cal_cfg = cfg.get("calibration", {})
 
     # Load model
     model_path = (
-        mm_config.MM_MODELS_DIR / model_version / f"top_model_{model_rank}.joblib"
+        MM_MODELS_DIR / model_version / f"top_model_{model_rank}.joblib"
     )
     model = joblib.load(model_path)
     logger.info("Loaded model from %s", model_path)
 
+    # Load calibrator if available
+    calibrator_path = MM_MODELS_DIR / model_version / "calibrator.joblib"
+    calibrator = None
+    if cal_cfg.get("enabled", False) and calibrator_path.exists():
+        calibrator = joblib.load(calibrator_path)
+        logger.info("Loaded calibrator from %s", calibrator_path)
+
     # Load prediction data
-    X_pred, team_info = load_prediction_data()
+    X_pred, team_info = load_prediction_data(feature_mode=feature_mode)
 
     # Standard predictions
     y_pred_proba = model.predict_proba(X_pred)[:, 1]
-    y_pred = model.predict(X_pred)
+
+    # Debiased predictions
+    if feature_mode == "difference":
+        X_swapped = swap_difference_features(X_pred)
+    else:
+        X_swapped = swap_team_columns(X_pred)
+    swapped_proba = model.predict_proba(X_swapped)[:, 1]
+    debiased_proba = (y_pred_proba + (1.0 - swapped_proba)) / 2.0
+
+    # Apply calibration
+    if calibrator is not None:
+        clip_min = cal_cfg.get("clip_min", 0.025)
+        clip_max = cal_cfg.get("clip_max", 0.975)
+        y_pred_proba = calibrate_probabilities(
+            calibrator, y_pred_proba, clip_min, clip_max,
+        )
+        debiased_proba = calibrate_probabilities(
+            calibrator, debiased_proba, clip_min, clip_max,
+        )
+    else:
+        # Still clip even without calibrator
+        y_pred_proba = np.clip(y_pred_proba, 0.025, 0.975)
+        debiased_proba = np.clip(debiased_proba, 0.025, 0.975)
+
+    y_pred = (y_pred_proba >= 0.5).astype(int)
+    debiased_pred = (debiased_proba >= 0.5).astype(int)
 
     results = pd.DataFrame({
         "Year": team_info["YEAR"],
@@ -72,13 +106,6 @@ def run_prediction(
         ),
     })
 
-    # Debiased predictions
-    X_swapped = swap_team_columns(X_pred)
-    swapped_proba = model.predict_proba(X_swapped)[:, 1]
-    swapped_team2_win_proba = 1 - swapped_proba
-    debiased_proba = (y_pred_proba + swapped_team2_win_proba) / 2
-    debiased_pred = [1 if p >= 0.5 else 0 for p in debiased_proba]
-
     debiased_results = pd.DataFrame({
         "Year": team_info["YEAR"],
         "Round": team_info["CURRENT ROUND"],
@@ -88,7 +115,7 @@ def run_prediction(
         "Seed2": team_info["Seed2"],
         "Prediction": debiased_pred,
         "Team1_Win_Probability": debiased_proba,
-        "Team2_Win_Probability": 1 - np.array(debiased_proba),
+        "Team2_Win_Probability": 1 - debiased_proba,
         "Predicted_Winner": team_info.apply(
             lambda row: (
                 row["Team1"] if debiased_pred[row.name] == 1 else row["Team2"]
@@ -98,7 +125,7 @@ def run_prediction(
     })
 
     # Save results
-    out_dir = mm_config.MM_PREDICTIONS_DIR
+    out_dir = MM_PREDICTIONS_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
     year = team_info["YEAR"].iloc[0] if len(team_info) > 0 else "unknown"
