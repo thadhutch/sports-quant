@@ -345,6 +345,110 @@ def _draw_legend(
 
 
 # ---------------------------------------------------------------------------
+# Survivor overlay
+# ---------------------------------------------------------------------------
+
+def overlay_survivor_picks(
+    d: draw.Drawing,
+    bracket: Bracket,
+    layout: BracketLayout,
+    survivor_picks: tuple[dict, ...],
+    theme: BracketTheme,
+    strategy_label: str = "",
+) -> None:
+    """Overlay survivor pool picks onto an existing bracket drawing.
+
+    For each pick, finds the matching game by round and team name,
+    draws a highlighted border and a numbered badge showing pick order.
+
+    Args:
+        d: The ``drawsvg.Drawing`` to annotate (modified in place).
+        bracket: The bracket whose games are rendered.
+        layout: Pre-computed game positions.
+        survivor_picks: Tuple of pick dicts from ``SurvivorMetrics.picks``.
+        theme: Visual style constants.
+        strategy_label: Label (e.g. "Greedy") drawn as a subtitle.
+    """
+    # Build lookup: (round_name, team_name) -> game
+    game_lookup: dict[tuple[str, int], BracketGame] = {
+        (g.round_name, g.game_index): g for g in bracket.games
+    }
+
+    # Build reverse lookup: (round_name, team_name) -> game_index
+    round_team_to_key: dict[tuple[str, str], tuple[str, int]] = {}
+    for key, game in game_lookup.items():
+        round_team_to_key[(game.round_name, game.team1.team)] = key
+        round_team_to_key[(game.round_name, game.team2.team)] = key
+
+    for pick_num, pick in enumerate(survivor_picks, start=1):
+        round_name = pick["round"]
+        team_name = pick["team"]
+        survived = pick["survived"]
+
+        key = round_team_to_key.get((round_name, team_name))
+        if key is None or key not in layout.game_positions:
+            continue
+
+        pos = layout.game_positions[key]
+        x, y = pos.x, pos.y
+        w, h = theme.box_width, theme.box_height
+
+        # Glow border
+        border_color = (
+            theme.survivor_survived_color if survived
+            else theme.survivor_eliminated_color
+        )
+        d.append(draw.Rectangle(
+            x - 2, y - 2, w + 4, h + 4,
+            rx=theme.box_corner_radius + 2,
+            ry=theme.box_corner_radius + 2,
+            fill="none",
+            stroke=border_color,
+            stroke_width=theme.survivor_glow_width,
+            stroke_opacity=0.8,
+        ))
+
+        # Numbered badge (top-right corner)
+        badge_r = theme.survivor_badge_size / 2.0
+        badge_cx = x + w - badge_r + 2
+        badge_cy = y - badge_r + 2
+
+        d.append(draw.Circle(
+            badge_cx, badge_cy, badge_r,
+            fill=theme.survivor_pick_color,
+            stroke=theme.background_color,
+            stroke_width=1.5,
+        ))
+        d.append(draw.Text(
+            str(pick_num),
+            theme.survivor_badge_size * 0.7,
+            badge_cx,
+            badge_cy,
+            fill="#ffffff",
+            font_family=theme.font_family,
+            font_weight="bold",
+            text_anchor="middle",
+            dominant_baseline="central",
+        ))
+
+    # Strategy label at bottom-right
+    if strategy_label:
+        lx = float(d.width) - theme.canvas_padding  # type: ignore[arg-type]
+        ly = float(d.height) - theme.canvas_padding * 0.6  # type: ignore[arg-type]
+        d.append(draw.Text(
+            f"Survivor: {strategy_label}",
+            theme.legend_font_size + 1,
+            lx,
+            ly,
+            fill=theme.survivor_pick_color,
+            font_family=theme.font_family,
+            font_weight="bold",
+            text_anchor="end",
+            dominant_baseline="central",
+        ))
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 

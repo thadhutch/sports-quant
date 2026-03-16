@@ -20,8 +20,16 @@ from sports_quant.march_madness._bracket_charts import (
     save_chart,
 )
 from sports_quant.march_madness._bracket_layout import compute_layout
-from sports_quant.march_madness._bracket_render_svg import render_bracket_svg
+from sports_quant.march_madness._bracket_render_svg import (
+    overlay_survivor_picks,
+    render_bracket_svg,
+)
+from sports_quant.march_madness._bracket_survivor_chart import (
+    render_multi_year_survivor_chart as _multi_year_survivor_chart,
+    render_survivor_chart as _survivor_chart,
+)
 from sports_quant.march_madness._bracket_theme import DEFAULT_THEME, BracketTheme
+from sports_quant.march_madness._results import SurvivorMetrics
 
 
 def _has_cairosvg() -> bool:
@@ -159,3 +167,75 @@ def render_accuracy_comparison(
     """
     fig = _multi_accuracy_chart(brackets, theme=theme)
     return save_chart(fig, output_path)
+
+
+def render_survivor_journey(
+    survivor_metrics: list[SurvivorMetrics],
+    output_path: str | Path,
+    year: int,
+    *,
+    theme: BracketTheme | None = None,
+) -> Path:
+    """Render an interactive survivor pick journey chart.
+
+    Args:
+        survivor_metrics: Survivor results for this year (one per strategy).
+        output_path: Destination file path (``.html`` for interactive).
+        year: Tournament year.
+        theme: Visual style.
+
+    Returns:
+        The resolved output path.
+    """
+    fig = _survivor_chart(survivor_metrics, year, theme=theme)
+    return save_chart(fig, output_path)
+
+
+def render_survivor_multi_year(
+    all_metrics: list[SurvivorMetrics],
+    output_path: str | Path,
+    *,
+    theme: BracketTheme | None = None,
+) -> Path:
+    """Render a multi-year survivor rounds-survived comparison chart.
+
+    Args:
+        all_metrics: Survivor results across multiple years.
+        output_path: Destination file path.
+        theme: Visual style.
+
+    Returns:
+        The resolved output path.
+    """
+    fig = _multi_year_survivor_chart(all_metrics, theme=theme)
+    return save_chart(fig, output_path)
+
+
+def render_bracket_with_survivor(
+    bracket: Bracket,
+    survivor_picks: tuple[dict, ...],
+    output_path: str | Path,
+    *,
+    strategy_label: str = "",
+    theme: BracketTheme | None = None,
+) -> Path:
+    """Render a bracket SVG with survivor pool picks highlighted.
+
+    Args:
+        bracket: The bracket data to visualise.
+        survivor_picks: Tuple of pick dicts from ``SurvivorMetrics.picks``.
+        output_path: Destination file path.
+        strategy_label: Label drawn on the bracket (e.g. "Greedy").
+        theme: Visual style.
+
+    Returns:
+        The resolved output path.
+    """
+    theme = theme or DEFAULT_THEME
+    layout = compute_layout(theme)
+    drawing = render_bracket_svg(bracket, layout, theme)
+    overlay_survivor_picks(
+        drawing, bracket, layout, survivor_picks, theme,
+        strategy_label=strategy_label,
+    )
+    return _save_drawing(drawing, Path(output_path))

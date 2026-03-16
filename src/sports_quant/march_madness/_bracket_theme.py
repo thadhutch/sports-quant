@@ -83,5 +83,12 @@ class BracketTheme:
     legend_swatch_size: float = 10.0
     legend_gap: float = 16.0
 
+    # Survivor pool overlay
+    survivor_pick_color: str = "#42a5f5"
+    survivor_survived_color: str = "#00c853"
+    survivor_eliminated_color: str = "#ff1744"
+    survivor_badge_size: float = 12.0
+    survivor_glow_width: float = 3.0
+
 
 DEFAULT_THEME = BracketTheme()

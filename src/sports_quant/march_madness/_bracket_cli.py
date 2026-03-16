@@ -29,7 +29,10 @@ from sports_quant.march_madness.bracket_plots import (
     render_accuracy,
     render_accuracy_comparison,
     render_bracket,
+    render_bracket_with_survivor,
     render_comparison,
+    render_survivor_journey,
+    render_survivor_multi_year,
 )
 
 logger = logging.getLogger(__name__)
@@ -254,6 +257,97 @@ def render_multi_year_accuracy(
     return outputs
 
 
+def _render_survivor_charts(
+    *,
+    backtest_dir: Path,
+    version: str,
+    years: list[int],
+    matchups_df: pd.DataFrame,
+    output_dirs: dict[int, Path],
+    simulation_brackets: dict[int, Bracket],
+) -> list[Path]:
+    """Render survivor pool charts from metrics.json.
+
+    Loads survivor metrics, renders per-year journey charts and
+    bracket overlays, plus a multi-year summary if multiple years exist.
+
+    Returns:
+        List of output file paths.
+    """
+    from sports_quant.march_madness._results import SurvivorMetrics, load_metrics
+
+    metrics_path = backtest_dir / version / "metrics.json"
+    if not metrics_path.exists():
+        logger.info("No metrics.json found at %s — skipping survivor charts", metrics_path)
+        return []
+
+    version_metrics = load_metrics(metrics_path)
+    if not version_metrics.survivor_metrics:
+        logger.info("No survivor metrics in %s — skipping", metrics_path)
+        return []
+
+    outputs: list[Path] = []
+    all_survivor: list[SurvivorMetrics] = []
+
+    for year in years:
+        year_survivors = [
+            m for m in version_metrics.survivor_metrics if m.year == year
+        ]
+        if not year_survivors:
+            continue
+
+        all_survivor.extend(year_survivors)
+        output_dir = output_dirs.get(year)
+        if output_dir is None:
+            output_dir = backtest_dir / version / str(year) / "plots" / "brackets"
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # 1. Journey chart (Plotly HTML)
+        journey_path = render_survivor_journey(
+            year_survivors,
+            output_dir / f"{year}_survivor_journey.html",
+            year,
+        )
+        outputs.append(journey_path)
+        logger.info("Rendered survivor journey chart: %s", journey_path)
+
+        # 2. Bracket overlays (one SVG per strategy)
+        bracket = simulation_brackets.get(year)
+        if bracket is None:
+            # Try building from actual results as fallback
+            try:
+                bracket = build_actual_bracket(matchups_df, year)
+            except (KeyError, ValueError):
+                logger.warning("Cannot build bracket for %d — skipping overlay", year)
+                continue
+
+        for survivor in year_survivors:
+            if not survivor.picks:
+                continue
+            svg_path = render_bracket_with_survivor(
+                bracket,
+                survivor.picks,
+                output_dir / f"{year}_simulation_survivor_{survivor.strategy}.svg",
+                strategy_label=survivor.strategy.title(),
+            )
+            outputs.append(svg_path)
+            logger.info("Rendered survivor overlay: %s", svg_path)
+
+    # 3. Multi-year summary
+    if len(all_survivor) > 1:
+        multi_dir = backtest_dir / version
+        multi_dir.mkdir(parents=True, exist_ok=True)
+        multi_path = render_survivor_multi_year(
+            all_survivor,
+            multi_dir / "multi_year_survivor.html",
+        )
+        outputs.append(multi_path)
+        logger.info("Rendered multi-year survivor chart: %s", multi_path)
+
+    return outputs
+
+
 def run_bracket_visualisation(
     *,
     years: list[int] | None = None,
@@ -380,6 +474,20 @@ def run_bracket_visualisation(
             multi_year_output_dir=backtest_dir / version,
         )
         all_outputs.extend(accuracy_outputs)
+
+    # Render survivor pool charts
+    survivor_outputs = _render_survivor_charts(
+        backtest_dir=backtest_dir,
+        version=version,
+        years=years,
+        matchups_df=matchups_df,
+        output_dirs=output_dirs,
+        simulation_brackets={
+            y: compared_brackets[y]
+            for y in compared_brackets
+        },
+    )
+    all_outputs.extend(survivor_outputs)
 
     logger.info("Bracket visualisation complete: %d files", len(all_outputs))
     return all_outputs
