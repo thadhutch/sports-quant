@@ -84,6 +84,34 @@ def test_merge_school_names(tmp_path):
     assert rows[2][1] == "Kansas"
 
 
+def test_merge_school_names_skips_known_conference(tmp_path):
+    """Regression: conference abbreviations must NOT be merged into team name.
+
+    Without this guard, 'Mount St. Mary's' + 'MAAC' would merge into
+    'Mount St. Mary's MAAC', shifting all subsequent columns and corrupting
+    the team's stats (AdjEM ~101 instead of ~-6).
+    """
+    input_path = tmp_path / "input.csv"
+    output_path = tmp_path / "output.csv"
+
+    with open(input_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Rank", "Team", "Conference", "Record"])
+        writer.writerow(["238", "Mount St. Mary's", "MAAC", "23-12"])
+        writer.writerow(["185", "Merrimack", "MAAC", "18-15"])
+
+    merge_school_names(input_path, output_path)
+
+    with open(output_path, "r") as f:
+        rows = list(csv.reader(f))
+
+    # Conference abbreviation must stay separate, not merged into team name
+    assert rows[1][1] == "Mount St. Mary's"
+    assert rows[1][2] == "MAAC"
+    assert rows[2][1] == "Merrimack"
+    assert rows[2][2] == "MAAC"
+
+
 def test_remove_seed_numbers(tmp_path):
     """Removes seed number column after team name."""
     input_path = tmp_path / "input.csv"
