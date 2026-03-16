@@ -108,12 +108,56 @@ DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
     *DERIVED_FEATURES,
 )
 
-# Team name normalization mapping
+# Team name normalization mapping.
+# Maps variant names (from KenPom historical data, matchups, etc.) to a
+# single canonical form used throughout the pipeline.
 TEAM_NAME_MAPPING: dict[str, str] = {
+    # Existing mappings
     "N.C. State": "North Carolina St.",
     "Louisiana Lafayette": "Louisiana",
     "College of Charleston": "Charleston",
     "Mount St. Mary's MAAC": "Mount St. Mary's",
+    # Historical KenPom (2011-2016) uses full "State" instead of "St."
+    "Michigan State": "Michigan St.",
+    "Ohio State": "Ohio St.",
+    "Wichita State": "Wichita St.",
+    "Iowa State": "Iowa St.",
+    "Kansas State": "Kansas St.",
+    "Florida State": "Florida St.",
+    "San Diego State": "San Diego St.",
+    "Colorado State": "Colorado St.",
+    "North Carolina State": "North Carolina St.",
+    "Murray State": "Murray St.",
+    "Oregon State": "Oregon St.",
+    "Oklahoma State": "Oklahoma St.",
+    "Arizona State": "Arizona St.",
+    "Weber State": "Weber St.",
+    "Norfolk State": "Norfolk St.",
+    "Fresno State": "Fresno St.",
+    "Georgia State": "Georgia St.",
+    "Long Beach State": "Long Beach St.",
+    "New Mexico State": "New Mexico St.",
+    "North Dakota State": "North Dakota St.",
+    "South Dakota State": "South Dakota St.",
+    "Northwestern State": "Northwestern St.",
+    "Cal State Bakersfield": "Cal St. Bakersfield",
+    # Name variant differences
+    "Ole Miss": "Mississippi",
+    "Miami (FL)": "Miami FL",
+    "Loyola (MD)": "Loyola MD",
+    "UConn": "Connecticut",
+    "Southern Methodist": "SMU",
+    "Long Island": "LIU Brooklyn",
+    "St. Peter's": "Saint Peter's",
+    "Louisiana-Lafayette": "Louisiana Lafayette",
+    "Texas San Antonio": "UTSA",
+    "California-Irvine": "UC Irvine",
+    "NC Central": "North Carolina Central",
+    # 2011 christoukmaji-specific variants
+    "Texas A&M;": "Texas A&M",
+    "Brigham Young": "BYU",
+    "Virginia Commonwealth": "VCU",
+    "Nevada Las Vegas": "UNLV",
 }
 
 

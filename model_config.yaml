@@ -22,6 +22,8 @@ march_madness:
   models_to_train: 50
   top_models: 3
   backtest_years:
+  - 2019
+  - 2021
   - 2022
   - 2023
   - 2024
