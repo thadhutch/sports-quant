@@ -18,7 +18,7 @@ ou:
   train:
     test_size: 0.2
 march_madness:
-  model_version: v4
+  model_version: v5
   models_to_train: 50
   top_models: 3
   backtest_years:

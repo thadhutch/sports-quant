@@ -17,7 +17,9 @@ from sports_quant.march_madness._features import (
     BARTTORVIK_STAT_PAIRS,
     COMBINED_DIFF_FEATURE_COLUMNS,
     DIFF_FEATURE_COLUMNS,
+    MATCHUP_FEATURE_COLUMNS,
     STAT_PAIRS,
+    seed_upset_prior,
     standardize_team_name,
 )
 
@@ -222,16 +224,16 @@ class FeatureLookup:
         team1: TeamStats,
         team2: TeamStats,
     ) -> pd.DataFrame:
-        """Build a single-row combined KenPom + Barttorvik difference DataFrame.
+        """Build a single-row combined KenPom + Barttorvik + matchup DataFrame.
 
-        Computes 34 features: 21 KenPom diffs + 13 Barttorvik diffs.
+        Computes 45 features: 21 KenPom + 13 Barttorvik + 11 matchup.
 
         Args:
             team1: First team (must have barttorvik_features).
             team2: Second team (must have barttorvik_features).
 
         Returns:
-            Single-row DataFrame with 34 float64 columns.
+            Single-row DataFrame with 45 float64 columns.
 
         Raises:
             ValueError: If either team is missing Barttorvik features.
@@ -245,9 +247,12 @@ class FeatureLookup:
                 f"Team2 ({team2.team}): {'has' if team2.barttorvik_features else 'missing'}"
             )
 
-        bart_row: dict[str, float] = {}
+        t1_kp = team1.features
+        t2_kp = team2.features
         t1_bart = team1.barttorvik_features
         t2_bart = team2.barttorvik_features
+
+        bart_row: dict[str, float] = {}
 
         # 12 Barttorvik stat differences
         for team1_col, _, diff_name in BARTTORVIK_STAT_PAIRS:
@@ -258,6 +263,50 @@ class FeatureLookup:
         ratio_t2 = t2_bart["Bart_AdjOE"] / t2_bart["Bart_AdjDE"]
         bart_row["bart_efficiency_ratio_diff"] = ratio_t1 - ratio_t2
 
-        bart_df = pd.DataFrame([bart_row])
+        # Matchup interaction features
+        adjO_diff = t1_kp["AdjustO"] - t2_kp["AdjustO"]
+        adjD_diff = t1_kp["AdjustD"] - t2_kp["AdjustD"]
+        adjEM_diff = t1_kp["AdjEM"] - t2_kp["AdjEM"]
+        adjT_diff = t1_kp["AdjustT"] - t2_kp["AdjustT"]
+        seed_diff = float(team1.seed - team2.seed)
+        bart_adjOE_diff = t1_bart["Bart_AdjOE"] - t2_bart["Bart_AdjOE"]
+        bart_adjDE_diff = t1_bart["Bart_AdjDE"] - t2_bart["Bart_AdjDE"]
+        sos_adjEM_diff = t1_kp["SOS AdjEM"] - t2_kp["SOS AdjEM"]
+        bart_barthag_diff = t1_bart["Bart_Barthag"] - t2_bart["Bart_Barthag"]
 
-        return pd.concat([kenpom_df, bart_df], axis=1)
+        matchup_row: dict[str, float] = {}
+
+        # Group 1: Offensive vs defensive style interactions
+        matchup_row["offense_vs_defense_mismatch"] = (
+            (t1_kp["AdjustO"] - t2_kp["AdjustD"])
+            - (t2_kp["AdjustO"] - t1_kp["AdjustD"])
+        )
+        matchup_row["bart_offense_vs_defense_mismatch"] = (
+            (t1_bart["Bart_AdjOE"] - t2_bart["Bart_AdjDE"])
+            - (t2_bart["Bart_AdjOE"] - t1_bart["Bart_AdjDE"])
+        )
+        matchup_row["offense_defense_product"] = adjO_diff * adjD_diff
+        matchup_row["bart_offense_defense_product"] = (
+            bart_adjOE_diff * bart_adjDE_diff
+        )
+
+        # Group 2: Tempo mismatch
+        matchup_row["tempo_mismatch_magnitude"] = abs(adjT_diff)
+        matchup_row["tempo_x_quality_interaction"] = adjT_diff * adjEM_diff
+        matchup_row["tempo_x_seed_interaction"] = adjT_diff * seed_diff
+
+        # Group 3: Historical seed priors
+        prior = seed_upset_prior(team1.seed, team2.seed)
+        matchup_row["seed_upset_prior_centered"] = prior
+        matchup_row["seed_x_quality_gap"] = prior * adjEM_diff
+
+        # Group 4: Quality consistency
+        matchup_row["quality_source_agreement"] = (
+            adjEM_diff * bart_barthag_diff
+        )
+        matchup_row["sos_quality_interaction"] = sos_adjEM_diff * adjEM_diff
+
+        combined_row = {**bart_row, **matchup_row}
+        extra_df = pd.DataFrame([combined_row])
+
+        return pd.concat([kenpom_df, extra_df], axis=1)

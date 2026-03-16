@@ -1,4 +1,6 @@
-# Seed Slot Debiasing — Specification
+# ~~Seed Slot Debiasing — Specification~~
+
+> **STATUS: SUPERSEDED** — This spec was written when the model used raw 36-column features where positional bias was significant. Since v2, the model uses difference features (`adjEM_diff = team1 - team2`) where negating the diffs is mathematically equivalent to swapping positions. The existing column-swap debiasing in `_debiasing.py` already handles this. The structural swap proposed here would provide marginal-at-best improvement with difference features. Skipping in favor of matchup-specific features (item 3 on the v4 roadmap).
 
 ## Problem Statement
 

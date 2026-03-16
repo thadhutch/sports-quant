@@ -200,10 +200,90 @@ BARTTORVIK_DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
     *BARTTORVIK_DERIVED_FEATURES,
 )
 
-# Combined KenPom + Barttorvik difference features (34 total)
+# ---------------------------------------------------------------------------
+# Matchup-specific interaction features
+# ---------------------------------------------------------------------------
+
+# Historical seed-pairing upset rates (lower seed winning), 2003-2024.
+# Keys are (higher_seed, lower_seed) — e.g. (1, 16) means 1-seed vs 16-seed.
+# Values are the historical probability that the LOWER seed wins (the upset).
+SEED_MATCHUP_PRIORS: dict[tuple[int, int], float] = {
+    (1, 16): 0.01,
+    (2, 15): 0.06,
+    (3, 14): 0.15,
+    (4, 13): 0.20,
+    (5, 12): 0.35,
+    (6, 11): 0.37,
+    (7, 10): 0.39,
+    (8, 9): 0.48,
+}
+
+
+def seed_upset_prior(seed1: int, seed2: int) -> float:
+    """Return a centered upset prior from Team1's perspective.
+
+    Positive means Team1 is historically favored, negative means
+    Team1 is the historical underdog. Zero when no prior exists.
+
+    The value is ``team1_win_prob - 0.5``, so it is odd under swap:
+    ``seed_upset_prior(a, b) == -seed_upset_prior(b, a)``.
+    """
+    if seed1 == seed2:
+        return 0.0
+
+    higher_seed = min(seed1, seed2)  # lower number = higher seed
+    lower_seed = max(seed1, seed2)
+    upset_rate = SEED_MATCHUP_PRIORS.get((higher_seed, lower_seed), 0.50)
+
+    # P(Team1 wins) from Team1's perspective
+    if seed1 <= seed2:
+        # Team1 is the higher seed (favorite)
+        team1_win_prob = 1.0 - upset_rate
+    else:
+        # Team1 is the lower seed (underdog)
+        team1_win_prob = upset_rate
+
+    return team1_win_prob - 0.5
+
+
+# Matchup interaction feature names (11 total)
+MATCHUP_FEATURE_COLUMNS: tuple[str, ...] = (
+    # Group 1: Offensive vs defensive style interactions
+    "offense_vs_defense_mismatch",
+    "bart_offense_vs_defense_mismatch",
+    "offense_defense_product",
+    "bart_offense_defense_product",
+    # Group 2: Tempo mismatch
+    "tempo_mismatch_magnitude",
+    "tempo_x_quality_interaction",
+    "tempo_x_seed_interaction",
+    # Group 3: Historical seed priors
+    "seed_upset_prior_centered",
+    "seed_x_quality_gap",
+    # Group 4: Quality consistency
+    "quality_source_agreement",
+    "sos_quality_interaction",
+)
+
+# Features with even symmetry (invariant under team swap).
+# These must NOT be negated during symmetrization — they are either
+# absolute values or products of two odd terms.
+MATCHUP_EVEN_FEATURES: frozenset[str] = frozenset({
+    "offense_defense_product",
+    "bart_offense_defense_product",
+    "tempo_mismatch_magnitude",
+    "tempo_x_quality_interaction",
+    "tempo_x_seed_interaction",
+    "seed_x_quality_gap",
+    "quality_source_agreement",
+    "sos_quality_interaction",
+})
+
+# Combined KenPom + Barttorvik + matchup features (45 total)
 COMBINED_DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
     *DIFF_FEATURE_COLUMNS,
     *BARTTORVIK_DIFF_FEATURE_COLUMNS,
+    *MATCHUP_FEATURE_COLUMNS,
 )
 
 # Team name normalization mapping.

@@ -16,10 +16,13 @@ from sports_quant.march_madness._features import (
     COMBINED_DIFF_FEATURE_COLUMNS,
     DIFF_FEATURE_COLUMNS,
     DROP_COLUMNS,
+    MATCHUP_EVEN_FEATURES,
+    MATCHUP_FEATURE_COLUMNS,
     STAT_PAIRS,
     TARGET_COLUMN,
     TEAM_INFO_COLUMNS,
     YEAR_COLUMN,
+    seed_upset_prior,
 )
 
 logger = logging.getLogger(__name__)
@@ -103,23 +106,88 @@ def compute_barttorvik_difference_features(
     return pd.DataFrame(result, columns=list(BARTTORVIK_DIFF_FEATURE_COLUMNS))
 
 
+def compute_matchup_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute matchup-specific interaction features.
+
+    Produces 11 features that capture how two teams' styles interact,
+    beyond simple stat differences. Requires both KenPom and Barttorvik
+    columns plus Seed1/Seed2.
+
+    Args:
+        df: DataFrame with KenPom, Barttorvik, and seed columns.
+
+    Returns:
+        New DataFrame with MATCHUP_FEATURE_COLUMNS (11 columns).
+    """
+    result: dict[str, pd.Series] = {}
+
+    # Precompute diffs used by multiple features
+    adjO_diff = df["AdjustO"] - df["AdjustO_Team2"]
+    adjD_diff = df["AdjustD"] - df["AdjustD_Team2"]
+    adjEM_diff = df["AdjEM"] - df["AdjEM_Team2"]
+    adjT_diff = df["AdjustT"] - df["AdjustT_Team2"]
+    seed_diff = df["Seed1"] - df["Seed2"]
+    bart_adjOE_diff = df["Bart_AdjOE"] - df["Bart_AdjOE_Team2"]
+    bart_adjDE_diff = df["Bart_AdjDE"] - df["Bart_AdjDE_Team2"]
+    sos_adjEM_diff = df["SOS AdjEM"] - df["SOS AdjEM_Team2"]
+    bart_barthag_diff = df["Bart_Barthag"] - df["Bart_Barthag_Team2"]
+
+    # Group 1: Offensive vs defensive style interactions
+    result["offense_vs_defense_mismatch"] = (
+        (df["AdjustO"] - df["AdjustD_Team2"])
+        - (df["AdjustO_Team2"] - df["AdjustD"])
+    )
+    result["bart_offense_vs_defense_mismatch"] = (
+        (df["Bart_AdjOE"] - df["Bart_AdjDE_Team2"])
+        - (df["Bart_AdjOE_Team2"] - df["Bart_AdjDE"])
+    )
+    result["offense_defense_product"] = adjO_diff * adjD_diff
+    result["bart_offense_defense_product"] = bart_adjOE_diff * bart_adjDE_diff
+
+    # Group 2: Tempo mismatch
+    result["tempo_mismatch_magnitude"] = (
+        (df["AdjustT"] - df["AdjustT_Team2"]).abs()
+    )
+    result["tempo_x_quality_interaction"] = adjT_diff * adjEM_diff
+    result["tempo_x_seed_interaction"] = adjT_diff * seed_diff
+
+    # Group 3: Historical seed priors
+    result["seed_upset_prior_centered"] = pd.Series(
+        [
+            seed_upset_prior(int(s1), int(s2))
+            for s1, s2 in zip(df["Seed1"], df["Seed2"])
+        ],
+        index=df.index,
+    )
+    result["seed_x_quality_gap"] = (
+        result["seed_upset_prior_centered"] * adjEM_diff
+    )
+
+    # Group 4: Quality consistency
+    result["quality_source_agreement"] = adjEM_diff * bart_barthag_diff
+    result["sos_quality_interaction"] = sos_adjEM_diff * adjEM_diff
+
+    return pd.DataFrame(result, columns=list(MATCHUP_FEATURE_COLUMNS))
+
+
 def compute_combined_difference_features(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Compute KenPom + Barttorvik difference features.
+    """Compute KenPom + Barttorvik + matchup interaction features.
 
-    Produces 34 total features: 21 KenPom + 13 Barttorvik.
+    Produces 45 total features: 21 KenPom + 13 Barttorvik + 11 matchup.
 
     Args:
         df: DataFrame with both KenPom and Barttorvik columns.
 
     Returns:
-        New DataFrame with COMBINED_DIFF_FEATURE_COLUMNS (34 columns).
+        New DataFrame with COMBINED_DIFF_FEATURE_COLUMNS (45 columns).
     """
     kenpom_feats = compute_difference_features(df)
     bart_feats = compute_barttorvik_difference_features(df)
+    matchup_feats = compute_matchup_features(df)
 
-    return pd.concat([kenpom_feats, bart_feats], axis=1)
+    return pd.concat([kenpom_feats, bart_feats, matchup_feats], axis=1)
 
 
 def symmetrize_training_data(
@@ -154,10 +222,11 @@ def symmetrize_training_data(
             f"Extra: {actual - combined}, Missing: {combined - actual}"
         )
 
-    # Product interaction features that are even under swap (don't negate)
-    even_features = {"seed_x_adjEM_interaction"}
+    # Even-symmetry features: products of two odd terms, or absolute values.
+    # These are invariant under team swap and must NOT be negated.
+    even_features = {"seed_x_adjEM_interaction"} | MATCHUP_EVEN_FEATURES
 
-    # Build flipped data: negate first-order diffs, keep even features.
+    # Build flipped data: negate odd features, preserve even features.
     flipped_data = {}
     for col in X.columns:
         if col in even_features:
@@ -165,10 +234,36 @@ def symmetrize_training_data(
         else:
             flipped_data[col] = -X[col]
 
-    # Recompute product features from negated components
+    # Recompute product features from negated components to ensure
+    # numerical consistency: (-a)*(-b) = a*b (same as original).
     flipped_data["seed_x_adjEM_interaction"] = (
         -X["seed_diff"] * -X["adjEM_diff"]
     )
+
+    # Recompute matchup product features if present
+    if "offense_defense_product" in X.columns:
+        flipped_data["offense_defense_product"] = (
+            -X["adjO_diff"] * -X["adjD_diff"]
+        )
+        flipped_data["bart_offense_defense_product"] = (
+            -X["bart_adjOE_diff"] * -X["bart_adjDE_diff"]
+        )
+        # tempo_mismatch_magnitude is abs() — inherently even, copy is fine
+        flipped_data["tempo_x_quality_interaction"] = (
+            -X["adjT_diff"] * -X["adjEM_diff"]
+        )
+        flipped_data["tempo_x_seed_interaction"] = (
+            -X["adjT_diff"] * -X["seed_diff"]
+        )
+        flipped_data["seed_x_quality_gap"] = (
+            -X["seed_upset_prior_centered"] * -X["adjEM_diff"]
+        )
+        flipped_data["quality_source_agreement"] = (
+            -X["adjEM_diff"] * -X["bart_barthag_diff"]
+        )
+        flipped_data["sos_quality_interaction"] = (
+            -X["sos_adjEM_diff"] * -X["adjEM_diff"]
+        )
 
     X_flipped = pd.DataFrame(flipped_data, columns=list(X.columns))
     y_flipped = 1 - y
