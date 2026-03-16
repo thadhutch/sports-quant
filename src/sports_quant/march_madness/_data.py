@@ -10,6 +10,10 @@ import pandas as pd
 
 from sports_quant.march_madness import _config as mm_config
 from sports_quant.march_madness._features import (
+    BARTTORVIK_DERIVED_FEATURES,
+    BARTTORVIK_DIFF_FEATURE_COLUMNS,
+    BARTTORVIK_STAT_PAIRS,
+    COMBINED_DIFF_FEATURE_COLUMNS,
     DIFF_FEATURE_COLUMNS,
     DROP_COLUMNS,
     STAT_PAIRS,
@@ -66,6 +70,58 @@ def compute_difference_features(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(result, columns=list(DIFF_FEATURE_COLUMNS))
 
 
+def _has_barttorvik_columns(df: pd.DataFrame) -> bool:
+    """Check if the DataFrame contains Barttorvik columns."""
+    return "Bart_Rank" in df.columns and "Bart_Rank_Team2" in df.columns
+
+
+def compute_barttorvik_difference_features(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compute pairwise difference features from Barttorvik columns.
+
+    Transforms Barttorvik Team1/Team2 columns into 13 difference features:
+    12 stat diffs + 1 derived feature.
+
+    Args:
+        df: DataFrame with Barttorvik columns for both teams.
+
+    Returns:
+        New DataFrame with only BARTTORVIK_DIFF_FEATURE_COLUMNS (13 columns).
+    """
+    result: dict[str, pd.Series] = {}
+
+    # 12 stat differences
+    for team1_col, team2_col, diff_name in BARTTORVIK_STAT_PAIRS:
+        result[diff_name] = df[team1_col] - df[team2_col]
+
+    # Derived: Barttorvik efficiency ratio diff = (AdjOE/AdjDE)_t1 - (AdjOE/AdjDE)_t2
+    ratio_t1 = df["Bart_AdjOE"] / df["Bart_AdjDE"]
+    ratio_t2 = df["Bart_AdjOE_Team2"] / df["Bart_AdjDE_Team2"]
+    result["bart_efficiency_ratio_diff"] = ratio_t1 - ratio_t2
+
+    return pd.DataFrame(result, columns=list(BARTTORVIK_DIFF_FEATURE_COLUMNS))
+
+
+def compute_combined_difference_features(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compute KenPom + Barttorvik difference features.
+
+    Produces 34 total features: 21 KenPom + 13 Barttorvik.
+
+    Args:
+        df: DataFrame with both KenPom and Barttorvik columns.
+
+    Returns:
+        New DataFrame with COMBINED_DIFF_FEATURE_COLUMNS (34 columns).
+    """
+    kenpom_feats = compute_difference_features(df)
+    bart_feats = compute_barttorvik_difference_features(df)
+
+    return pd.concat([kenpom_feats, bart_feats], axis=1)
+
+
 def symmetrize_training_data(
     X: pd.DataFrame, y: pd.Series,
 ) -> tuple[pd.DataFrame, pd.Series]:
@@ -75,7 +131,7 @@ def symmetrize_training_data(
     diff(A,B) = -diff(B,A). Second-order features (products of diffs)
     are even under swap and must be recomputed, not negated.
 
-    Only works with difference features (all columns should be diffs).
+    Works with both KenPom-only (21 cols) and combined (34 cols) features.
 
     Args:
         X: Feature matrix with difference columns.
@@ -85,28 +141,36 @@ def symmetrize_training_data(
         Tuple of (augmented X, augmented y) with 2x the original rows.
 
     Raises:
-        ValueError: If X columns don't match DIFF_FEATURE_COLUMNS.
+        ValueError: If X columns don't match expected difference features.
     """
-    expected = set(DIFF_FEATURE_COLUMNS)
     actual = set(X.columns)
-    if actual != expected:
+    kenpom_only = set(DIFF_FEATURE_COLUMNS)
+    combined = set(COMBINED_DIFF_FEATURE_COLUMNS)
+
+    if actual != kenpom_only and actual != combined:
         raise ValueError(
             f"Symmetrization requires difference features. "
-            f"Missing: {expected - actual}, Extra: {actual - expected}"
+            f"Got {len(actual)} columns, expected {len(kenpom_only)} or {len(combined)}. "
+            f"Extra: {actual - combined}, Missing: {combined - actual}"
         )
 
-    # Build flipped data without mutating: negate first-order diffs,
-    # recompute product feature from the negated components.
-    flipped_data = {
-        col: (-X[col] if col != "seed_x_adjEM_interaction" else X[col])
-        for col in X.columns
-    }
-    # (-seed_diff) * (-adjEM_diff) = seed_diff * adjEM_diff (same as original)
+    # Product interaction features that are even under swap (don't negate)
+    even_features = {"seed_x_adjEM_interaction"}
+
+    # Build flipped data: negate first-order diffs, keep even features.
+    flipped_data = {}
+    for col in X.columns:
+        if col in even_features:
+            flipped_data[col] = X[col].copy()
+        else:
+            flipped_data[col] = -X[col]
+
+    # Recompute product features from negated components
     flipped_data["seed_x_adjEM_interaction"] = (
         -X["seed_diff"] * -X["adjEM_diff"]
     )
-    X_flipped = pd.DataFrame(flipped_data, columns=list(DIFF_FEATURE_COLUMNS))
 
+    X_flipped = pd.DataFrame(flipped_data, columns=list(X.columns))
     y_flipped = 1 - y
 
     X_sym = pd.concat([X, X_flipped], ignore_index=True)
@@ -121,7 +185,8 @@ def load_and_prepare(
     """Load training_data.csv and prepare the feature matrix.
 
     Args:
-        feature_mode: "difference" for 21 pairwise diff features,
+        feature_mode: "difference" for KenPom-only diff features (21 cols),
+                      "combined" for KenPom + Barttorvik diffs (34 cols),
                       "raw" for original 36 team columns.
 
     Returns a PreparedData instance with features, target, and metadata.
@@ -135,7 +200,16 @@ def load_and_prepare(
 
     years = sorted(df[YEAR_COLUMN].unique().tolist())
 
-    if feature_mode == "difference":
+    has_bart = _has_barttorvik_columns(df)
+
+    if feature_mode == "combined":
+        if not has_bart:
+            raise ValueError(
+                "feature_mode='combined' requires Barttorvik columns in "
+                "training_data.csv. Run the Barttorvik scraper and re-merge."
+            )
+        X = compute_combined_difference_features(df)
+    elif feature_mode == "difference":
         X = compute_difference_features(df)
     else:
         # Original raw feature mode
@@ -159,7 +233,8 @@ def load_prediction_data(
     """Load prediction_data.csv for inference.
 
     Args:
-        feature_mode: "difference" for 21 pairwise diff features,
+        feature_mode: "difference" for KenPom-only diff features,
+                      "combined" for KenPom + Barttorvik diffs,
                       "raw" for original 36 team columns.
 
     Returns (X_pred, team_info) where X_pred has features only.
@@ -176,7 +251,16 @@ def load_prediction_data(
         ["YEAR", "Team1", "Team2", "Seed1", "Seed2", "CURRENT ROUND"]
     ].copy()
 
-    if feature_mode == "difference":
+    has_bart = _has_barttorvik_columns(df)
+
+    if feature_mode == "combined":
+        if not has_bart:
+            raise ValueError(
+                "feature_mode='combined' requires Barttorvik columns in "
+                "prediction_data.csv. Run the Barttorvik scraper and re-merge."
+            )
+        X_pred = compute_combined_difference_features(df)
+    elif feature_mode == "difference":
         X_pred = compute_difference_features(df)
     else:
         drop = DROP_COLUMNS + [TARGET_COLUMN]

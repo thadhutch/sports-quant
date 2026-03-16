@@ -27,11 +27,13 @@ from sports_quant.march_madness._config import (
     load_mm_config,
 )
 from sports_quant.march_madness._data import (
+    compute_combined_difference_features,
     compute_difference_features,
     load_and_prepare,
     symmetrize_training_data,
 )
 from sports_quant.march_madness._features import (
+    COMBINED_DIFF_FEATURE_COLUMNS,
     DIFF_FEATURE_COLUMNS,
     DROP_COLUMNS,
     TARGET_COLUMN,
@@ -75,11 +77,13 @@ def _prepare_features(
 
     Args:
         df: Raw matchup data with all columns.
-        feature_mode: "difference" or "raw".
+        feature_mode: "difference", "combined", or "raw".
 
     Returns:
         Feature-only DataFrame.
     """
+    if feature_mode == "combined":
+        return compute_combined_difference_features(df)
     if feature_mode == "difference":
         return compute_difference_features(df)
 
@@ -185,7 +189,7 @@ def run_backtest() -> None:
         y_backtest = backtest_data[TARGET_COLUMN].reset_index(drop=True)
 
         # Apply symmetrization to training data only
-        if do_symmetrize and feature_mode == "difference":
+        if do_symmetrize and feature_mode in ("difference", "combined"):
             X_train_full, y_train_full = symmetrize_training_data(
                 X_train_full, y_train_full,
             )
@@ -380,11 +384,12 @@ def run_backtest() -> None:
                 str(plots_dir / f"learning_curve_top_{rank}.png"),
                 year=backtest_year,
             )
-            feature_names = list(
-                DIFF_FEATURE_COLUMNS
-                if feature_mode == "difference"
-                else X_train_full.columns
-            )
+            if feature_mode == "combined":
+                feature_names = list(COMBINED_DIFF_FEATURE_COLUMNS)
+            elif feature_mode == "difference":
+                feature_names = list(DIFF_FEATURE_COLUMNS)
+            else:
+                feature_names = list(X_train_full.columns)
             plots.plot_feature_importance(
                 md["feature_importances"],
                 feature_names,

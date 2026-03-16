@@ -28,7 +28,7 @@ from sports_quant.march_madness._config import (
     load_mm_config,
 )
 from sports_quant.march_madness._data import load_and_prepare, symmetrize_training_data
-from sports_quant.march_madness._features import DIFF_FEATURE_COLUMNS
+from sports_quant.march_madness._features import COMBINED_DIFF_FEATURE_COLUMNS, DIFF_FEATURE_COLUMNS
 from sports_quant.march_madness import plots
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def run_training() -> None:
         )
 
         # Apply symmetrization to training split only
-        if do_symmetrize and feature_mode == "difference":
+        if do_symmetrize and feature_mode in ("difference", "combined"):
             X_train, y_train = symmetrize_training_data(X_train, y_train)
 
         model = build_lgbm(hyperparams, random_seed)
@@ -144,11 +144,12 @@ def run_training() -> None:
         plots.plot_learning_curve(
             md["results"], rank, str(plots_dir / f"learning_curve_top_{rank}.png")
         )
-        feature_names = list(
-            DIFF_FEATURE_COLUMNS
-            if feature_mode == "difference"
-            else md["X_train"].columns
-        )
+        if feature_mode == "combined":
+            feature_names = list(COMBINED_DIFF_FEATURE_COLUMNS)
+        elif feature_mode == "difference":
+            feature_names = list(DIFF_FEATURE_COLUMNS)
+        else:
+            feature_names = list(md["X_train"].columns)
         plots.plot_feature_importance(
             md["feature_importances"],
             feature_names,
@@ -222,9 +223,12 @@ def run_training() -> None:
     avg_importance = np.mean(
         [d["feature_importances"] for d in all_model_data], axis=0
     )
-    feature_names = list(
-        DIFF_FEATURE_COLUMNS if feature_mode == "difference" else X.columns
-    )
+    if feature_mode == "combined":
+        feature_names = list(COMBINED_DIFF_FEATURE_COLUMNS)
+    elif feature_mode == "difference":
+        feature_names = list(DIFF_FEATURE_COLUMNS)
+    else:
+        feature_names = list(X.columns)
     plots.plot_average_feature_importance(
         avg_importance,
         feature_names,

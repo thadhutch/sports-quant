@@ -18,6 +18,7 @@ from sklearn.metrics import log_loss
 from sports_quant import _config as config
 from sports_quant.march_madness._config import load_mm_config
 from sports_quant.march_madness._data import (
+    compute_combined_difference_features,
     compute_difference_features,
     symmetrize_training_data,
 )
@@ -49,6 +50,7 @@ def run_optuna_study(
     n_trials = n_trials or cfg.get("tuning", {}).get("n_trials", 100)
     do_symmetrize = cfg.get("train", {}).get("symmetrize", False)
     early_stop_rounds = cfg.get("train", {}).get("early_stopping_rounds", 50)
+    feature_mode = cfg.get("feature_mode", "difference")
 
     if matchups_df is None:
         matchups_df = pd.read_csv(mm_config.MM_TRAINING_DATA)
@@ -105,9 +107,14 @@ def run_optuna_study(
             if len(val_raw) == 0:
                 continue
 
-            X_train = compute_difference_features(train_raw)
+            compute_fn = (
+                compute_combined_difference_features
+                if feature_mode == "combined"
+                else compute_difference_features
+            )
+            X_train = compute_fn(train_raw)
             y_train = train_raw[TARGET_COLUMN].reset_index(drop=True)
-            X_val = compute_difference_features(val_raw)
+            X_val = compute_fn(val_raw)
             y_val = val_raw[TARGET_COLUMN].reset_index(drop=True)
 
             if do_symmetrize:

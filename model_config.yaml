@@ -18,7 +18,7 @@ ou:
   train:
     test_size: 0.2
 march_madness:
-  model_version: v3
+  model_version: v4
   models_to_train: 50
   top_models: 3
   backtest_years:
@@ -28,20 +28,20 @@ march_madness:
   - 2023
   - 2024
   - 2025
-  feature_mode: difference
+  feature_mode: combined
   hyperparameters:
     objective: binary
     metric: binary_logloss
-    num_leaves: 62
-    max_depth: 10
-    learning_rate: 0.29941968781040595
-    n_estimators: 963
-    min_child_samples: 79
-    reg_alpha: 1.0529176386970869
-    reg_lambda: 4.418726931211652
-    subsample: 0.6588625026407098
-    colsample_bytree: 0.5115784330157085
-    min_split_gain: 0.204541747379676
+    num_leaves: 55
+    max_depth: 3
+    learning_rate: 0.25730944565655234
+    n_estimators: 177
+    min_child_samples: 43
+    reg_alpha: 0.30260951014986426
+    reg_lambda: 3.8315636574590153
+    subsample: 0.5616914054960942
+    colsample_bytree: 0.6859257313781385
+    min_split_gain: 0.2179546539285833
   backtest:
     min_training_years: 3
     val_years: 2

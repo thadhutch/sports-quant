@@ -364,6 +364,7 @@ def simulate(year, version):
     from sports_quant._config import MODEL_CONFIG_FILE
     from sports_quant.march_madness._config import (
         MM_BACKTEST_DIR,
+        MM_BARTTORVIK_DATA,
         MM_KENPOM_DATA,
         MM_MATCHUPS_RESTRUCTURED,
         load_models,
@@ -373,14 +374,21 @@ def simulate(year, version):
     from sports_quant.march_madness.simulate import simulate_bracket_deterministic
     from sports_quant.march_madness.bracket_plots import render_bracket
 
+    cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
+    feature_mode = cfg["march_madness"].get("feature_mode", "difference")
+
     if not year:
-        cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
         year = cfg["march_madness"]["backtest_years"]
 
     years = list(year)
     matchups_df = pd.read_csv(MM_MATCHUPS_RESTRUCTURED)
     kenpom_df = pd.read_csv(MM_KENPOM_DATA)
-    feature_lookup = FeatureLookup(kenpom_df)
+
+    barttorvik_df = None
+    if MM_BARTTORVIK_DATA.exists() and feature_mode == "combined":
+        barttorvik_df = pd.read_csv(MM_BARTTORVIK_DATA)
+
+    feature_lookup = FeatureLookup(kenpom_df, barttorvik_df=barttorvik_df)
 
     for yr in years:
         models_dir = MM_BACKTEST_DIR / version / str(yr) / "models"
@@ -397,6 +405,7 @@ def simulate(year, version):
             feature_lookup=feature_lookup,
             matchups_df=matchups_df,
             actual_bracket=actual,
+            feature_mode=feature_mode,
         )
 
         correct, total = result.overall_accuracy

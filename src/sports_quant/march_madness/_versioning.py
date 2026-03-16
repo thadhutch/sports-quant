@@ -148,7 +148,11 @@ def _collect_simulation_metrics(
     Loads trained models and KenPom data, then simulates from R64 forward
     (winners cascade) to get realistic bracket accuracy.
     """
-    from sports_quant.march_madness._config import MM_KENPOM_DATA
+    from sports_quant.march_madness._config import (
+        MM_BARTTORVIK_DATA,
+        MM_KENPOM_DATA,
+        load_mm_config,
+    )
     from sports_quant.march_madness._bracket_builder import build_actual_bracket
     from sports_quant.march_madness._feature_builder import FeatureLookup
     from sports_quant.march_madness.simulate import simulate_bracket_deterministic
@@ -161,8 +165,17 @@ def _collect_simulation_metrics(
         )
         return []
 
+    cfg = load_mm_config()
+    feature_mode = cfg.get("feature_mode", "difference")
+
     kenpom_df = pd.read_csv(kenpom_path)
-    feature_lookup = FeatureLookup(kenpom_df)
+
+    barttorvik_df = None
+    bart_path = MM_BARTTORVIK_DATA
+    if bart_path.exists() and feature_mode == "combined":
+        barttorvik_df = pd.read_csv(bart_path)
+
+    feature_lookup = FeatureLookup(kenpom_df, barttorvik_df=barttorvik_df)
 
     metrics: list[SimulationMetrics] = []
 
@@ -188,6 +201,7 @@ def _collect_simulation_metrics(
                 feature_lookup=feature_lookup,
                 matchups_df=matchups_df,
                 actual_bracket=actual,
+                feature_mode=feature_mode,
             )
         except (KeyError, ValueError) as exc:
             logger.warning(

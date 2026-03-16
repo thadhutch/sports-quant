@@ -90,7 +90,10 @@ def _predict_game(
     Returns:
         Debiased probability that team1 wins.
     """
-    if feature_mode == "difference":
+    if feature_mode == "combined":
+        features = feature_lookup.build_combined_difference_features(team1, team2)
+        features_swapped = swap_difference_features(features)
+    elif feature_mode == "difference":
         features = feature_lookup.build_difference_features(team1, team2)
         features_swapped = swap_difference_features(features)
     else:

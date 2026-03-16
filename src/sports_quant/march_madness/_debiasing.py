@@ -13,7 +13,10 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-from sports_quant.march_madness._features import DIFF_FEATURE_COLUMNS
+from sports_quant.march_madness._features import (
+    COMBINED_DIFF_FEATURE_COLUMNS,
+    DIFF_FEATURE_COLUMNS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +67,9 @@ def swap_difference_features(X: pd.DataFrame) -> pd.DataFrame:
 
 
 def _is_difference_features(X: pd.DataFrame) -> bool:
-    """Check if a DataFrame uses difference feature columns."""
-    return set(X.columns) == set(DIFF_FEATURE_COLUMNS)
+    """Check if a DataFrame uses difference feature columns (KenPom or combined)."""
+    cols = set(X.columns)
+    return cols == set(DIFF_FEATURE_COLUMNS) or cols == set(COMBINED_DIFF_FEATURE_COLUMNS)
 
 
 def run_debiased_prediction(

@@ -64,7 +64,7 @@ def run_prediction(
     y_pred_proba = np.mean(all_probas, axis=0)
 
     # Debiased predictions (ensemble of debiased per-model predictions)
-    if feature_mode == "difference":
+    if feature_mode in ("difference", "combined"):
         X_swapped = swap_difference_features(X_pred)
     else:
         X_swapped = swap_team_columns(X_pred)

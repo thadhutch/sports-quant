@@ -25,6 +25,11 @@ DROP_COLUMNS: list[str] = [
     "Seed2",
     "YEAR",
     "CURRENT ROUND",
+    # Barttorvik metadata columns
+    "Bart_Team",
+    "Bart_Team_Team2",
+    "Bart_Year",
+    "Bart_Year_Team2",
 ]
 
 # Columns preserved for team identification before dropping
@@ -39,6 +44,61 @@ TEAM_INFO_COLUMNS: list[str] = [
 
 TARGET_COLUMN = "Team1_Win"
 YEAR_COLUMN = "YEAR"
+
+# ---------------------------------------------------------------------------
+# Barttorvik column definitions
+# ---------------------------------------------------------------------------
+
+# Raw column names as they appear in the Barttorvik CSV download.
+# Order matters — must align with BARTTORVIK_COLUMNS below.
+BARTTORVIK_RAW_COLUMNS: tuple[str, ...] = (
+    "team",
+    "rank",
+    "adjoe",
+    "adjde",
+    "barthag",
+    "adjt",
+    "sos",
+    "ncsos",
+    "elite SOS",
+    "WAB",
+    "Qual O",
+    "Qual D",
+    "Qual Barthag",
+)
+
+# Standardized column names used internally after download.
+BARTTORVIK_COLUMNS: tuple[str, ...] = (
+    "Team",
+    "Bart_Rank",
+    "Bart_AdjOE",
+    "Bart_AdjDE",
+    "Bart_Barthag",
+    "Bart_AdjT",
+    "Bart_SOS",
+    "Bart_NCSOS",
+    "Bart_EliteSOS",
+    "Bart_WAB",
+    "Bart_QualO",
+    "Bart_QualD",
+    "Bart_QualBarthag",
+)
+
+# Stat columns used for feature engineering (excludes Team and Year).
+BARTTORVIK_STAT_COLUMNS: tuple[str, ...] = (
+    "Bart_Rank",
+    "Bart_AdjOE",
+    "Bart_AdjDE",
+    "Bart_Barthag",
+    "Bart_AdjT",
+    "Bart_SOS",
+    "Bart_NCSOS",
+    "Bart_EliteSOS",
+    "Bart_WAB",
+    "Bart_QualO",
+    "Bart_QualD",
+    "Bart_QualBarthag",
+)
 
 # KenPom column names after scraping
 KENPOM_COLUMNS: list[str] = [
@@ -101,11 +161,49 @@ DERIVED_FEATURES: tuple[str, ...] = (
     "seed_x_adjEM_interaction",
 )
 
-# Complete ordered list of difference feature columns (21 total)
+# Complete ordered list of KenPom-only difference feature columns (21 total)
 DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
     *(diff_name for _, _, diff_name in STAT_PAIRS),
     SEED_DIFF_COLUMN,
     *DERIVED_FEATURES,
+)
+
+# ---------------------------------------------------------------------------
+# Barttorvik difference feature definitions
+# ---------------------------------------------------------------------------
+
+# Pairwise difference features for Barttorvik stats.
+# Maps (team1_col, team2_col, diff_name) — same pattern as STAT_PAIRS.
+BARTTORVIK_STAT_PAIRS: tuple[tuple[str, str, str], ...] = (
+    ("Bart_Rank", "Bart_Rank_Team2", "bart_rank_diff"),
+    ("Bart_AdjOE", "Bart_AdjOE_Team2", "bart_adjOE_diff"),
+    ("Bart_AdjDE", "Bart_AdjDE_Team2", "bart_adjDE_diff"),
+    ("Bart_Barthag", "Bart_Barthag_Team2", "bart_barthag_diff"),
+    ("Bart_AdjT", "Bart_AdjT_Team2", "bart_adjT_diff"),
+    ("Bart_SOS", "Bart_SOS_Team2", "bart_sos_diff"),
+    ("Bart_NCSOS", "Bart_NCSOS_Team2", "bart_ncsos_diff"),
+    ("Bart_EliteSOS", "Bart_EliteSOS_Team2", "bart_elite_sos_diff"),
+    ("Bart_WAB", "Bart_WAB_Team2", "bart_wab_diff"),
+    ("Bart_QualO", "Bart_QualO_Team2", "bart_qualO_diff"),
+    ("Bart_QualD", "Bart_QualD_Team2", "bart_qualD_diff"),
+    ("Bart_QualBarthag", "Bart_QualBarthag_Team2", "bart_qual_barthag_diff"),
+)
+
+# Barttorvik-derived features
+BARTTORVIK_DERIVED_FEATURES: tuple[str, ...] = (
+    "bart_efficiency_ratio_diff",
+)
+
+# Barttorvik-only difference feature columns (13 total)
+BARTTORVIK_DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
+    *(diff_name for _, _, diff_name in BARTTORVIK_STAT_PAIRS),
+    *BARTTORVIK_DERIVED_FEATURES,
+)
+
+# Combined KenPom + Barttorvik difference features (34 total)
+COMBINED_DIFF_FEATURE_COLUMNS: tuple[str, ...] = (
+    *DIFF_FEATURE_COLUMNS,
+    *BARTTORVIK_DIFF_FEATURE_COLUMNS,
 )
 
 # Team name normalization mapping.
@@ -157,6 +255,13 @@ TEAM_NAME_MAPPING: dict[str, str] = {
     "Brigham Young": "BYU",
     "Virginia Commonwealth": "VCU",
     "Nevada Las Vegas": "UNLV",
+    # Barttorvik uses "St." suffix where matchup data does not
+    "McNeese St.": "McNeese",
+    # Barttorvik/matchup name variants
+    "SIU Edwardsville": "SIUE",
+    "LIU": "LIU Brooklyn",
+    "Detroit Mercy": "Detroit",
+    "Arkansas Little Rock": "Little Rock",
 }
 
 
