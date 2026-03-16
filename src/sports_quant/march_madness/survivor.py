@@ -756,6 +756,245 @@ def run_survivor_mc_optimal(
 
 
 # ---------------------------------------------------------------------------
+# Sequential MC optimal strategy (round-by-round re-optimization)
+# ---------------------------------------------------------------------------
+
+
+def _extract_round_matchups(
+    actual_bracket: Bracket,
+    round_name: str,
+    feature_lookup,
+    year: int,
+) -> list[tuple]:
+    """Extract actual matchups for a round as TeamStats pairs.
+
+    Reads the actual bracket to find the games in ``round_name``,
+    then converts each team into a ``TeamStats`` via ``feature_lookup``.
+    Games are returned sorted by ``game_index`` so adjacent winners
+    pair correctly for the next round.
+    """
+    from sports_quant.march_madness._feature_builder import TeamStats
+
+    round_games = sorted(
+        [g for g in actual_bracket.games if g.round_name == round_name],
+        key=lambda g: g.game_index,
+    )
+
+    matchups: list[tuple] = []
+    for game in round_games:
+        t1 = feature_lookup.get_team(game.team1.team, year, game.team1.seed)
+        t2 = feature_lookup.get_team(game.team2.team, year, game.team2.seed)
+        matchups.append((t1, t2))
+
+    return matchups
+
+
+def _extract_round_winners(
+    actual_bracket: Bracket,
+    round_name: str,
+    feature_lookup,
+    year: int,
+) -> list:
+    """Get winners of a round as TeamStats, sorted by game_index.
+
+    Used to construct matchups for the next round: adjacent winners
+    are paired (winner of game 0 vs winner of game 1, etc.).
+    """
+    round_games = sorted(
+        [g for g in actual_bracket.games if g.round_name == round_name],
+        key=lambda g: g.game_index,
+    )
+
+    winners = []
+    for game in round_games:
+        if game.winner is None:
+            continue
+        w = game.winner
+        winners.append(feature_lookup.get_team(w.team, year, w.seed))
+
+    return winners
+
+
+def run_survivor_mc_optimal_sequential(
+    year: int,
+    models: list,
+    feature_lookup,
+    matchups_df: pd.DataFrame,
+    actual_bracket: Bracket,
+    n_simulations: int = 1000,
+    rng_seed: int = 42,
+    feature_mode: str = "difference",
+) -> SurvivorResult:
+    """Sequential MC optimal: re-optimize after each round's results.
+
+    Mirrors how a real survivor pool works. Before each round:
+
+    1. Use the **actual** matchups for the current round (known after
+       the previous round completes).
+    2. Run N MC simulations from the current round **forward** to NCG.
+    3. Build a cost matrix for remaining rounds, excluding used teams.
+    4. Solve the assignment — commit only the current round's pick.
+    5. Observe the actual result (survived or eliminated).
+    6. Repeat with updated information for the next round.
+
+    This gives the optimizer progressively more information as the
+    tournament unfolds, unlike ``run_survivor_mc_optimal`` which
+    commits all 6 picks before R64.
+
+    Args:
+        year: Tournament year.
+        models: Trained ensemble models.
+        feature_lookup: ``FeatureLookup`` for building feature vectors.
+        matchups_df: Restructured matchups (for extracting R64).
+        actual_bracket: Ground-truth bracket for results and matchups.
+        n_simulations: Number of forward simulations per round.
+        rng_seed: Random seed for reproducibility.
+        feature_mode: Feature construction mode.
+    """
+    from sports_quant.march_madness.simulate import (
+        _extract_r64_matchups,
+        _precompute_probabilities,
+        _simulate_from_round,
+    )
+
+    # Precompute all pairwise probabilities once (they don't change)
+    r64 = _extract_r64_matchups(matchups_df, year, feature_lookup)
+    probabilities = _precompute_probabilities(
+        year, r64, models, feature_lookup, feature_mode=feature_mode,
+    )
+
+    # Collect all 64 team names
+    all_teams: set[str] = set()
+    for t1, t2 in r64:
+        all_teams.add(t1.team)
+        all_teams.add(t2.team)
+    teams = sorted(all_teams)
+    team_idx = {t: i for i, t in enumerate(teams)}
+
+    used_teams: set[str] = set()
+    picks: list[SurvivorPick] = []
+    exhausted = False
+
+    for round_idx, round_name in enumerate(ROUND_ORDER):
+        # Get the ACTUAL matchups for this round
+        if round_idx == 0:
+            current_matchups = list(r64)
+        else:
+            # Winners of the previous round, paired for this round
+            prev_round = ROUND_ORDER[round_idx - 1]
+            prev_winners = _extract_round_winners(
+                actual_bracket, prev_round, feature_lookup, year,
+            )
+            if len(prev_winners) < 2:
+                exhausted = True
+                break
+            current_matchups = [
+                (prev_winners[i], prev_winners[i + 1])
+                for i in range(0, len(prev_winners), 2)
+            ]
+
+        remaining_rounds = list(ROUND_ORDER[round_idx:])
+        n_remaining = len(remaining_rounds)
+        n_teams_total = len(teams)
+
+        # Run N MC sims from this round forward, accumulate costs
+        cost_sum = np.zeros((n_teams_total, n_remaining))
+        cost_count = np.zeros((n_teams_total, n_remaining))
+
+        rng = np.random.default_rng(rng_seed + round_idx * 1000)
+
+        for _ in range(n_simulations):
+            games = _simulate_from_round(
+                year, round_idx, current_matchups, probabilities, rng,
+            )
+
+            for game in games:
+                if game.winner is None or game.win_probability is None:
+                    continue
+
+                j = remaining_rounds.index(game.round_name)
+                winner = game.winner.team
+                if winner not in team_idx:
+                    continue
+
+                i = team_idx[winner]
+                if game.team1.team == winner:
+                    wp = max(game.win_probability, _PROB_FLOOR)
+                else:
+                    wp = max(1.0 - game.win_probability, _PROB_FLOOR)
+                cost_sum[i, j] += -np.log(wp)
+                cost_count[i, j] += 1
+
+        # Build averaged cost matrix, excluding used teams
+        avg_cost = np.full((n_teams_total, n_remaining), _INFEASIBLE)
+        nonzero = cost_count > 0
+        avg_cost[nonzero] = cost_sum[nonzero] / cost_count[nonzero]
+
+        # Mark used teams as infeasible
+        for used_team in used_teams:
+            if used_team in team_idx:
+                avg_cost[team_idx[used_team], :] = _INFEASIBLE
+
+        # Solve assignment for remaining rounds
+        assignments = _solve_assignment(avg_cost, teams, remaining_rounds)
+
+        if not assignments:
+            exhausted = True
+            break
+
+        # Commit only the CURRENT round's pick
+        current_pick = next(
+            (a for a in assignments if a[1] == round_name), None,
+        )
+        if current_pick is None:
+            exhausted = True
+            break
+
+        team_name, _, win_prob = current_pick
+        used_teams.add(team_name)
+
+        # Check actual result
+        actual = _find_actual_result(team_name, round_name, actual_bracket)
+        if actual is not None:
+            pick = SurvivorPick(
+                round_name=round_name,
+                team=team_name,
+                seed=actual["seed"],
+                opponent=actual["opponent"],
+                opponent_seed=actual["opponent_seed"],
+                win_probability=win_prob,
+                actual_winner=actual["actual_winner"],
+                survived=actual["actual_winner"] == team_name,
+            )
+        else:
+            pick = SurvivorPick(
+                round_name=round_name,
+                team=team_name,
+                seed=0,
+                opponent="unknown",
+                opponent_seed=0,
+                win_probability=win_prob,
+                actual_winner="N/A (eliminated earlier)",
+                survived=False,
+            )
+
+        picks.append(pick)
+
+        if not pick.survived:
+            break
+
+    logger.info(
+        "MC optimal sequential %d (%d sims/round): %d picks, survived %s",
+        year, n_simulations, len(picks),
+        "/".join("OK" if p.survived else "XX" for p in picks),
+    )
+
+    return _result_from_picks(
+        year, "mc_optimal_seq", picks, exhausted=exhausted,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Live prediction mode
 # ---------------------------------------------------------------------------
 

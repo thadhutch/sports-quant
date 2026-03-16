@@ -546,3 +546,64 @@ def _simulate_from_precomputed(
             ]
 
     return games
+
+
+def _simulate_from_round(
+    year: int,
+    start_round_idx: int,
+    entering_matchups: list[tuple[TeamStats, TeamStats]],
+    probabilities: dict[tuple[str, str], float],
+    rng: np.random.Generator,
+) -> list[BracketGame]:
+    """Simulate from an arbitrary round onward using precomputed probs.
+
+    Like ``_simulate_from_precomputed`` but starts at a given round
+    rather than always from R64. Used by the sequential MC survivor
+    strategy which advances round-by-round with known results.
+
+    Args:
+        year: Tournament year.
+        start_round_idx: Index into ``ROUND_ORDER`` to begin at.
+        entering_matchups: Team pairs for the starting round.
+        probabilities: Precomputed pairwise win probabilities.
+        rng: Random generator for sampling outcomes.
+
+    Returns:
+        List of ``BracketGame`` objects for the simulated rounds.
+    """
+    games: list[BracketGame] = []
+    current_matchups = list(entering_matchups)
+
+    for round_name in ROUND_ORDER[start_round_idx:]:
+        winners: list[TeamStats] = []
+
+        for game_idx, (t1, t2) in enumerate(current_matchups):
+            prob = probabilities[(t1.team, t2.team)]
+            team1_wins = rng.random() < prob
+
+            winner_stats = t1 if team1_wins else t2
+            winners.append(winner_stats)
+
+            slot1 = BracketSlot(team=t1.team, seed=t1.seed)
+            slot2 = BracketSlot(team=t2.team, seed=t2.seed)
+
+            game = BracketGame(
+                round_name=round_name,
+                region=_assign_region(round_name, game_idx),
+                game_index=game_idx,
+                team1=slot1,
+                team2=slot2,
+                winner=slot1 if team1_wins else slot2,
+                win_probability=prob,
+                is_upset=determine_upset(t1.seed, t2.seed, team1_wins),
+                is_correct=None,
+            )
+            games.append(game)
+
+        if len(winners) >= 2:
+            current_matchups = [
+                (winners[i], winners[i + 1])
+                for i in range(0, len(winners), 2)
+            ]
+
+    return games

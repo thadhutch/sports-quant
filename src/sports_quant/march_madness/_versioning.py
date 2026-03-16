@@ -39,6 +39,7 @@ from sports_quant.march_madness.survivor import (
     run_survivor_bracket_aware,
     run_survivor_greedy,
     run_survivor_mc_optimal,
+    run_survivor_mc_optimal_sequential,
     run_survivor_optimal,
 )
 
@@ -205,6 +206,24 @@ def _collect_survivor_metrics(
             )
             continue
         metrics.append(_survivor_result_to_metrics(mc_result))
+
+        # MC optimal sequential (round-by-round re-optimization)
+        try:
+            mc_seq_result = run_survivor_mc_optimal_sequential(
+                year=year,
+                models=models,
+                feature_lookup=feature_lookup,
+                matchups_df=matchups_df,
+                actual_bracket=actual,
+                n_simulations=1000,
+                feature_mode=feature_mode,
+            )
+        except Exception as exc:
+            logger.warning(
+                "MC optimal sequential failed for %d: %s", year, exc,
+            )
+            continue
+        metrics.append(_survivor_result_to_metrics(mc_seq_result))
 
     return metrics
 
