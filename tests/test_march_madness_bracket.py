@@ -594,6 +594,28 @@ class TestBracketTreeOrder:
                 f"Region {region_idx} has wrong seed distribution: {seeds}"
             )
 
+    def test_r64_canonical_seed_pair_order(self):
+        """R64 games within each region follow canonical bracket order."""
+        canonical = [(1, 16), (8, 9), (5, 12), (4, 13),
+                     (6, 11), (3, 14), (7, 10), (2, 15)]
+
+        df = _make_full_matchups_df()
+        bracket = build_actual_bracket(df, year=2024)
+        by_region = bracket.games_by_region()
+        for region_idx in range(4):
+            r64 = sorted(
+                [g for g in by_region[region_idx] if g.round_name == "R64"],
+                key=lambda g: g.game_index,
+            )
+            pairs = [
+                (min(g.team1.seed, g.team2.seed), max(g.team1.seed, g.team2.seed))
+                for g in r64
+            ]
+            expected = [(min(s1, s2), max(s1, s2)) for s1, s2 in canonical]
+            assert pairs == expected, (
+                f"Region {region_idx} seed-pair order: {pairs}"
+            )
+
     def test_scrambled_input_produces_same_bracket(self):
         """Shuffling CSV rows should not change the bracket output."""
         df_ordered = _make_full_matchups_df()

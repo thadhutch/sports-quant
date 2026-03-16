@@ -29,6 +29,79 @@ logger = logging.getLogger(__name__)
 # Bracket-tree ordering
 # ---------------------------------------------------------------------------
 
+# Canonical seed-pair order within each region of 8 R64 games.
+# This is the standard NCAA bracket layout.
+_CANONICAL_SEED_PAIR_POS: dict[tuple[int, int], int] = {
+    (1, 16): 0, (8, 9): 1, (5, 12): 2, (4, 13): 3,
+    (6, 11): 4, (3, 14): 5, (7, 10): 6, (2, 15): 7,
+}
+
+
+def _seed_pair_key(row: pd.Series) -> tuple[int, int]:
+    """Return the normalised (low, high) seed pair for a game row."""
+    s1, s2 = int(row["Seed1"]), int(row["Seed2"])
+    return (min(s1, s2), max(s1, s2))
+
+
+def _canonicalize_order(
+    ordered: dict[str, list[int]],
+    year_df: pd.DataFrame,
+) -> dict[str, list[int]]:
+    """Fix within-region ordering to match the canonical bracket layout.
+
+    The tree walk groups games into correct regions but the within-pair
+    ordering depends on Team1/Team2 CSV ordering.  This function:
+
+    1. Sorts R64 games within each region by canonical seed-pair position.
+    2. Re-derives every later round's ordering from the fixed R64 order
+       by mapping each game to the position of its feeder games.
+    """
+
+    def _winner_name(df_idx: int) -> str:
+        row = year_df.loc[df_idx]
+        return row["Team1"] if row["Team1_Win"] == 1 else row["Team2"]
+
+    # Step 1 — Sort R64 within each region (groups of 8)
+    r64 = list(ordered["R64"])
+    sorted_r64: list[int] = []
+    for start in range(0, 32, 8):
+        region = r64[start : start + 8]
+        region.sort(
+            key=lambda idx: _CANONICAL_SEED_PAIR_POS.get(
+                _seed_pair_key(year_df.loc[idx]), 99,
+            ),
+        )
+        sorted_r64.extend(region)
+
+    result: dict[str, list[int]] = {"R64": sorted_r64}
+
+    # Step 2 — Re-derive R32 through NCG from the sorted R64
+    prev_round_name = "R64"
+    for round_name in ROUND_ORDER[1:]:
+        prev_indices = result[prev_round_name]
+
+        # Map: winner team name → sorted position in previous round
+        winner_pos: dict[str, int] = {}
+        for pos, idx in enumerate(prev_indices):
+            winner_pos[_winner_name(idx)] = pos
+
+        # Each game in this round maps to position = min(feeder_pos) // 2
+        games_with_target: list[tuple[int, int]] = []
+        for idx in ordered[round_name]:
+            row = year_df.loc[idx]
+            pos1 = winner_pos.get(row["Team1"], 999)
+            pos2 = winner_pos.get(row["Team2"], 999)
+            target = min(pos1, pos2) // 2
+            games_with_target.append((target, idx))
+
+        games_with_target.sort(key=lambda x: x[0])
+        result[round_name] = [idx for _, idx in games_with_target]
+
+        prev_round_name = round_name
+
+    return result
+
+
 def _bracket_tree_order(
     year_df: pd.DataFrame,
 ) -> dict[str, list[int]] | None:
@@ -36,7 +109,8 @@ def _bracket_tree_order(
 
     Walks from the championship game (NCG) backward to R64, matching
     each game's participants to the winners of games in the previous round.
-    This makes ``game_index`` assignment independent of CSV row order.
+    Then canonicalises the within-region ordering to match the standard
+    NCAA bracket layout (1v16, 8v9, 5v12, 4v13, 6v11, 3v14, 7v10, 2v15).
 
     Args:
         year_df: Matchups DataFrame filtered to a single year.
@@ -65,18 +139,16 @@ def _bracket_tree_order(
             return None
         round_dfs[round_name] = rdf
 
-    # Seed with NCG (single game)
+    # --- Phase 1: tree walk (NCG → R64) for region grouping ---
+
     ordered: dict[str, list[int]] = {
         "NCG": list(round_dfs["NCG"].index),
     }
 
-    # Walk backward: for each parent game, locate the two child games
-    # whose winner matches the parent's Team1 and Team2.
     for round_idx in range(len(ROUND_ORDER) - 1, 0, -1):
         parent_round = ROUND_ORDER[round_idx]
         child_round = ROUND_ORDER[round_idx - 1]
 
-        # Build lookup: winner team name → DataFrame index
         child_df = round_dfs[child_round]
         winner_to_idx: dict[str, int] = {}
         for idx, row in child_df.iterrows():
@@ -103,7 +175,9 @@ def _bracket_tree_order(
 
         ordered[child_round] = child_ordered
 
-    return ordered
+    # --- Phase 2: canonical seed-pair ordering within each region ---
+
+    return _canonicalize_order(ordered, year_df)
 
 
 def _build_games_ordered(
