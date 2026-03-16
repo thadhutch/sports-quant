@@ -36,6 +36,21 @@ GAMES_PER_ROUND: dict[str, int] = {
 # Number of R64 games per region
 GAMES_PER_REGION_R64 = 8
 
+# Bracket sides: regions that feed into each F4 semifinal
+# F4 game 0 = region 0 winner vs region 1 winner ("left")
+# F4 game 1 = region 2 winner vs region 3 winner ("right")
+BRACKET_SIDES: dict[str, tuple[int, ...]] = {
+    "left": (0, 1),
+    "right": (2, 3),
+}
+SIDE_FOR_REGION: dict[int, str] = {
+    0: "left", 1: "left",
+    2: "right", 3: "right",
+}
+
+# Rounds that occur within regions (before F4/NCG cross-region play)
+REGIONAL_ROUNDS: tuple[str, ...] = ("R64", "R32", "S16", "E8")
+
 
 def determine_upset(seed1: int, seed2: int, team1_wins: bool) -> bool:
     """Determine if the game result is an upset.

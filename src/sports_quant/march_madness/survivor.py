@@ -17,8 +17,14 @@ from scipy.optimize import linear_sum_assignment
 
 from sports_quant.march_madness._bracket import (
     Bracket,
+    REGIONAL_ROUNDS,
     ROUND_NAMES,
     ROUND_ORDER,
+)
+from sports_quant.march_madness._bracket_topology import (
+    build_team_side_map,
+    build_team_side_map_from_r64,
+    solve_constrained_assignment,
 )
 
 logger = logging.getLogger(__name__)
@@ -561,9 +567,9 @@ def run_survivor_bracket_aware(
     """Derive survivor picks from a simulated bracket.
 
     Uses the simulation's predicted matchups and winners to build the
-    candidate pool, then solves the linear assignment to find the
-    optimal pick set. Teams predicted to go deep are naturally
-    available in later rounds, so the optimizer reserves them.
+    candidate pool, then solves a bracket-constrained ILP to find the
+    optimal pick set. The ILP ensures picks don't over-concentrate on
+    one bracket side in R64-E8, preserving viable options for F4/NCG.
 
     After solving, each pick is evaluated against the actual bracket
     to determine whether it would have survived in reality.
@@ -580,7 +586,10 @@ def run_survivor_bracket_aware(
         return _result_from_picks(year, "bracket_aware", [], exhausted=True)
 
     cost, teams, round_list = _build_cost_matrix(candidates, rounds)
-    assignments = _solve_assignment(cost, teams, round_list)
+    team_side_map = build_team_side_map(bracket)
+    assignments = solve_constrained_assignment(
+        cost, teams, round_list, team_side_map,
+    )
 
     picks: list[SurvivorPick] = []
     for team_name, round_name, win_prob in assignments:
@@ -714,7 +723,10 @@ def run_survivor_mc_optimal(
     nonzero = cost_count > 0
     avg_cost[nonzero] = cost_sum[nonzero] / cost_count[nonzero]
 
-    assignments = _solve_assignment(avg_cost, teams, rounds)
+    team_side_map = build_team_side_map_from_r64(r64)
+    assignments = solve_constrained_assignment(
+        avg_cost, teams, rounds, team_side_map,
+    )
 
     picks: list[SurvivorPick] = []
     for team_name, round_name, win_prob in assignments:
@@ -871,7 +883,9 @@ def run_survivor_mc_optimal_sequential(
     teams = sorted(all_teams)
     team_idx = {t: i for i, t in enumerate(teams)}
 
+    team_side_map = build_team_side_map_from_r64(r64)
     used_teams: set[str] = set()
+    side_counts: dict[str, int] = {"left": 0, "right": 0}
     picks: list[SurvivorPick] = []
     exhausted = False
 
@@ -935,8 +949,11 @@ def run_survivor_mc_optimal_sequential(
             if used_team in team_idx:
                 avg_cost[team_idx[used_team], :] = _INFEASIBLE
 
-        # Solve assignment for remaining rounds
-        assignments = _solve_assignment(avg_cost, teams, remaining_rounds)
+        # Solve assignment with bracket-side constraints
+        assignments = solve_constrained_assignment(
+            avg_cost, teams, remaining_rounds, team_side_map,
+            prior_side_counts=side_counts,
+        )
 
         if not assignments:
             exhausted = True
@@ -952,6 +969,15 @@ def run_survivor_mc_optimal_sequential(
 
         team_name, _, win_prob = current_pick
         used_teams.add(team_name)
+
+        # Update side counts for sequential constraint tracking
+        if round_name in REGIONAL_ROUNDS:
+            pick_side = team_side_map.get(team_name)
+            if pick_side:
+                side_counts = {
+                    **side_counts,
+                    pick_side: side_counts[pick_side] + 1,
+                }
 
         # Check actual result
         actual = _find_actual_result(team_name, round_name, actual_bracket)
