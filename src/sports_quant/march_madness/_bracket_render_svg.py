@@ -160,6 +160,18 @@ def _draw_game_box(
             dominant_baseline="central",
         ))
 
+    # Upset indicator (gold triangle in top-left corner)
+    if game.is_upset:
+        tri_size = 10.0
+        d.append(draw.Lines(
+            x, y,
+            x + tri_size, y,
+            x, y + tri_size,
+            close=True,
+            fill=theme.upset_color,
+            fill_opacity=0.9,
+        ))
+
     # Win probability annotation (top-right corner)
     if game.win_probability is not None:
         prob_text = f"{game.win_probability:.0%}"
@@ -294,23 +306,32 @@ def _draw_legend(
     has_correctness: bool,
 ) -> None:
     """Draw a small colour legend at the bottom-left."""
-    entries: list[tuple[str, str]] = []
+    entries: list[tuple[str, str, bool]] = []
     if has_correctness:
-        entries.append((theme.correct_color, "Correct"))
-        entries.append((theme.incorrect_color, "Incorrect"))
-    entries.append((theme.upset_color, "Upset"))
+        entries.append((theme.correct_color, "Correct", False))
+        entries.append((theme.incorrect_color, "Incorrect", False))
+    entries.append((theme.upset_color, "Upset", True))
 
     lx = theme.canvas_padding
     ly = float(d.height) - theme.canvas_padding * 0.6  # type: ignore[arg-type]
     s = theme.legend_swatch_size
 
-    for i, (colour, label) in enumerate(entries):
+    for i, (colour, label, is_triangle) in enumerate(entries):
         offset = i * (s + theme.legend_gap + 40)
-        d.append(draw.Rectangle(
-            lx + offset, ly - s / 2, s, s,
-            rx=2, ry=2,
-            fill=colour,
-        ))
+        if is_triangle:
+            d.append(draw.Lines(
+                lx + offset, ly - s / 2,
+                lx + offset + s, ly - s / 2,
+                lx + offset, ly + s / 2,
+                close=True,
+                fill=colour,
+            ))
+        else:
+            d.append(draw.Rectangle(
+                lx + offset, ly - s / 2, s, s,
+                rx=2, ry=2,
+                fill=colour,
+            ))
         d.append(draw.Text(
             label,
             theme.legend_font_size,
