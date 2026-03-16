@@ -32,16 +32,16 @@ march_madness:
   hyperparameters:
     objective: binary
     metric: binary_logloss
-    num_leaves: 11
-    max_depth: 6
-    learning_rate: 0.17997139385638763
-    n_estimators: 123
-    min_child_samples: 33
-    reg_alpha: 0.7365997192521206
-    reg_lambda: 2.3236883471898326
-    subsample: 0.7205727713471942
-    colsample_bytree: 0.7516754218969777
-    min_split_gain: 0.05425051820105283
+    num_leaves: 62
+    max_depth: 10
+    learning_rate: 0.29941968781040595
+    n_estimators: 963
+    min_child_samples: 79
+    reg_alpha: 1.0529176386970869
+    reg_lambda: 4.418726931211652
+    subsample: 0.6588625026407098
+    colsample_bytree: 0.5115784330157085
+    min_split_gain: 0.204541747379676
   backtest:
     min_training_years: 3
   train:
@@ -49,8 +49,14 @@ march_madness:
     symmetrize: true
     early_stopping_rounds: 50
   tuning:
-    n_trials: 100
+    n_trials: 200
     cv_folds:
+    - train_end: 2013
+      val_year: 2014
+    - train_end: 2015
+      val_year: 2016
+    - train_end: 2017
+      val_year: 2018
     - train_end: 2018
       val_year: 2019
     - train_end: 2021
