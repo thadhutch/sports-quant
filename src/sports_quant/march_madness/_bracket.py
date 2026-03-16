@@ -51,6 +51,32 @@ SIDE_FOR_REGION: dict[int, str] = {
 # Rounds that occur within regions (before F4/NCG cross-region play)
 REGIONAL_ROUNDS: tuple[str, ...] = ("R64", "R32", "S16", "E8")
 
+# Survivor pool day slots: 9 picks across the tournament.
+# R64, R32, and S16 each span two days, requiring a pick per day.
+# E8, F4, and NCG are single-pool slots.
+SURVIVOR_SLOTS: tuple[str, ...] = (
+    "R64_D1", "R64_D2",
+    "R32_D1", "R32_D2",
+    "S16_D1", "S16_D2",
+    "E8", "F4", "NCG",
+)
+
+# Regional survivor slots (before F4/NCG cross-region play)
+REGIONAL_SURVIVOR_SLOTS: tuple[str, ...] = (
+    "R64_D1", "R64_D2",
+    "R32_D1", "R32_D2",
+    "S16_D1", "S16_D2",
+    "E8",
+)
+
+# Map each survivor slot to its parent round name
+SLOT_TO_ROUND: dict[str, str] = {
+    "R64_D1": "R64", "R64_D2": "R64",
+    "R32_D1": "R32", "R32_D2": "R32",
+    "S16_D1": "S16", "S16_D2": "S16",
+    "E8": "E8", "F4": "F4", "NCG": "NCG",
+}
+
 
 def determine_upset(seed1: int, seed2: int, team1_wins: bool) -> bool:
     """Determine if the game result is an upset.
@@ -98,6 +124,8 @@ class BracketGame:
     win_probability: float | None
     is_upset: bool
     is_correct: bool | None  # None = no ground truth to compare against
+    game_date: str | None = None  # YYYY-MM-DD calendar date
+    day_slot: str | None = None  # Survivor slot: R64_D1, R64_D2, etc.
 
 
 @dataclass(frozen=True)

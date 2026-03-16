@@ -15,8 +15,11 @@ from scipy.optimize import Bounds, LinearConstraint, linear_sum_assignment, milp
 from sports_quant.march_madness._bracket import (
     Bracket,
     REGIONAL_ROUNDS,
+    REGIONAL_SURVIVOR_SLOTS,
     ROUND_ORDER,
     SIDE_FOR_REGION,
+    SLOT_TO_ROUND,
+    SURVIVOR_SLOTS,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,10 +27,19 @@ logger = logging.getLogger(__name__)
 _INFEASIBLE = 1e9
 _PROB_FLOOR = 1e-10
 
-# Pre-computed round ordering for sorting assignments
+# Pre-computed ordering for sorting assignments (supports both
+# round names like "R64" and survivor slots like "R64_D1")
 _ROUND_ORDER_INDEX: dict[str, int] = {
     name: idx for idx, name in enumerate(ROUND_ORDER)
 }
+_ROUND_ORDER_INDEX.update({
+    name: idx for idx, name in enumerate(SURVIVOR_SLOTS)
+})
+
+# Set of all regional column names (round names + survivor slot names)
+_REGIONAL_COLUMNS: frozenset[str] = frozenset(REGIONAL_ROUNDS) | frozenset(
+    REGIONAL_SURVIVOR_SLOTS
+)
 
 
 # ---------------------------------------------------------------------------
@@ -141,9 +153,9 @@ def solve_constrained_assignment(
     if n_teams == 0 or n_rounds == 0:
         return []
 
-    # Identify which columns are regional rounds
+    # Identify which columns are regional (R64-E8 rounds or day slots)
     regional_col_indices = [
-        j for j, r in enumerate(rounds) if r in REGIONAL_ROUNDS
+        j for j, r in enumerate(rounds) if r in _REGIONAL_COLUMNS
     ]
     n_regional = len(regional_col_indices)
 
@@ -169,13 +181,17 @@ def solve_constrained_assignment(
         )
         return _solve_unconstrained(cost_matrix, teams, rounds)
 
-    # Compute budget: max picks per side in remaining regional rounds.
-    # Total regional rounds in a full tournament is always 4 (R64-E8).
-    # max_per_side is computed from that total (= 3), then prior picks
-    # are subtracted to get the remaining budget.
+    # Compute budget: max picks per side in remaining regional slots.
+    # Detect whether we're using survivor day-slots (7 regional) or
+    # plain round names (4 regional). Day-slots contain "_D" suffix
+    # (e.g. R64_D1, R32_D2) — their presence signals 9-slot mode.
     prior_left = (prior_side_counts or {}).get("left", 0)
     prior_right = (prior_side_counts or {}).get("right", 0)
-    total_regional = len(REGIONAL_ROUNDS)
+    uses_survivor_slots = any("_D" in r for r in rounds)
+    total_regional = (
+        len(REGIONAL_SURVIVOR_SLOTS) if uses_survivor_slots
+        else len(REGIONAL_ROUNDS)
+    )
     max_per_side = _max_regional_picks_per_side(total_regional)
     budget_left = max(max_per_side - prior_left, 0)
     budget_right = max(max_per_side - prior_right, 0)
@@ -315,7 +331,7 @@ def _solve_ilp(
     team_idx_lookup = {t: i for i, t in enumerate(teams)}
     side_dist: dict[str, int] = {"left": 0, "right": 0}
     for team_name, round_name, _ in assignments:
-        if round_name in REGIONAL_ROUNDS:
+        if round_name in _REGIONAL_COLUMNS:
             idx = team_idx_lookup.get(team_name)
             if idx is not None:
                 if idx in left_teams:

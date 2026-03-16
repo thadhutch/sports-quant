@@ -18,8 +18,11 @@ from scipy.optimize import linear_sum_assignment
 from sports_quant.march_madness._bracket import (
     Bracket,
     REGIONAL_ROUNDS,
+    REGIONAL_SURVIVOR_SLOTS,
     ROUND_NAMES,
     ROUND_ORDER,
+    SLOT_TO_ROUND,
+    SURVIVOR_SLOTS,
 )
 from sports_quant.march_madness._bracket_topology import (
     build_team_side_map,
@@ -47,6 +50,7 @@ class SurvivorPick:
     win_probability: float
     actual_winner: str
     survived: bool
+    day_slot: str | None = None  # Survivor slot: R64_D1, R64_D2, etc.
 
 
 @dataclass(frozen=True)
@@ -84,8 +88,9 @@ class SurvivorMonteCarloResult:
 
 def _build_round_candidates(
     game_probs: pd.DataFrame,
+    use_day_slots: bool = False,
 ) -> dict[str, list[dict]]:
-    """Build per-round candidate lists from game probabilities.
+    """Build per-slot candidate lists from game probabilities.
 
     Each candidate is a dict with team info and win probability for
     both the Team1 side and Team2 side of each game.
@@ -93,10 +98,14 @@ def _build_round_candidates(
     Args:
         game_probs: DataFrame with YEAR, Team1, Seed1, Team2, Seed2,
                     CURRENT ROUND, Debiased_Prob, Team1_Win.
+                    When ``use_day_slots=True``, must also have ``day_slot``.
+        use_day_slots: If True, key candidates by ``day_slot`` column
+                       (e.g. R64_D1) instead of round name (e.g. R64).
 
     Returns:
-        round_name -> list of candidate dicts, each with keys:
-        team, seed, opponent, opponent_seed, win_prob, actual_winner.
+        slot_or_round -> list of candidate dicts, each with keys:
+        team, seed, opponent, opponent_seed, win_prob, actual_winner,
+        round_name, day_slot.
     """
     candidates: dict[str, list[dict]] = {}
 
@@ -106,15 +115,29 @@ def _build_round_candidates(
         if round_name is None:
             continue
 
+        # Determine the grouping key
+        if use_day_slots and "day_slot" in row.index and pd.notna(row.get("day_slot")):
+            key = str(row["day_slot"])
+        else:
+            key = round_name
+
         prob = float(row["Debiased_Prob"])
         actual_winner = (
             row["Team1"] if int(row["Team1_Win"]) == 1 else row["Team2"]
         )
 
-        candidates.setdefault(round_name, [])
+        day_slot = str(row["day_slot"]) if "day_slot" in row.index and pd.notna(row.get("day_slot")) else None
+
+        candidates.setdefault(key, [])
+
+        base = {
+            "round_name": round_name,
+            "day_slot": day_slot,
+        }
 
         # Team1 candidate
-        candidates[round_name].append({
+        candidates[key].append({
+            **base,
             "team": row["Team1"],
             "seed": int(row["Seed1"]),
             "opponent": row["Team2"],
@@ -124,7 +147,8 @@ def _build_round_candidates(
         })
 
         # Team2 candidate
-        candidates[round_name].append({
+        candidates[key].append({
+            **base,
             "team": row["Team2"],
             "seed": int(row["Seed2"]),
             "opponent": row["Team1"],
@@ -241,7 +265,11 @@ def _find_actual_result(
     return None
 
 
-def _make_pick(candidate: dict, round_name: str) -> SurvivorPick:
+def _make_pick(
+    candidate: dict,
+    round_name: str,
+    day_slot: str | None = None,
+) -> SurvivorPick:
     """Create a SurvivorPick from a candidate dict."""
     survived = candidate["actual_winner"] == candidate["team"]
     return SurvivorPick(
@@ -253,6 +281,7 @@ def _make_pick(candidate: dict, round_name: str) -> SurvivorPick:
         win_probability=candidate["win_prob"],
         actual_winner=candidate["actual_winner"],
         survived=survived,
+        day_slot=day_slot or candidate.get("day_slot"),
     )
 
 
@@ -260,10 +289,15 @@ def _result_from_picks(
     year: int,
     strategy: str,
     picks: list[SurvivorPick],
-    total_rounds: int = len(ROUND_ORDER),
+    total_rounds: int | None = None,
     exhausted: bool = False,
 ) -> SurvivorResult:
     """Build a SurvivorResult from a list of picks."""
+    # Infer total from picks: if any pick has day_slot, use 9 slots
+    if total_rounds is None:
+        has_day_slots = any(p.day_slot is not None for p in picks)
+        total_rounds = len(SURVIVOR_SLOTS) if has_day_slots else len(ROUND_ORDER)
+
     rounds_survived = 0
     for p in picks:
         if p.survived:
@@ -302,31 +336,39 @@ def run_survivor_greedy(
     year: int,
     game_probs: pd.DataFrame,
 ) -> SurvivorResult:
-    """Pick highest win-prob unused team each round.
+    """Pick highest win-prob unused team each round/slot.
+
+    When ``game_probs`` has a ``day_slot`` column, iterates over
+    9 survivor slots instead of 6 rounds.
 
     Args:
         year: Tournament year.
         game_probs: DataFrame with YEAR, Team1, Seed1, Team2, Seed2,
                     CURRENT ROUND, Debiased_Prob, Team1_Win.
+                    Optionally ``day_slot`` for 9-slot mode.
     """
-    candidates = _build_round_candidates(game_probs)
+    use_slots = "day_slot" in game_probs.columns and game_probs["day_slot"].notna().any()
+    candidates = _build_round_candidates(game_probs, use_day_slots=use_slots)
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
+
     used: set[str] = set()
     picks: list[SurvivorPick] = []
     exhausted = False
 
-    for round_name in ROUND_ORDER:
-        round_cands = candidates.get(round_name, [])
-        available = [c for c in round_cands if c["team"] not in used]
+    for slot_name in slot_order:
+        slot_cands = candidates.get(slot_name, [])
+        available = [c for c in slot_cands if c["team"] not in used]
 
         if not available:
             logger.warning(
-                "No available candidates for %s in %d", round_name, year,
+                "No available candidates for %s in %d", slot_name, year,
             )
             exhausted = True
             break
 
         best = max(available, key=lambda c: c["win_prob"])
-        pick = _make_pick(best, round_name)
+        round_name = best.get("round_name", SLOT_TO_ROUND.get(slot_name, slot_name))
+        pick = _make_pick(best, round_name, day_slot=slot_name if use_slots else None)
         picks.append(pick)
         used.add(pick.team)
 
@@ -345,30 +387,34 @@ def run_survivor_optimal(
     year: int,
     game_probs: pd.DataFrame,
 ) -> SurvivorResult:
-    """Find the pick sequence that maximizes P(survive all 6 rounds).
+    """Find the pick sequence that maximizes P(survive all slots).
 
     Solves a linear assignment problem on ``-log(win_prob)`` costs.
     Minimising the sum of log-costs is equivalent to maximising the
-    product of win probabilities.
+    product of win probabilities. Uses 9 survivor slots when day_slot
+    data is available, otherwise falls back to 6 rounds.
     """
-    candidates = _build_round_candidates(game_probs)
-    rounds = [r for r in ROUND_ORDER if r in candidates]
+    use_slots = "day_slot" in game_probs.columns and game_probs["day_slot"].notna().any()
+    candidates = _build_round_candidates(game_probs, use_day_slots=use_slots)
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
 
-    if not rounds:
+    slots = [s for s in slot_order if s in candidates]
+
+    if not slots:
         return _result_from_picks(year, "optimal", [], exhausted=True)
 
-    cost, teams, round_list = _build_cost_matrix(candidates, rounds)
-    assignments = _solve_assignment(cost, teams, round_list)
+    cost, teams, slot_list = _build_cost_matrix(candidates, slots)
+    assignments = _solve_assignment(cost, teams, slot_list)
 
     picks: list[SurvivorPick] = []
-    for team_name, round_name, _ in assignments:
-        # Look up the full candidate dict for opponent/seed/actual_winner
+    for team_name, slot_name, _ in assignments:
         cand = next(
-            c for c in candidates[round_name] if c["team"] == team_name
+            c for c in candidates[slot_name] if c["team"] == team_name
         )
-        picks.append(_make_pick(cand, round_name))
+        round_name = cand.get("round_name", SLOT_TO_ROUND.get(slot_name, slot_name))
+        picks.append(_make_pick(cand, round_name, day_slot=slot_name if use_slots else None))
 
-    exhausted = len(assignments) < len(ROUND_ORDER) or len(rounds) < len(ROUND_ORDER)
+    exhausted = len(assignments) < len(slot_order) or len(slots) < len(slot_order)
     return _result_from_picks(year, "optimal", picks, exhausted=exhausted)
 
 
@@ -402,20 +448,24 @@ def run_survivor_monte_carlo(
     else:
         base_result = run_survivor_greedy(year, game_probs)
 
-    # Build a lookup: round_name -> (picked_team, win_prob)
+    # Determine slot order from the picks
+    use_slots = any(p.day_slot is not None for p in base_result.picks)
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
+
+    # Build a lookup: slot_or_round -> (picked_team, win_prob)
     pick_plan: dict[str, tuple[str, float]] = {}
     for pick in base_result.picks:
-        pick_plan[pick.round_name] = (pick.team, pick.win_probability)
+        key = pick.day_slot if use_slots and pick.day_slot else pick.round_name
+        pick_plan[key] = (pick.team, pick.win_probability)
 
     # Track which game each pick belongs to (for sampling outcomes)
-    # We need the team's opponent to know which game to sample
     pick_games: dict[str, dict] = {}
     for pick in base_result.picks:
-        # Find this pick's game in candidates
-        round_cands = candidates.get(pick.round_name, [])
-        for cand in round_cands:
+        key = pick.day_slot if use_slots and pick.day_slot else pick.round_name
+        slot_cands = candidates.get(key, [])
+        for cand in slot_cands:
             if cand["team"] == pick.team:
-                pick_games[pick.round_name] = cand
+                pick_games[key] = cand
                 break
 
     rounds_survived_counts: dict[int, int] = {}
@@ -424,18 +474,18 @@ def run_survivor_monte_carlo(
     for _ in range(n_simulations):
         rounds_survived = 0
 
-        for round_name in ROUND_ORDER:
-            if round_name not in pick_plan:
+        for slot_name in slot_order:
+            if slot_name not in pick_plan:
                 break
 
-            _, win_prob = pick_plan[round_name]
+            _, win_prob = pick_plan[slot_name]
             pick_wins = rng.random() < win_prob
 
             if pick_wins:
                 rounds_survived += 1
             else:
-                elimination_rounds[round_name] = (
-                    elimination_rounds.get(round_name, 0) + 1
+                elimination_rounds[slot_name] = (
+                    elimination_rounds.get(slot_name, 0) + 1
                 )
                 break
 
@@ -445,14 +495,11 @@ def run_survivor_monte_carlo(
 
     # Normalize
     n_picks = len(pick_plan)
-    total_rounds = len(ROUND_ORDER)
+    total_rounds = len(slot_order)
     survival_counts = {
         k: v / n_simulations
         for k, v in sorted(rounds_survived_counts.items())
     }
-    # Survival means surviving all 6 rounds. If the strategy doesn't
-    # have 6 picks (e.g., greedy ran out of candidates), it can never
-    # achieve full survival.
     survival_rate = (
         survival_counts.get(total_rounds, 0.0)
         if n_picks == total_rounds
@@ -465,15 +512,17 @@ def run_survivor_monte_carlo(
     # Team pick rates are deterministic (same picks every sim)
     team_rates: dict[str, dict[str, float]] = {}
     for pick in base_result.picks:
-        team_rates.setdefault(pick.round_name, {})
-        team_rates[pick.round_name][pick.team] = 1.0
+        key = pick.day_slot if use_slots and pick.day_slot else pick.round_name
+        team_rates.setdefault(key, {})
+        team_rates[key][pick.team] = 1.0
 
+    # Sort by slot/round order
+    slot_order_idx = {s: i for i, s in enumerate(slot_order)}
     elim_dist = {
         k: v / n_simulations
         for k, v in sorted(
             elimination_rounds.items(),
-            key=lambda x: ROUND_ORDER.index(x[0])
-            if x[0] in ROUND_ORDER else 99,
+            key=lambda x: slot_order_idx.get(x[0], 99),
         )
     }
 
@@ -514,8 +563,9 @@ def _pick_greedy(
 
 def _extract_bracket_candidates(
     bracket: Bracket,
+    use_day_slots: bool = False,
 ) -> dict[str, list[dict]]:
-    """Build per-round candidate lists from a simulated bracket.
+    """Build per-slot candidate lists from a simulated bracket.
 
     Converts ``BracketGame`` objects into the same candidate dict
     format used by ``_build_round_candidates``, so the cost-matrix
@@ -524,6 +574,11 @@ def _extract_bracket_candidates(
     The ``actual_winner`` field is left as the *predicted* winner
     (from the simulation). Callers that need real-world evaluation
     should replace this via ``_find_actual_result``.
+
+    Args:
+        bracket: A Bracket with simulated or actual games.
+        use_day_slots: If True, key by ``game.day_slot`` instead
+                       of ``game.round_name``.
     """
     candidates: dict[str, list[dict]] = {}
 
@@ -532,12 +587,23 @@ def _extract_bracket_candidates(
             continue
 
         round_name = game.round_name
-        candidates.setdefault(round_name, [])
+        if use_day_slots and game.day_slot is not None:
+            key = game.day_slot
+        else:
+            key = round_name
+
+        candidates.setdefault(key, [])
 
         prob = game.win_probability if game.win_probability is not None else 0.5
 
+        base = {
+            "round_name": round_name,
+            "day_slot": game.day_slot,
+        }
+
         # Team1 candidate
-        candidates[round_name].append({
+        candidates[key].append({
+            **base,
             "team": game.team1.team,
             "seed": game.team1.seed,
             "opponent": game.team2.team,
@@ -547,7 +613,8 @@ def _extract_bracket_candidates(
         })
 
         # Team2 candidate
-        candidates[round_name].append({
+        candidates[key].append({
+            **base,
             "team": game.team2.team,
             "seed": game.team2.seed,
             "opponent": game.team1.team,
@@ -569,7 +636,11 @@ def run_survivor_bracket_aware(
     Uses the simulation's predicted matchups and winners to build the
     candidate pool, then solves a bracket-constrained ILP to find the
     optimal pick set. The ILP ensures picks don't over-concentrate on
-    one bracket side in R64-E8, preserving viable options for F4/NCG.
+    one bracket side in regional slots, preserving viable options for
+    F4/NCG.
+
+    When bracket games have ``day_slot`` set, uses 9 survivor slots
+    instead of 6 rounds. Otherwise falls back to the 6-round mode.
 
     After solving, each pick is evaluated against the actual bracket
     to determine whether it would have survived in reality.
@@ -579,25 +650,28 @@ def run_survivor_bracket_aware(
         bracket: Simulated bracket (from ``simulate_bracket_deterministic``).
         actual_bracket: Ground-truth bracket for survival evaluation.
     """
-    candidates = _extract_bracket_candidates(bracket)
-    rounds = [r for r in ROUND_ORDER if r in candidates]
+    use_slots = any(g.day_slot is not None for g in bracket.games)
+    candidates = _extract_bracket_candidates(bracket, use_day_slots=use_slots)
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
 
-    if not rounds:
+    slots = [s for s in slot_order if s in candidates]
+
+    if not slots:
         return _result_from_picks(year, "bracket_aware", [], exhausted=True)
 
-    cost, teams, round_list = _build_cost_matrix(candidates, rounds)
+    cost, teams, slot_list = _build_cost_matrix(candidates, slots)
     team_side_map = build_team_side_map(bracket)
     assignments = solve_constrained_assignment(
-        cost, teams, round_list, team_side_map,
+        cost, teams, slot_list, team_side_map,
     )
 
     picks: list[SurvivorPick] = []
-    for team_name, round_name, win_prob in assignments:
+    for team_name, slot_name, win_prob in assignments:
+        round_name = SLOT_TO_ROUND.get(slot_name, slot_name)
         # Check what actually happened to this team in this round
         actual = _find_actual_result(team_name, round_name, actual_bracket)
 
         if actual is not None:
-            # Team played in this round — use real result
             pick = SurvivorPick(
                 round_name=round_name,
                 team=team_name,
@@ -607,11 +681,11 @@ def run_survivor_bracket_aware(
                 win_probability=win_prob,
                 actual_winner=actual["actual_winner"],
                 survived=actual["actual_winner"] == team_name,
+                day_slot=slot_name if use_slots else None,
             )
         else:
-            # Team was eliminated before reaching this round
             sim_cand = next(
-                c for c in candidates[round_name] if c["team"] == team_name
+                c for c in candidates[slot_name] if c["team"] == team_name
             )
             pick = SurvivorPick(
                 round_name=round_name,
@@ -622,10 +696,11 @@ def run_survivor_bracket_aware(
                 win_probability=win_prob,
                 actual_winner="N/A (eliminated earlier)",
                 survived=False,
+                day_slot=slot_name if use_slots else None,
             )
         picks.append(pick)
 
-    exhausted = len(assignments) < len(ROUND_ORDER)
+    exhausted = len(assignments) < len(slot_order)
     return _result_from_picks(year, "bracket_aware", picks, exhausted=exhausted)
 
 
@@ -1027,7 +1102,11 @@ def run_survivor_mc_optimal_sequential(
 
 @dataclass(frozen=True)
 class LiveSurvivorState:
-    """State of a survivor pool in progress."""
+    """State of a survivor pool in progress.
+
+    ``completed_rounds`` can contain either round names (R64, R32, ...)
+    or survivor slot names (R64_D1, R64_D2, ...) depending on mode.
+    """
 
     year: int
     completed_rounds: tuple[str, ...]
@@ -1071,23 +1150,36 @@ def run_survivor_live(
     """
     rng = np.random.default_rng(rng_seed)
 
-    # Figure out which round to pick for
-    remaining_rounds = [
-        r for r in ROUND_ORDER if r not in state.completed_rounds
+    # Determine whether we're in slot mode or round mode
+    use_slots = (
+        "day_slot" in known_results.columns
+        and known_results["day_slot"].notna().any()
+    )
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
+
+    # Figure out which slot/round to pick for
+    remaining = [
+        s for s in slot_order if s not in state.completed_rounds
     ]
-    if not remaining_rounds:
+    if not remaining:
         return {}
 
-    next_round = remaining_rounds[0]
-    future_rounds = remaining_rounds[1:]
+    next_slot = remaining[0]
+    future_slots = remaining[1:]
 
-    # Build candidates for the next round from known results
+    # Map slot to round number for filtering
+    round_name_for_slot = SLOT_TO_ROUND.get(next_slot, next_slot)
+    round_num_lookup = {v: k for k, v in ROUND_NAMES.items()}
+
+    # Build candidates for the next slot from known results
+    next_round_num = round_num_lookup.get(round_name_for_slot)
+    if next_round_num is None:
+        return {}
+
+    filtered = known_results[known_results["CURRENT ROUND"] == next_round_num]
     next_round_candidates = _build_round_candidates(
-        known_results[
-            known_results["CURRENT ROUND"]
-            == {v: k for k, v in ROUND_NAMES.items()}[next_round]
-        ],
-    ).get(next_round, [])
+        filtered, use_day_slots=use_slots,
+    ).get(next_slot, [])
 
     available = [
         c for c in next_round_candidates
@@ -1111,19 +1203,21 @@ def run_survivor_live(
             if not pick_wins:
                 continue
 
-            # Simulate future rounds with greedy strategy
+            # Simulate future slots with greedy strategy
             survived_future = True
             used = set(state.teams_used) | {candidate["team"]}
 
-            for future_round in future_rounds:
-                round_num = {v: k for k, v in ROUND_NAMES.items()}[
-                    future_round
-                ]
+            for future_slot in future_slots:
+                future_round = SLOT_TO_ROUND.get(future_slot, future_slot)
+                round_num = round_num_lookup.get(future_round)
+                if round_num is None:
+                    break
                 future_cands = _build_round_candidates(
                     known_results[
                         known_results["CURRENT ROUND"] == round_num
                     ],
-                ).get(future_round, [])
+                    use_day_slots=use_slots,
+                ).get(future_slot, [])
 
                 if not future_cands:
                     # No known matchups for future rounds — can't evaluate
@@ -1175,10 +1269,11 @@ def prepare_game_probs(
     matchups_df: pd.DataFrame,
     year: int,
 ) -> pd.DataFrame:
-    """Merge CURRENT ROUND from matchups into debiased results.
+    """Merge CURRENT ROUND and day_slot from matchups into debiased results.
 
     The debiased_results.csv lacks round info. This joins it back
     from restructured_matchups.csv by matching on team names and year.
+    When matchups_df has a ``day_slot`` column, it is carried through.
     """
     yr_matchups = matchups_df[matchups_df["YEAR"] == year].reset_index(
         drop=True,
@@ -1195,4 +1290,9 @@ def prepare_game_probs(
 
     result = yr_debiased.copy()
     result["CURRENT ROUND"] = yr_matchups["CURRENT ROUND"].values
+
+    # Carry day_slot through if present
+    if "day_slot" in yr_matchups.columns:
+        result["day_slot"] = yr_matchups["day_slot"].values
+
     return result
