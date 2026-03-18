@@ -4,12 +4,22 @@
 test-venv/
 __pycache__/
 proxies/
-data/
+
+# Ignore all data except march-madness raw data
+data/*
+!data/march-madness/
+data/march-madness/backtest/
+data/march-madness/models/
+
+# Allow CSVs and TXTs inside march-madness raw data
 *.csv
+!data/march-madness/**/*.csv
 *.json
 !pyproject.toml
 *.txt
+!data/march-madness/**/*.txt
 !requirements.txt
+
 dist/
 *.egg-info/
 chromedriver
