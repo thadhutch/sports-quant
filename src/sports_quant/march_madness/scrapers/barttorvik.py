@@ -42,7 +42,7 @@ SNAPSHOT_DATES: dict[int, str] = {
     2023: "20230312",
     2024: "20240317",
     2025: "20250316",
-    2026: "20260318",
+    2026: "20260317",
 }
 
 DEFAULT_YEARS: list[int] = sorted(SNAPSHOT_DATES.keys())
