@@ -20,11 +20,12 @@ from sports_quant.march_madness._features import standardize_team_name
 
 logger = logging.getLogger(__name__)
 
-# Pre-tournament snapshot dates (Selection Sunday for each year).
-# These are the LAST day before tournament games begin.
-# Using Selection Sunday ensures we capture conference tournament results
-# but NOT NCAA tournament games.
-SELECTION_SUNDAY_DATES: dict[int, str] = {
+# Pre-tournament snapshot dates (day before R64 starts for each year).
+# Using the day before R64 captures First Four results in the ratings
+# while still excluding all NCAA tournament main-draw games.
+# Historical dates (2010-2025) used Selection Sunday and are kept as-is
+# since that data was already scraped.
+SNAPSHOT_DATES: dict[int, str] = {
     2010: "20100314",
     2011: "20110313",
     2012: "20120311",
@@ -41,9 +42,10 @@ SELECTION_SUNDAY_DATES: dict[int, str] = {
     2023: "20230312",
     2024: "20240317",
     2025: "20250316",
+    2026: "20260318",
 }
 
-DEFAULT_YEARS: list[int] = sorted(SELECTION_SUNDAY_DATES.keys())
+DEFAULT_YEARS: list[int] = sorted(SNAPSHOT_DATES.keys())
 
 _TIME_MACHINE_URL = (
     "https://barttorvik.com/timemachine/team_results/"
@@ -86,10 +88,10 @@ def _download_time_machine(year: int) -> pd.DataFrame:
     Returns:
         DataFrame with standardized column names, or empty on error.
     """
-    date_str = SELECTION_SUNDAY_DATES.get(year)
+    date_str = SNAPSHOT_DATES.get(year)
     if date_str is None:
         logger.warning(
-            "No Selection Sunday date configured for year %d", year,
+            "No snapshot date configured for year %d", year,
         )
         return pd.DataFrame()
 
@@ -161,8 +163,8 @@ def scrape_barttorvik(
 ) -> pd.DataFrame:
     """Download pre-tournament Barttorvik T-Rank data from the Time Machine.
 
-    Uses Selection Sunday snapshots to ensure NO tournament game data
-    contaminates the ratings.
+    Uses day-before-R64 snapshots to ensure NO tournament main-draw data
+    contaminates the ratings while capturing First Four results.
 
     Args:
         years: List of season years. Defaults to DEFAULT_YEARS.

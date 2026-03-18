@@ -179,7 +179,7 @@ def append_kenpom_data(
     existing_path: Path,
     new_path: Path,
     output_path: Path,
-    year: int = 2025,
+    year: int = 2026,
 ) -> None:
     """Append new KenPom data to existing historical data."""
     existing_data = pd.read_csv(existing_path)

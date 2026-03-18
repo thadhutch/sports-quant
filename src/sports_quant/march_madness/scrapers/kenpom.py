@@ -22,10 +22,11 @@ DEFAULT_URLS: list[str] = [
     "https://web.archive.org/web/20220312213724/https://kenpom.com/",
     "https://web.archive.org/web/20230314165625/https://kenpom.com/",
     "https://web.archive.org/web/20240321081134/https://kenpom.com/",
+    "https://web.archive.org/web/20250314000625/https://kenpom.com/",
     "https://kenpom.com/",
 ]
 
-DEFAULT_YEARS: list[int] = [2017, 2018, 2019, 2021, 2022, 2023, 2024, 2025]
+DEFAULT_YEARS: list[int] = [2017, 2018, 2019, 2021, 2022, 2023, 2024, 2025, 2026]
 
 
 def _scrape_archive(url: str, year: int) -> pd.DataFrame:

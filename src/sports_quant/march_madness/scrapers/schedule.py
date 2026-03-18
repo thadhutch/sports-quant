@@ -61,6 +61,7 @@ _R64_START_DATES: dict[int, str] = {
     2023: "2023-03-16",
     2024: "2024-03-21",
     2025: "2025-03-20",
+    2026: "2026-03-19",
 }
 
 DEFAULT_YEARS: list[int] = sorted(_R64_START_DATES.keys())
