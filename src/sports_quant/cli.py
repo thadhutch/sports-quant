@@ -8,7 +8,7 @@ from sports_quant import __version__
 @click.group()
 @click.version_option(version=__version__, prog_name="sports-quant")
 def cli():
-    """NFL data pipeline combining PFF grades and PFR game data."""
+    """Sports analytics pipeline for NFL and March Madness prediction."""
 
 
 @cli.group()
@@ -246,3 +246,375 @@ def pipeline():
     """Run the entire pipeline end-to-end."""
     from sports_quant.pipeline import run_full_pipeline
     run_full_pipeline()
+
+
+# -- March Madness commands ---------------------------------------------------
+
+
+@cli.group(name="march-madness")
+def march_madness():
+    """March Madness NCAA basketball prediction pipeline."""
+
+
+@march_madness.command()
+def scrape_kenpom():
+    """Scrape KenPom ratings from web archive."""
+    from sports_quant.march_madness.scrapers.kenpom import scrape_kenpom
+    scrape_kenpom()
+
+
+@march_madness.command(name="clean-kenpom")
+def clean_kenpom():
+    """Run the KenPom data cleaning pipeline."""
+    from sports_quant.march_madness.processing.clean_kenpom import run_kenpom_cleaning_pipeline
+    run_kenpom_cleaning_pipeline()
+
+
+@march_madness.command()
+def preprocess():
+    """Preprocess matchup data (pair rows into Team1 vs Team2)."""
+    from sports_quant.march_madness.processing.preprocess_matchups import preprocess_matchups
+    preprocess_matchups()
+
+
+@march_madness.command(name="merge-stats")
+def merge_stats():
+    """Merge matchups with KenPom statistics."""
+    from sports_quant.march_madness.processing.merge_matchups_stats import merge_matchups_stats
+    merge_matchups_stats()
+
+
+@march_madness.command()
+def train():
+    """Train LightGBM ensemble for March Madness prediction."""
+    from sports_quant.march_madness.train import run_training
+    run_training()
+
+
+@march_madness.command()
+def backtest():
+    """Run sequential year-by-year backtesting."""
+    from sports_quant.march_madness.backtest import run_backtest
+    run_backtest()
+
+
+@march_madness.command()
+def predict():
+    """Generate predictions for the current year."""
+    from sports_quant.march_madness.predict import run_prediction
+    run_prediction()
+
+
+@march_madness.command()
+@click.option(
+    "--year", "-y",
+    multiple=True,
+    type=int,
+    help="Tournament year(s) to render. Repeatable. Default: all backtest years.",
+)
+@click.option(
+    "--source", "-s",
+    multiple=True,
+    type=click.Choice(
+        ["ensemble", "debiased", "simulation"], case_sensitive=False,
+    ),
+    help="Prediction source(s) to render. Default: ensemble + debiased.",
+)
+@click.option(
+    "--version", "-v",
+    default="v1",
+    help="Model version directory (default: v1).",
+)
+def bracket(year, source, version):
+    """Render bracket visualisations from backtest results."""
+    from sports_quant.march_madness._bracket_cli import run_bracket_visualisation
+
+    years = list(year) if year else None
+    sources = list(source) if source else None
+
+    outputs = run_bracket_visualisation(
+        years=years,
+        sources=sources,
+        version=version,
+    )
+
+    click.echo(f"Rendered {len(outputs)} bracket files:")
+    for path in outputs:
+        click.echo(f"  {path}")
+
+
+@march_madness.command()
+@click.option(
+    "--year", "-y",
+    multiple=True,
+    type=int,
+    help="Tournament year(s) to simulate. Default: all backtest years.",
+)
+@click.option(
+    "--version", "-v",
+    default="v1",
+    help="Model version directory (default: v1).",
+)
+def simulate(year, version):
+    """Run forward bracket simulation (R64->NCG) and display results."""
+    import yaml
+
+    import pandas as pd
+
+    from sports_quant._config import MODEL_CONFIG_FILE
+    from sports_quant.march_madness._config import (
+        MM_BACKTEST_DIR,
+        MM_BARTTORVIK_DATA,
+        MM_KENPOM_DATA,
+        MM_MATCHUPS_RESTRUCTURED,
+        load_models,
+    )
+    from sports_quant.march_madness._bracket_builder import build_actual_bracket
+    from sports_quant.march_madness._feature_builder import FeatureLookup
+    from sports_quant.march_madness.simulate import simulate_bracket_deterministic
+    from sports_quant.march_madness.bracket_plots import render_bracket
+
+    cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
+    feature_mode = cfg["march_madness"].get("feature_mode", "difference")
+
+    if not year:
+        year = cfg["march_madness"]["backtest_years"]
+
+    years = list(year)
+    matchups_df = pd.read_csv(MM_MATCHUPS_RESTRUCTURED)
+    kenpom_df = pd.read_csv(MM_KENPOM_DATA)
+
+    barttorvik_df = None
+    if MM_BARTTORVIK_DATA.exists() and feature_mode == "combined":
+        barttorvik_df = pd.read_csv(MM_BARTTORVIK_DATA)
+
+    feature_lookup = FeatureLookup(kenpom_df, barttorvik_df=barttorvik_df)
+
+    for yr in years:
+        models_dir = MM_BACKTEST_DIR / version / str(yr) / "models"
+        models = load_models(models_dir)
+
+        if not models:
+            click.echo(f"No models found for {yr}, skipping.")
+            continue
+
+        actual = build_actual_bracket(matchups_df, yr)
+        result = simulate_bracket_deterministic(
+            year=yr,
+            models=models,
+            feature_lookup=feature_lookup,
+            matchups_df=matchups_df,
+            actual_bracket=actual,
+            feature_mode=feature_mode,
+        )
+
+        correct, total = result.overall_accuracy
+        click.echo(f"\n{yr}: {correct}/{total} ({correct/total:.1%})")
+
+        for rnd, (rc, rt) in result.accuracy_by_round.items():
+            click.echo(f"  {rnd}: {rc}/{rt} ({rc/rt:.0%})")
+
+        # Render SVG — the simulation bracket already has is_correct
+        # set via position-based matching, so render it directly
+        # (compare_brackets would break it by matching on team names)
+        output_dir = MM_BACKTEST_DIR / version / str(yr) / "plots" / "brackets"
+        sim_path = render_bracket(
+            result.bracket, output_dir / f"{yr}_simulation.svg",
+        )
+        click.echo(f"  -> {sim_path}")
+
+
+@march_madness.command(name="save-version")
+@click.option(
+    "--version", "-v",
+    default=None,
+    help="Version identifier (default: from model_config.yaml).",
+)
+@click.option(
+    "--description", "-d",
+    required=True,
+    help="Short description of what changed in this version.",
+)
+def save_version(version, description):
+    """Snapshot current backtest results as a named version with metrics."""
+    import yaml
+
+    from sports_quant._config import MODEL_CONFIG_FILE
+    from sports_quant.march_madness._versioning import save_version as _save
+
+    if version is None:
+        cfg = yaml.safe_load(MODEL_CONFIG_FILE.read_text())
+        version = cfg["march_madness"]["model_version"]
+
+    vm = _save(version=version, description=description)
+
+    click.echo(f"Version {vm.version} saved ({vm.created_at})")
+    click.echo(f"  Description: {vm.description}")
+    click.echo(f"  Per-game accuracy (avg):  {vm.avg_bracket_accuracy:.1%}")
+    click.echo(f"  Simulation accuracy (avg): {vm.avg_simulation_accuracy:.1%}")
+    click.echo(f"  Survivor rounds (avg):     {vm.avg_survivor_rounds:.1f}")
+
+    click.echo("\nPer-game bracket metrics:")
+    for m in vm.bracket_metrics:
+        click.echo(
+            f"  {m.year} {m.source:>10s}: "
+            f"{m.overall_accuracy:.1%} "
+            f"({m.correct_games}/{m.total_games})"
+        )
+
+    if vm.simulation_metrics:
+        click.echo("\nForward simulation metrics (R64→NCG):")
+        for m in vm.simulation_metrics:
+            click.echo(
+                f"  {m.year}: {m.overall_accuracy:.1%} "
+                f"({m.overall_correct}/{m.overall_total})"
+            )
+            rounds_str = "  ".join(
+                f"{r}={a:.0%}" for r, a in m.accuracy_by_round.items()
+            )
+            click.echo(f"    {rounds_str}")
+
+    click.echo("\nSurvivor metrics:")
+    for m in vm.survivor_metrics:
+        if m.survived_all:
+            status = "SURVIVED"
+        elif m.exhausted:
+            status = "no picks left"
+        else:
+            status = f"out R{m.rounds_survived + 1}"
+        click.echo(
+            f"  {m.year} {m.strategy:>8s}: "
+            f"{m.rounds_survived}/{m.total_rounds} rounds ({status})"
+        )
+
+
+@march_madness.command(name="list-versions")
+def list_versions_cmd():
+    """List all saved model versions."""
+    from sports_quant.march_madness._versioning import list_versions
+
+    registry = list_versions()
+
+    if not registry:
+        click.echo("No saved versions. Run save-version first.")
+        return
+
+    # Header
+    click.echo(
+        f"{'Version':<10} {'Per-game':>10} {'Sim':>10} {'Survivor':>10} "
+        f"{'Created':>22}  Description"
+    )
+    click.echo("-" * 90)
+
+    for entry in registry:
+        acc = entry.get("avg_bracket_accuracy", 0)
+        sim = entry.get("avg_simulation_accuracy", 0)
+        surv = entry.get("avg_survivor_rounds", 0)
+        click.echo(
+            f"{entry['version']:<10} "
+            f"{acc:>9.1%} "
+            f"{sim:>9.1%} "
+            f"{surv:>8.1f}R "
+            f"{entry['created_at'][:19]:>22}  "
+            f"{entry.get('description', '')}"
+        )
+
+
+@march_madness.command(name="compare-versions")
+@click.argument("version_a")
+@click.argument("version_b")
+def compare_versions_cmd(version_a, version_b):
+    """Compare two saved versions side by side.
+
+    VERSION_A is the baseline, VERSION_B is the candidate.
+    """
+    from sports_quant.march_madness._versioning import compare_versions
+
+    result = compare_versions(version_a, version_b)
+
+    # Per-game bracket comparison
+    click.echo(f"\nPer-game Bracket Accuracy: {version_a} vs {version_b}")
+    click.echo("-" * 65)
+    click.echo(
+        f"{'Year':<6} {'Source':<12} "
+        f"{version_a:>10} {version_b:>10} {'Delta':>10}"
+    )
+
+    for row in result["bracket"]:
+        acc_a = f"{row[f'{version_a}_accuracy']:.1%}" if row[f"{version_a}_accuracy"] is not None else "  —"
+        acc_b = f"{row[f'{version_b}_accuracy']:.1%}" if row[f"{version_b}_accuracy"] is not None else "  —"
+        delta = ""
+        if row["delta"] is not None:
+            sign = "+" if row["delta"] >= 0 else ""
+            delta = f"{sign}{row['delta']:.1%}"
+        click.echo(
+            f"{row['year']:<6} {row['source']:<12} "
+            f"{acc_a:>10} {acc_b:>10} {delta:>10}"
+        )
+
+    # Simulation comparison
+    if result.get("simulation"):
+        click.echo(
+            f"\nSimulation Accuracy (R64->NCG): {version_a} vs {version_b}"
+        )
+        click.echo("-" * 55)
+        click.echo(
+            f"{'Year':<6} "
+            f"{version_a:>10} {version_b:>10} {'Delta':>10}"
+        )
+        for row in result["simulation"]:
+            acc_a = f"{row[f'{version_a}_accuracy']:.1%}" if row[f"{version_a}_accuracy"] is not None else "  —"
+            acc_b = f"{row[f'{version_b}_accuracy']:.1%}" if row[f"{version_b}_accuracy"] is not None else "  —"
+            delta = ""
+            if row["delta"] is not None:
+                sign = "+" if row["delta"] >= 0 else ""
+                delta = f"{sign}{row['delta']:.1%}"
+            click.echo(
+                f"{row['year']:<6} "
+                f"{acc_a:>10} {acc_b:>10} {delta:>10}"
+            )
+
+    # Survivor comparison
+    click.echo(f"\nSurvivor Rounds: {version_a} vs {version_b}")
+    click.echo("-" * 65)
+    click.echo(
+        f"{'Year':<6} {'Strategy':<12} "
+        f"{version_a:>10} {version_b:>10} {'Delta':>10}"
+    )
+
+    for row in result["survivor"]:
+        ra = f"{row[f'{version_a}_rounds']}/6" if row[f"{version_a}_rounds"] is not None else "—"
+        rb = f"{row[f'{version_b}_rounds']}/6" if row[f"{version_b}_rounds"] is not None else "—"
+        delta = ""
+        if row["delta"] is not None:
+            sign = "+" if row["delta"] >= 0 else ""
+            delta = f"{sign}{row['delta']}"
+        click.echo(
+            f"{row['year']:<6} {row['strategy']:<12} "
+            f"{ra:>10} {rb:>10} {delta:>10}"
+        )
+
+    # Summary
+    s = result["summary"]
+    click.echo(f"\nSummary:")
+    acc_delta = s["accuracy_delta"]
+    acc_sign = "+" if acc_delta >= 0 else ""
+    click.echo(
+        f"  Per-game accuracy: {s[f'{version_a}_avg_accuracy']:.1%} -> "
+        f"{s[f'{version_b}_avg_accuracy']:.1%} "
+        f"({acc_sign}{acc_delta:.1%})"
+    )
+    sim_delta = s.get("sim_accuracy_delta", 0)
+    sim_sign = "+" if sim_delta >= 0 else ""
+    click.echo(
+        f"  Simulation accuracy: {s.get(f'{version_a}_avg_sim_accuracy', 0):.1%} -> "
+        f"{s.get(f'{version_b}_avg_sim_accuracy', 0):.1%} "
+        f"({sim_sign}{sim_delta:.1%})"
+    )
+    surv_delta = s["survivor_delta"]
+    surv_sign = "+" if surv_delta >= 0 else ""
+    click.echo(
+        f"  Survivor rounds:  {s[f'{version_a}_avg_survivor_rounds']:.1f} -> "
+        f"{s[f'{version_b}_avg_survivor_rounds']:.1f} "
+        f"({surv_sign}{surv_delta:.1f})"
+    )

@@ -1,16 +1,88 @@
 ou:
-  model_version: "v2"
+  model_version: v2
   models_to_train: 50
   top_models: 3
-  accuracy_threshold: 0.50
-  model_weights: [0.4, 0.35, 0.25]
+  accuracy_threshold: 0.5
+  model_weights:
+  - 0.4
+  - 0.35
+  - 0.25
   starting_capital: 100.0
   hyperparameters:
-    objective: "multi:softprob"
+    objective: multi:softprob
     num_class: 3
-    eval_metric: "mlogloss"
+    eval_metric: mlogloss
   backtest:
     min_training_seasons: 2
     test_size: 0.8
   train:
     test_size: 0.2
+march_madness:
+  model_version: v6b
+  models_to_train: 50
+  top_models: 3
+  backtest_years:
+  - 2019
+  - 2021
+  - 2022
+  - 2023
+  - 2024
+  - 2025
+  feature_mode: combined
+  hyperparameters:
+    objective: binary
+    metric: binary_logloss
+    num_leaves: 55
+    max_depth: 3
+    learning_rate: 0.25730944565655234
+    n_estimators: 177
+    min_child_samples: 43
+    reg_alpha: 0.30260951014986426
+    reg_lambda: 3.8315636574590153
+    subsample: 0.5616914054960942
+    colsample_bytree: 0.6859257313781385
+    min_split_gain: 0.2179546539285833
+  backtest:
+    min_training_years: 3
+    val_years: 2
+  train:
+    test_size: 0.2
+    symmetrize: true
+    early_stopping_rounds: 50
+    min_boosting_rounds: 50
+  tuning:
+    n_trials: 200
+    meta_learner:
+      phase1_trials: 150
+      phase2_trials: 100
+    cv_folds:
+    - train_end: 2013
+      val_year: 2014
+    - train_end: 2015
+      val_year: 2016
+    - train_end: 2017
+      val_year: 2018
+    - train_end: 2018
+      val_year: 2019
+    - train_end: 2021
+      val_year: 2022
+    - train_end: 2022
+      val_year: 2023
+    - train_end: 2023
+      val_year: 2024
+    - train_end: 2024
+      val_year: 2025
+  meta_learner:
+    enabled: true
+    lgbm_oof_ensemble_size: 10
+    lr_C: 1.0
+    rf_n_estimators: 200
+    rf_max_depth: 6
+    rf_min_samples_leaf: 20
+    meta_C: 1.0
+    min_oof_years: 3
+  calibration:
+    enabled: true
+    method: isotonic
+    clip_min: 0.025
+    clip_max: 0.975
