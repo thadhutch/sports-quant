@@ -18,7 +18,7 @@ ou:
   train:
     test_size: 0.2
 march_madness:
-  model_version: v6
+  model_version: v6b
   models_to_train: 50
   top_models: 3
   backtest_years:
@@ -28,7 +28,6 @@ march_madness:
   - 2023
   - 2024
   - 2025
-  - 2026
   feature_mode: combined
   hyperparameters:
     objective: binary
@@ -53,6 +52,9 @@ march_madness:
     min_boosting_rounds: 50
   tuning:
     n_trials: 200
+    meta_learner:
+      phase1_trials: 150
+      phase2_trials: 100
     cv_folds:
     - train_end: 2013
       val_year: 2014
