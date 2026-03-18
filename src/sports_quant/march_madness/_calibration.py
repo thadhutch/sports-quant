@@ -132,6 +132,14 @@ def collect_oof_predictions(
         val_year = fold["val_year"]
         train_end = fold["train_end"]
 
+        if train_end >= val_year:
+            raise ValueError(
+                f"Data leakage: train_end ({train_end}) >= val_year "
+                f"({val_year}). train_end must be strictly less than "
+                f"val_year to prevent validation data from leaking "
+                f"into training."
+            )
+
         if val_year not in available_years:
             logger.warning("Skipping fold val_year=%d (no data)", val_year)
             continue
