@@ -97,10 +97,9 @@ def _fetch_espn(date_str: str) -> dict:
 # Region ordering — canonical region order for the bracket
 # ---------------------------------------------------------------------------
 
-# The standard bracket layout: regions are displayed in a specific order.
-# We assign region index based on alphabetical ordering of region names
-# from the ESPN data, which gives a stable ordering.
-_REGION_ORDER = ["East Region", "Midwest Region", "South Region", "West Region"]
+# 2026 bracket sides: East+South on the left, Midwest+West on the right.
+# Adjacent pairs meet in the F4 semifinals; winners cross for the NCG.
+_REGION_ORDER = ["East Region", "South Region", "Midwest Region", "West Region"]
 
 
 def _fetch_first_four_results() -> dict[str, dict]:
