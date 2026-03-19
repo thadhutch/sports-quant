@@ -162,6 +162,17 @@ def _extract_r64_matchups(
 # ---------------------------------------------------------------------------
 
 
+def _build_day_slot_map(
+    bracket: Bracket,
+) -> dict[tuple[str, int], str]:
+    """Build (round_name, game_index) -> day_slot lookup from a bracket."""
+    return {
+        (g.round_name, g.game_index): g.day_slot
+        for g in bracket.games
+        if g.day_slot is not None
+    }
+
+
 def _simulate_single_bracket(
     year: int,
     r64_matchups: list[tuple[TeamStats, TeamStats]],
@@ -169,6 +180,7 @@ def _simulate_single_bracket(
     feature_lookup: FeatureLookup,
     rng: np.random.Generator | None,
     feature_mode: str = "difference",
+    day_slot_map: dict[tuple[str, int], str] | None = None,
 ) -> tuple[list[BracketGame], dict[str, list[float]]]:
     """Simulate one complete bracket from R64 through NCG.
 
@@ -180,6 +192,7 @@ def _simulate_single_bracket(
         rng: If provided, sample outcomes from probabilities (MC mode).
              If None, always pick the higher-probability team (deterministic).
         feature_mode: "difference" or "raw".
+        day_slot_map: Optional (round_name, game_index) -> day_slot lookup.
 
     Returns:
         Tuple of (list of 63 BracketGames, dict of round -> probabilities).
@@ -187,6 +200,7 @@ def _simulate_single_bracket(
     games: list[BracketGame] = []
     round_probs: dict[str, list[float]] = {}
     current_matchups = list(r64_matchups)
+    slot_map = day_slot_map or {}
 
     for round_name in ROUND_ORDER:
         round_probs[round_name] = []
@@ -219,7 +233,8 @@ def _simulate_single_bracket(
                 winner=winner_slot,
                 win_probability=prob,
                 is_upset=determine_upset(t1.seed, t2.seed, team1_wins),
-                is_correct=None,  # set later during evaluation
+                is_correct=None,
+                day_slot=slot_map.get((round_name, game_idx)),
             )
             games.append(game)
 
@@ -269,6 +284,8 @@ def _evaluate_games(
                 win_probability=g.win_probability,
                 is_upset=g.is_upset,
                 is_correct=is_correct,
+                game_date=g.game_date,
+                day_slot=g.day_slot,
             )
         )
     return evaluated
@@ -315,9 +332,11 @@ def simulate_bracket_deterministic(
         SimulationResult with predicted bracket and accuracy.
     """
     r64 = _extract_r64_matchups(matchups_df, year, feature_lookup)
+    day_slot_map = _build_day_slot_map(actual_bracket)
     games, _ = _simulate_single_bracket(
         year, r64, models, feature_lookup, rng=None,
         feature_mode=feature_mode,
+        day_slot_map=day_slot_map,
     )
 
     actual_winners = _build_actual_winners(actual_bracket)
@@ -372,6 +391,7 @@ def simulate_bracket_monte_carlo(
     """
     r64 = _extract_r64_matchups(matchups_df, year, feature_lookup)
     actual_winners = _build_actual_winners(actual_bracket)
+    day_slot_map = _build_day_slot_map(actual_bracket)
     rng = np.random.default_rng(rng_seed)
 
     # Pre-compute all game probabilities once (they don't change between sims)
@@ -389,6 +409,7 @@ def simulate_bracket_monte_carlo(
     for _ in range(n_simulations):
         games = _simulate_from_precomputed(
             year, r64, probabilities, rng,
+            day_slot_map=day_slot_map,
         )
         evaluated = _evaluate_games(games, actual_winners)
 
@@ -508,10 +529,12 @@ def _simulate_from_precomputed(
     r64_matchups: list[tuple[TeamStats, TeamStats]],
     probabilities: dict[tuple[str, str], float],
     rng: np.random.Generator,
+    day_slot_map: dict[tuple[str, int], str] | None = None,
 ) -> list[BracketGame]:
     """Simulate one bracket using precomputed probabilities (fast)."""
     games: list[BracketGame] = []
     current_matchups = list(r64_matchups)
+    slot_map = day_slot_map or {}
 
     for round_name in ROUND_ORDER:
         winners: list[TeamStats] = []
@@ -536,6 +559,7 @@ def _simulate_from_precomputed(
                 win_probability=prob,
                 is_upset=determine_upset(t1.seed, t2.seed, team1_wins),
                 is_correct=None,
+                day_slot=slot_map.get((round_name, game_idx)),
             )
             games.append(game)
 
@@ -554,6 +578,7 @@ def _simulate_from_round(
     entering_matchups: list[tuple[TeamStats, TeamStats]],
     probabilities: dict[tuple[str, str], float],
     rng: np.random.Generator,
+    day_slot_map: dict[tuple[str, int], str] | None = None,
 ) -> list[BracketGame]:
     """Simulate from an arbitrary round onward using precomputed probs.
 
@@ -567,12 +592,14 @@ def _simulate_from_round(
         entering_matchups: Team pairs for the starting round.
         probabilities: Precomputed pairwise win probabilities.
         rng: Random generator for sampling outcomes.
+        day_slot_map: Optional (round_name, game_index) -> day_slot lookup.
 
     Returns:
         List of ``BracketGame`` objects for the simulated rounds.
     """
     games: list[BracketGame] = []
     current_matchups = list(entering_matchups)
+    slot_map = day_slot_map or {}
 
     for round_name in ROUND_ORDER[start_round_idx:]:
         winners: list[TeamStats] = []
@@ -597,6 +624,7 @@ def _simulate_from_round(
                 win_probability=prob,
                 is_upset=determine_upset(t1.seed, t2.seed, team1_wins),
                 is_correct=None,
+                day_slot=slot_map.get((round_name, game_idx)),
             )
             games.append(game)
 

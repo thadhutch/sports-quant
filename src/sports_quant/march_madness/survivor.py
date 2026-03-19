@@ -741,6 +741,7 @@ def run_survivor_mc_optimal(
         feature_mode: Feature construction mode.
     """
     from sports_quant.march_madness.simulate import (
+        _build_day_slot_map,
         _extract_r64_matchups,
         _precompute_probabilities,
         _simulate_from_precomputed,
@@ -751,6 +752,11 @@ def run_survivor_mc_optimal(
         year, r64, models, feature_lookup, feature_mode=feature_mode,
     )
 
+    # Detect 9-slot mode from actual bracket
+    day_slot_map = _build_day_slot_map(actual_bracket)
+    use_slots = len(day_slot_map) > 0
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
+
     # Collect all 64 team names
     all_teams: set[str] = set()
     for t1, t2 in r64:
@@ -759,33 +765,37 @@ def run_survivor_mc_optimal(
     teams = sorted(all_teams)
     team_idx = {t: i for i, t in enumerate(teams)}
 
-    rounds = list(ROUND_ORDER)
     n_teams = len(teams)
-    n_rounds = len(rounds)
+    n_slots = len(slot_order)
 
     # Accumulators: sum of -log(p) and count of appearances
-    cost_sum = np.zeros((n_teams, n_rounds))
-    cost_count = np.zeros((n_teams, n_rounds))
+    cost_sum = np.zeros((n_teams, n_slots))
+    cost_count = np.zeros((n_teams, n_slots))
 
     rng = np.random.default_rng(rng_seed)
 
     for _ in range(n_simulations):
-        games = _simulate_from_precomputed(year, r64, probabilities, rng)
+        games = _simulate_from_precomputed(
+            year, r64, probabilities, rng,
+            day_slot_map=day_slot_map,
+        )
 
         for game in games:
             if game.winner is None:
                 continue
 
-            j = rounds.index(game.round_name)
+            col_key = game.day_slot if use_slots and game.day_slot else game.round_name
+            if col_key not in slot_order:
+                continue
+            j = slot_order.index(col_key)
+
             prob = game.win_probability
             if prob is None:
                 continue
 
-            # Winner's probability
             winner = game.winner.team
             if winner in team_idx:
                 i = team_idx[winner]
-                # Determine actual win probability for the winner
                 if game.team1.team == winner:
                     wp = max(prob, _PROB_FLOOR)
                 else:
@@ -794,17 +804,18 @@ def run_survivor_mc_optimal(
                 cost_count[i, j] += 1
 
     # Build averaged cost matrix
-    avg_cost = np.full((n_teams, n_rounds), _INFEASIBLE)
+    avg_cost = np.full((n_teams, n_slots), _INFEASIBLE)
     nonzero = cost_count > 0
     avg_cost[nonzero] = cost_sum[nonzero] / cost_count[nonzero]
 
     team_side_map = build_team_side_map_from_r64(r64)
     assignments = solve_constrained_assignment(
-        avg_cost, teams, rounds, team_side_map,
+        avg_cost, teams, slot_order, team_side_map,
     )
 
     picks: list[SurvivorPick] = []
-    for team_name, round_name, win_prob in assignments:
+    for team_name, slot_name, win_prob in assignments:
+        round_name = SLOT_TO_ROUND.get(slot_name, slot_name)
         actual = _find_actual_result(team_name, round_name, actual_bracket)
 
         if actual is not None:
@@ -817,6 +828,7 @@ def run_survivor_mc_optimal(
                 win_probability=win_prob,
                 actual_winner=actual["actual_winner"],
                 survived=actual["actual_winner"] == team_name,
+                day_slot=slot_name if use_slots else None,
             )
         else:
             pick = SurvivorPick(
@@ -828,10 +840,11 @@ def run_survivor_mc_optimal(
                 win_probability=win_prob,
                 actual_winner="N/A (eliminated earlier)",
                 survived=False,
+                day_slot=slot_name if use_slots else None,
             )
         picks.append(pick)
 
-    exhausted = len(assignments) < len(ROUND_ORDER)
+    exhausted = len(assignments) < len(slot_order)
 
     logger.info(
         "MC optimal survivor %d (%d sims): %d picks, prob=%.4f",
@@ -939,6 +952,7 @@ def run_survivor_mc_optimal_sequential(
         feature_mode: Feature construction mode.
     """
     from sports_quant.march_madness.simulate import (
+        _build_day_slot_map,
         _extract_r64_matchups,
         _precompute_probabilities,
         _simulate_from_round,
@@ -949,6 +963,11 @@ def run_survivor_mc_optimal_sequential(
     probabilities = _precompute_probabilities(
         year, r64, models, feature_lookup, feature_mode=feature_mode,
     )
+
+    # Detect 9-slot mode from actual bracket
+    day_slot_map = _build_day_slot_map(actual_bracket)
+    use_slots = len(day_slot_map) > 0
+    slot_order = list(SURVIVOR_SLOTS) if use_slots else list(ROUND_ORDER)
 
     # Collect all 64 team names
     all_teams: set[str] = set()
@@ -964,44 +983,62 @@ def run_survivor_mc_optimal_sequential(
     picks: list[SurvivorPick] = []
     exhausted = False
 
-    for round_idx, round_name in enumerate(ROUND_ORDER):
-        # Get the ACTUAL matchups for this round
-        if round_idx == 0:
-            current_matchups = list(r64)
-        else:
-            # Winners of the previous round, paired for this round
-            prev_round = ROUND_ORDER[round_idx - 1]
-            prev_winners = _extract_round_winners(
-                actual_bracket, prev_round, feature_lookup, year,
-            )
-            if len(prev_winners) < 2:
-                exhausted = True
-                break
-            current_matchups = [
-                (prev_winners[i], prev_winners[i + 1])
-                for i in range(0, len(prev_winners), 2)
-            ]
+    # Track which round's matchups we've already built so we don't
+    # re-extract when consecutive slots share a round (e.g. R64_D1, R64_D2).
+    last_round_idx: int | None = None
+    current_matchups: list[tuple] = []
 
-        remaining_rounds = list(ROUND_ORDER[round_idx:])
-        n_remaining = len(remaining_rounds)
+    for slot_idx, slot_name in enumerate(slot_order):
+        round_name = SLOT_TO_ROUND.get(slot_name, slot_name)
+        round_idx = ROUND_ORDER.index(round_name)
+
+        # Build matchups for this round (only when the round changes)
+        if round_idx != last_round_idx:
+            if round_idx == 0:
+                current_matchups = list(r64)
+            else:
+                prev_round = ROUND_ORDER[round_idx - 1]
+                prev_winners = _extract_round_winners(
+                    actual_bracket, prev_round, feature_lookup, year,
+                )
+                if len(prev_winners) < 2:
+                    exhausted = True
+                    break
+                current_matchups = [
+                    (prev_winners[i], prev_winners[i + 1])
+                    for i in range(0, len(prev_winners), 2)
+                ]
+            last_round_idx = round_idx
+
+        remaining_slots = list(slot_order[slot_idx:])
+        n_remaining = len(remaining_slots)
         n_teams_total = len(teams)
 
         # Run N MC sims from this round forward, accumulate costs
         cost_sum = np.zeros((n_teams_total, n_remaining))
         cost_count = np.zeros((n_teams_total, n_remaining))
 
-        rng = np.random.default_rng(rng_seed + round_idx * 1000)
+        rng = np.random.default_rng(rng_seed + slot_idx * 1000)
 
         for _ in range(n_simulations):
             games = _simulate_from_round(
                 year, round_idx, current_matchups, probabilities, rng,
+                day_slot_map=day_slot_map,
             )
 
             for game in games:
                 if game.winner is None or game.win_probability is None:
                     continue
 
-                j = remaining_rounds.index(game.round_name)
+                col_key = (
+                    game.day_slot
+                    if use_slots and game.day_slot
+                    else game.round_name
+                )
+                if col_key not in remaining_slots:
+                    continue
+                j = remaining_slots.index(col_key)
+
                 winner = game.winner.team
                 if winner not in team_idx:
                     continue
@@ -1019,14 +1056,13 @@ def run_survivor_mc_optimal_sequential(
         nonzero = cost_count > 0
         avg_cost[nonzero] = cost_sum[nonzero] / cost_count[nonzero]
 
-        # Mark used teams as infeasible
         for used_team in used_teams:
             if used_team in team_idx:
                 avg_cost[team_idx[used_team], :] = _INFEASIBLE
 
         # Solve assignment with bracket-side constraints
         assignments = solve_constrained_assignment(
-            avg_cost, teams, remaining_rounds, team_side_map,
+            avg_cost, teams, remaining_slots, team_side_map,
             prior_side_counts=side_counts,
         )
 
@@ -1034,9 +1070,9 @@ def run_survivor_mc_optimal_sequential(
             exhausted = True
             break
 
-        # Commit only the CURRENT round's pick
+        # Commit only the CURRENT slot's pick
         current_pick = next(
-            (a for a in assignments if a[1] == round_name), None,
+            (a for a in assignments if a[1] == slot_name), None,
         )
         if current_pick is None:
             exhausted = True
@@ -1066,6 +1102,7 @@ def run_survivor_mc_optimal_sequential(
                 win_probability=win_prob,
                 actual_winner=actual["actual_winner"],
                 survived=actual["actual_winner"] == team_name,
+                day_slot=slot_name if use_slots else None,
             )
         else:
             pick = SurvivorPick(
@@ -1077,6 +1114,7 @@ def run_survivor_mc_optimal_sequential(
                 win_probability=win_prob,
                 actual_winner="N/A (eliminated earlier)",
                 survived=False,
+                day_slot=slot_name if use_slots else None,
             )
 
         picks.append(pick)
@@ -1085,7 +1123,7 @@ def run_survivor_mc_optimal_sequential(
             break
 
     logger.info(
-        "MC optimal sequential %d (%d sims/round): %d picks, survived %s",
+        "MC optimal sequential %d (%d sims/slot): %d picks, survived %s",
         year, n_simulations, len(picks),
         "/".join("OK" if p.survived else "XX" for p in picks),
     )

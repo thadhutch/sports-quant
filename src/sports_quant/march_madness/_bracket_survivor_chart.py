@@ -1,7 +1,7 @@
 """Plotly charts for survivor pool pick visualisation.
 
 Produces interactive HTML charts showing the pick sequence, win
-probabilities, and outcomes for greedy vs optimal survivor strategies.
+probabilities, and outcomes for all survivor strategies.
 """
 
 from __future__ import annotations
@@ -30,12 +30,23 @@ def _theme_layout(theme: BracketTheme) -> dict:
     )
 
 
+_STRATEGY_COLORS: dict[str, str] = {
+    "greedy": "#42a5f5",
+    "optimal": "#ab47bc",
+    "bracket_aware": "#66bb6a",
+    "mc_optimal": "#ffa726",
+    "mc_optimal_seq": "#ef5350",
+}
+
+
 def _strategy_color(strategy: str) -> str:
     """Map strategy name to a line colour."""
-    return {
-        "greedy": "#42a5f5",
-        "optimal": "#ab47bc",
-    }.get(strategy, "#ef5350")
+    return _STRATEGY_COLORS.get(strategy, "#78909c")
+
+
+def _pick_label(pick: dict) -> str:
+    """X-axis label for a pick: prefer day_slot, fall back to round."""
+    return pick.get("day_slot") or pick.get("round", "")
 
 
 def _build_trace(
@@ -43,7 +54,7 @@ def _build_trace(
     theme: BracketTheme,
 ) -> go.Scatter:
     """Build a single Scatter trace for one strategy's picks."""
-    rounds = [p["round"] for p in metrics.picks]
+    x_labels = [_pick_label(p) for p in metrics.picks]
     probs = [p["win_prob"] * 100.0 for p in metrics.picks]
 
     marker_colors = [
@@ -70,10 +81,10 @@ def _build_trace(
     line_color = _strategy_color(metrics.strategy)
 
     return go.Scatter(
-        x=rounds,
+        x=x_labels,
         y=probs,
         mode="lines+markers+text",
-        name=metrics.strategy.title(),
+        name=metrics.strategy.replace("_", " ").title(),
         text=labels,
         textposition="top center",
         textfont=dict(size=9, color=theme.text_dimmed),
@@ -116,11 +127,12 @@ def render_survivor_chart(
     # Build subtitle with survival summary
     summaries = []
     for m in survivor_metrics:
-        status = "survived all" if m.survived_all else f"eliminated R{m.rounds_survived + 1}"
+        total = m.total_rounds
+        status = "survived all" if m.survived_all else f"eliminated slot {m.rounds_survived + 1}"
         if m.exhausted:
-            status = f"exhausted R{m.rounds_survived + 1}"
+            status = f"exhausted slot {m.rounds_survived + 1}"
         summaries.append(
-            f"{m.strategy.title()}: {m.rounds_survived}/{m.total_rounds} rounds ({status})"
+            f"{m.strategy.replace('_', ' ').title()}: {m.rounds_survived}/{total} ({status})"
         )
     subtitle = " | ".join(summaries)
 
@@ -133,7 +145,7 @@ def render_survivor_chart(
             ),
             font=dict(size=16),
         ),
-        xaxis_title="Round",
+        xaxis_title="Day Slot",
         yaxis_title="Win Probability (%)",
         yaxis_range=[0, 109],
         legend=dict(
@@ -165,6 +177,9 @@ def render_multi_year_survivor_chart(
     """
     theme = theme or DEFAULT_THEME
 
+    # Determine the max total_rounds across all metrics (6 or 9)
+    max_total = max((m.total_rounds for m in all_metrics), default=6)
+
     # Group by strategy
     strategies: dict[str, list[SurvivorMetrics]] = {}
     for m in all_metrics:
@@ -176,13 +191,14 @@ def render_multi_year_survivor_chart(
         sorted_metrics = sorted(metrics_list, key=lambda m: m.year)
         years = [str(m.year) for m in sorted_metrics]
         rounds = [m.rounds_survived for m in sorted_metrics]
+        totals = [m.total_rounds for m in sorted_metrics]
         color = _strategy_color(strategy)
 
         fig.add_trace(go.Bar(
-            name=strategy.title(),
+            name=strategy.replace("_", " ").title(),
             x=years,
             y=rounds,
-            text=[f"{r}/6" for r in rounds],
+            text=[f"{r}/{t}" for r, t in zip(rounds, totals)],
             textposition="outside",
             marker_color=color,
             marker_line_color=theme.box_stroke,
@@ -191,12 +207,12 @@ def render_multi_year_survivor_chart(
 
     fig.update_layout(
         title=dict(
-            text="Survivor Pool — Rounds Survived by Year",
+            text="Survivor Pool — Slots Survived by Year",
             font=dict(size=16),
         ),
         xaxis_title="Year",
-        yaxis_title="Rounds Survived",
-        yaxis_range=[0, 7.5],
+        yaxis_title="Slots Survived",
+        yaxis_range=[0, max_total + 1.5],
         barmode="group",
         legend=dict(
             orientation="h",

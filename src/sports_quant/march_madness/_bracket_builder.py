@@ -302,6 +302,10 @@ def _row_to_game(
 
     region = _assign_region(round_name, game_index)
 
+    # Carry through schedule-derived fields when present
+    game_date = str(row["game_date"]) if "game_date" in row.index and pd.notna(row.get("game_date")) else None
+    day_slot = str(row["day_slot"]) if "day_slot" in row.index and pd.notna(row.get("day_slot")) else None
+
     return BracketGame(
         round_name=round_name,
         region=region,
@@ -312,6 +316,8 @@ def _row_to_game(
         win_probability=win_probability,
         is_upset=is_upset,
         is_correct=is_correct,
+        game_date=game_date,
+        day_slot=day_slot,
     )
 
 

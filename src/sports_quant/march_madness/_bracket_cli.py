@@ -469,7 +469,7 @@ def run_bracket_visualisation(
         primary_source = source_tuple[0]
         if primary_source == "simulation" and simulation_bracket is not None:
             compared_brackets[year] = simulation_bracket
-        else:
+        elif primary_source != "simulation":
             primary_df = (
                 ensemble_df if primary_source == "ensemble" else debiased_df
             )
