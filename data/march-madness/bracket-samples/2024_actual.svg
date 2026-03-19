@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1880.0" height="1029.0" viewBox="0 0 1880.0 1029.0">
+<defs>
+</defs>
+<rect x="0" y="0" width="1880.0" height="1029.0" fill="#1a1a2e" />
+<filter id="shadow" x="-5%" y="-5%" width="115%" height="115%"><feDropShadow dx="2.0" dy="2.0" stdDeviation="2.0" flood-color="rgba(0,0,0,0.3)" /></filter>
+<path d="M190.0,147.0 C202.0,147.0,202.0,173.0,214.0,173.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,199.0 C202.0,199.0,202.0,173.0,214.0,173.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,251.0 C202.0,251.0,202.0,277.0,214.0,277.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,303.0 C202.0,303.0,202.0,277.0,214.0,277.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,355.0 C202.0,355.0,202.0,381.0,214.0,381.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,407.0 C202.0,407.0,202.0,381.0,214.0,381.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,459.0 C202.0,459.0,202.0,485.0,214.0,485.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,511.0 C202.0,511.0,202.0,485.0,214.0,485.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,593.0 C202.0,593.0,202.0,619.0,214.0,619.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,645.0 C202.0,645.0,202.0,619.0,214.0,619.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,697.0 C202.0,697.0,202.0,723.0,214.0,723.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,749.0 C202.0,749.0,202.0,723.0,214.0,723.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,801.0 C202.0,801.0,202.0,827.0,214.0,827.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,853.0 C202.0,853.0,202.0,827.0,214.0,827.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,905.0 C202.0,905.0,202.0,931.0,214.0,931.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M190.0,957.0 C202.0,957.0,202.0,931.0,214.0,931.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,147.0 C1678.0,147.0,1678.0,173.0,1666.0,173.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,199.0 C1678.0,199.0,1678.0,173.0,1666.0,173.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,251.0 C1678.0,251.0,1678.0,277.0,1666.0,277.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,303.0 C1678.0,303.0,1678.0,277.0,1666.0,277.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,355.0 C1678.0,355.0,1678.0,381.0,1666.0,381.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,407.0 C1678.0,407.0,1678.0,381.0,1666.0,381.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,459.0 C1678.0,459.0,1678.0,485.0,1666.0,485.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,511.0 C1678.0,511.0,1678.0,485.0,1666.0,485.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,593.0 C1678.0,593.0,1678.0,619.0,1666.0,619.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,645.0 C1678.0,645.0,1678.0,619.0,1666.0,619.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,697.0 C1678.0,697.0,1678.0,723.0,1666.0,723.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,749.0 C1678.0,749.0,1678.0,723.0,1666.0,723.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,801.0 C1678.0,801.0,1678.0,827.0,1666.0,827.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,853.0 C1678.0,853.0,1678.0,827.0,1666.0,827.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,905.0 C1678.0,905.0,1678.0,931.0,1666.0,931.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1690.0,957.0 C1678.0,957.0,1678.0,931.0,1666.0,931.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,173.0 C366.0,173.0,366.0,225.0,378.0,225.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,277.0 C366.0,277.0,366.0,225.0,378.0,225.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,381.0 C366.0,381.0,366.0,433.0,378.0,433.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,485.0 C366.0,485.0,366.0,433.0,378.0,433.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,619.0 C366.0,619.0,366.0,671.0,378.0,671.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,723.0 C366.0,723.0,366.0,671.0,378.0,671.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,827.0 C366.0,827.0,366.0,879.0,378.0,879.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M354.0,931.0 C366.0,931.0,366.0,879.0,378.0,879.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,173.0 C1514.0,173.0,1514.0,225.0,1502.0,225.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,277.0 C1514.0,277.0,1514.0,225.0,1502.0,225.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,381.0 C1514.0,381.0,1514.0,433.0,1502.0,433.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,485.0 C1514.0,485.0,1514.0,433.0,1502.0,433.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,619.0 C1514.0,619.0,1514.0,671.0,1502.0,671.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,723.0 C1514.0,723.0,1514.0,671.0,1502.0,671.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,827.0 C1514.0,827.0,1514.0,879.0,1502.0,879.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1526.0,931.0 C1514.0,931.0,1514.0,879.0,1502.0,879.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M518.0,225.0 C530.0,225.0,530.0,329.0,542.0,329.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M518.0,433.0 C530.0,433.0,530.0,329.0,542.0,329.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M518.0,671.0 C530.0,671.0,530.0,775.0,542.0,775.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M518.0,879.0 C530.0,879.0,530.0,775.0,542.0,775.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1362.0,225.0 C1350.0,225.0,1350.0,329.0,1338.0,329.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1362.0,433.0 C1350.0,433.0,1350.0,329.0,1338.0,329.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1362.0,671.0 C1350.0,671.0,1350.0,775.0,1338.0,775.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1362.0,879.0 C1350.0,879.0,1350.0,775.0,1338.0,775.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M682.0,329.0 C694.0,329.0,694.0,552.0,706.0,552.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M682.0,775.0 C694.0,775.0,694.0,552.0,706.0,552.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1198.0,329.0 C1186.0,329.0,1186.0,552.0,1174.0,552.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1198.0,775.0 C1186.0,775.0,1186.0,552.0,1174.0,552.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M846.0,552.0 C858.0,552.0,858.0,552.0,870.0,552.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<path d="M1034.0,552.0 C1022.0,552.0,1022.0,552.0,1010.0,552.0" stroke="#4a5568" stroke-width="1.5" fill="none" />
+<rect x="50.0" y="125.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,147.0 L189.0,147.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="125.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="136.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="80.0" y="136.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Connecticut</text>
+<rect x="50.0" y="147.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="147.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="158.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">16</text>
+<text x="80.0" y="158.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Stetson</text>
+<rect x="50.0" y="177.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,199.0 L189.0,199.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="177.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="188.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">8</text>
+<text x="80.0" y="188.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Florida Atlan…</text>
+<rect x="50.0" y="199.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="199.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="210.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="80.0" y="210.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Northwestern</text>
+<path d="M50.0,177.0 L60.0,177.0 L50.0,187.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="50.0" y="229.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,251.0 L189.0,251.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="229.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="240.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="80.0" y="240.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">San Diego St.</text>
+<rect x="50.0" y="251.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="251.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="262.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">12</text>
+<text x="80.0" y="262.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">UAB</text>
+<rect x="50.0" y="281.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,303.0 L189.0,303.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="281.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="292.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="80.0" y="292.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Auburn</text>
+<rect x="50.0" y="303.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="303.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="314.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">13</text>
+<text x="80.0" y="314.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Yale</text>
+<path d="M50.0,281.0 L60.0,281.0 L50.0,291.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="50.0" y="333.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,355.0 L189.0,355.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="333.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="344.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="80.0" y="344.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">BYU</text>
+<rect x="50.0" y="355.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="355.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="366.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="80.0" y="366.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Duquesne</text>
+<path d="M50.0,333.0 L60.0,333.0 L50.0,343.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="50.0" y="385.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,407.0 L189.0,407.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="385.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="396.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="80.0" y="396.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Illinois</text>
+<rect x="50.0" y="407.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="407.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="418.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">14</text>
+<text x="80.0" y="418.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Morehead St.</text>
+<rect x="50.0" y="437.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,459.0 L189.0,459.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="437.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="448.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="80.0" y="448.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Washington St.</text>
+<rect x="50.0" y="459.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="459.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="470.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">10</text>
+<text x="80.0" y="470.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Drake</text>
+<rect x="50.0" y="489.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,511.0 L189.0,511.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="489.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="500.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="80.0" y="500.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Iowa St.</text>
+<rect x="50.0" y="511.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="511.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="522.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">15</text>
+<text x="80.0" y="522.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">South Dakota …</text>
+<rect x="50.0" y="571.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,593.0 L189.0,593.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="571.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="582.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="80.0" y="582.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">North Carolina</text>
+<rect x="50.0" y="593.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="593.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="604.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">16</text>
+<text x="80.0" y="604.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Wagner</text>
+<rect x="50.0" y="623.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,645.0 L189.0,645.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="623.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="634.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">8</text>
+<text x="80.0" y="634.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Mississippi S…</text>
+<rect x="50.0" y="645.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="645.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="656.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="80.0" y="656.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Michigan St.</text>
+<path d="M50.0,623.0 L60.0,623.0 L50.0,633.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="50.0" y="675.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,697.0 L189.0,697.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="675.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="686.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="80.0" y="686.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Saint Mary's</text>
+<rect x="50.0" y="697.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="697.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="708.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">12</text>
+<text x="80.0" y="708.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Grand Canyon</text>
+<path d="M50.0,675.0 L60.0,675.0 L50.0,685.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="50.0" y="727.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,749.0 L189.0,749.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="727.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="738.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="80.0" y="738.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Alabama</text>
+<rect x="50.0" y="749.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="749.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="760.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">13</text>
+<text x="80.0" y="760.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">College of Ch…</text>
+<rect x="50.0" y="779.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,801.0 L189.0,801.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="779.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="790.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="80.0" y="790.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Clemson</text>
+<rect x="50.0" y="801.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="801.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="812.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="80.0" y="812.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">New Mexico</text>
+<rect x="50.0" y="831.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,853.0 L189.0,853.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="831.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="842.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="80.0" y="842.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Baylor</text>
+<rect x="50.0" y="853.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="853.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="864.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">14</text>
+<text x="80.0" y="864.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Colgate</text>
+<rect x="50.0" y="883.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,905.0 L189.0,905.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="883.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="894.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="80.0" y="894.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Dayton</text>
+<rect x="50.0" y="905.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="905.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="916.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">10</text>
+<text x="80.0" y="916.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Nevada</text>
+<rect x="50.0" y="935.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M51.0,957.0 L189.0,957.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="50.0" y="935.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="63.0" y="946.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="80.0" y="946.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Arizona</text>
+<rect x="50.0" y="957.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="50.0" y="957.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="63.0" y="968.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">15</text>
+<text x="80.0" y="968.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Long Beach St.</text>
+<rect x="1690.0" y="125.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,147.0 L1829.0,147.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="125.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="136.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1720.0" y="136.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Purdue</text>
+<rect x="1690.0" y="147.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="147.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="158.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">16</text>
+<text x="1720.0" y="158.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Grambling St.</text>
+<rect x="1690.0" y="177.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,199.0 L1829.0,199.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="177.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="188.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">8</text>
+<text x="1720.0" y="188.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Utah St.</text>
+<rect x="1690.0" y="199.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="199.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="210.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="1720.0" y="210.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">TCU</text>
+<rect x="1690.0" y="229.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,251.0 L1829.0,251.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="229.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="240.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="1720.0" y="240.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Gonzaga</text>
+<rect x="1690.0" y="251.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="251.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="262.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">12</text>
+<text x="1720.0" y="262.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">McNeese St.</text>
+<rect x="1690.0" y="281.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,303.0 L1829.0,303.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="281.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="292.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="1720.0" y="292.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Kansas</text>
+<rect x="1690.0" y="303.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="303.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="314.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">13</text>
+<text x="1720.0" y="314.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Samford</text>
+<rect x="1690.0" y="333.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,355.0 L1829.0,355.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="333.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="344.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="1720.0" y="344.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">South Carolina</text>
+<rect x="1690.0" y="355.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="355.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="366.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1720.0" y="366.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Oregon</text>
+<path d="M1690.0,333.0 L1700.0,333.0 L1690.0,343.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1690.0" y="385.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,407.0 L1829.0,407.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="385.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="396.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="1720.0" y="396.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Creighton</text>
+<rect x="1690.0" y="407.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="407.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="418.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">14</text>
+<text x="1720.0" y="418.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Akron</text>
+<rect x="1690.0" y="437.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,459.0 L1829.0,459.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="437.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="448.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="1720.0" y="448.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Texas</text>
+<rect x="1690.0" y="459.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="459.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="470.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">10</text>
+<text x="1720.0" y="470.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Colorado St.</text>
+<rect x="1690.0" y="489.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,511.0 L1829.0,511.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="489.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="500.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1720.0" y="500.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Tennessee</text>
+<rect x="1690.0" y="511.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="511.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="522.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">15</text>
+<text x="1720.0" y="522.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Saint Peter's</text>
+<rect x="1690.0" y="571.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,593.0 L1829.0,593.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="571.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="582.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1720.0" y="582.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Houston</text>
+<rect x="1690.0" y="593.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="593.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="604.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">16</text>
+<text x="1720.0" y="604.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Longwood</text>
+<rect x="1690.0" y="623.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,645.0 L1829.0,645.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="623.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="634.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">8</text>
+<text x="1720.0" y="634.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Nebraska</text>
+<rect x="1690.0" y="645.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="645.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="656.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="1720.0" y="656.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Texas A&amp;M</text>
+<path d="M1690.0,623.0 L1700.0,623.0 L1690.0,633.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1690.0" y="675.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,697.0 L1829.0,697.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="675.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="686.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="1720.0" y="686.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Wisconsin</text>
+<rect x="1690.0" y="697.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="697.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="708.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">12</text>
+<text x="1720.0" y="708.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">James Madison</text>
+<path d="M1690.0,675.0 L1700.0,675.0 L1690.0,685.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1690.0" y="727.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,749.0 L1829.0,749.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="727.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="738.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="1720.0" y="738.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Duke</text>
+<rect x="1690.0" y="749.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="749.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="760.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">13</text>
+<text x="1720.0" y="760.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Vermont</text>
+<rect x="1690.0" y="779.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,801.0 L1829.0,801.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="779.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="790.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="1720.0" y="790.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Texas Tech</text>
+<rect x="1690.0" y="801.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="801.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="812.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1720.0" y="812.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">North Carolin…</text>
+<path d="M1690.0,779.0 L1700.0,779.0 L1690.0,789.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1690.0" y="831.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,853.0 L1829.0,853.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="831.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="842.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="1720.0" y="842.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Kentucky</text>
+<rect x="1690.0" y="853.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="853.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="864.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">14</text>
+<text x="1720.0" y="864.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Oakland</text>
+<path d="M1690.0,831.0 L1700.0,831.0 L1690.0,841.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1690.0" y="883.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,905.0 L1829.0,905.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="883.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="894.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="1720.0" y="894.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Florida</text>
+<rect x="1690.0" y="905.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="905.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="916.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">10</text>
+<text x="1720.0" y="916.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Colorado</text>
+<path d="M1690.0,883.0 L1700.0,883.0 L1690.0,893.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1690.0" y="935.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1691.0,957.0 L1829.0,957.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1690.0" y="935.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1703.0" y="946.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1720.0" y="946.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Marquette</text>
+<rect x="1690.0" y="957.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1690.0" y="957.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1703.0" y="968.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">15</text>
+<text x="1720.0" y="968.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Western Kentu…</text>
+<rect x="214.0" y="151.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,173.0 L353.0,173.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="151.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="162.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="244.0" y="162.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Connecticut</text>
+<rect x="214.0" y="173.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="173.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="184.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="244.0" y="184.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Northwestern</text>
+<rect x="214.0" y="255.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,277.0 L353.0,277.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="255.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="266.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">13</text>
+<text x="244.0" y="266.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Yale</text>
+<rect x="214.0" y="277.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="277.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="288.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="244.0" y="288.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">San Diego St.</text>
+<rect x="214.0" y="359.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,381.0 L353.0,381.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="359.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="370.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="244.0" y="370.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Illinois</text>
+<rect x="214.0" y="381.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="381.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="392.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="244.0" y="392.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Duquesne</text>
+<rect x="214.0" y="463.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,485.0 L353.0,485.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="463.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="474.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="244.0" y="474.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Iowa St.</text>
+<rect x="214.0" y="485.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="485.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="496.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="244.0" y="496.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Washington St.</text>
+<rect x="214.0" y="597.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,619.0 L353.0,619.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="597.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="608.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="244.0" y="608.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">North Carolina</text>
+<rect x="214.0" y="619.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="619.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="630.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="244.0" y="630.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Michigan St.</text>
+<rect x="214.0" y="701.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,723.0 L353.0,723.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="701.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="712.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="244.0" y="712.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Alabama</text>
+<rect x="214.0" y="723.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="723.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="734.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">12</text>
+<text x="244.0" y="734.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Grand Canyon</text>
+<rect x="214.0" y="805.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,827.0 L353.0,827.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="805.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="816.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="244.0" y="816.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Baylor</text>
+<rect x="214.0" y="827.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="827.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="838.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="244.0" y="838.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Clemson</text>
+<path d="M214.0,805.0 L224.0,805.0 L214.0,815.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="214.0" y="909.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M215.0,931.0 L353.0,931.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="214.0" y="909.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="227.0" y="920.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="244.0" y="920.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Arizona</text>
+<rect x="214.0" y="931.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="214.0" y="931.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="227.0" y="942.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="244.0" y="942.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Dayton</text>
+<rect x="1526.0" y="151.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,173.0 L1665.0,173.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="151.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="162.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1556.0" y="162.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Purdue</text>
+<rect x="1526.0" y="173.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="173.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="184.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">8</text>
+<text x="1556.0" y="184.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Utah St.</text>
+<rect x="1526.0" y="255.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,277.0 L1665.0,277.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="255.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="266.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="1556.0" y="266.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Kansas</text>
+<rect x="1526.0" y="277.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="277.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="288.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="1556.0" y="288.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Gonzaga</text>
+<path d="M1526.0,255.0 L1536.0,255.0 L1526.0,265.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1526.0" y="359.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,381.0 L1665.0,381.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="359.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="370.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="1556.0" y="370.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Creighton</text>
+<rect x="1526.0" y="381.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="381.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="392.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1556.0" y="392.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Oregon</text>
+<rect x="1526.0" y="463.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,485.0 L1665.0,485.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="463.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="474.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1556.0" y="474.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Tennessee</text>
+<rect x="1526.0" y="485.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="485.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="496.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="1556.0" y="496.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Texas</text>
+<rect x="1526.0" y="597.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,619.0 L1665.0,619.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="597.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="608.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1556.0" y="608.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Houston</text>
+<rect x="1526.0" y="619.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="619.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="630.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">9</text>
+<text x="1556.0" y="630.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Texas A&amp;M</text>
+<rect x="1526.0" y="701.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,723.0 L1665.0,723.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="701.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="712.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="1556.0" y="712.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Duke</text>
+<rect x="1526.0" y="723.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="723.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="734.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">12</text>
+<text x="1556.0" y="734.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">James Madison</text>
+<rect x="1526.0" y="805.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,827.0 L1665.0,827.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="805.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="816.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">14</text>
+<text x="1556.0" y="816.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Oakland</text>
+<rect x="1526.0" y="827.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="827.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="838.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1556.0" y="838.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">North Carolin…</text>
+<rect x="1526.0" y="909.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1527.0,931.0 L1665.0,931.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1526.0" y="909.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1539.0" y="920.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1556.0" y="920.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Marquette</text>
+<rect x="1526.0" y="931.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1526.0" y="931.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1539.0" y="942.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">10</text>
+<text x="1556.0" y="942.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Colorado</text>
+<rect x="378.0" y="203.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M379.0,225.0 L517.0,225.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="378.0" y="203.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="391.0" y="214.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="408.0" y="214.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Connecticut</text>
+<rect x="378.0" y="225.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="378.0" y="225.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="391.0" y="236.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="408.0" y="236.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">San Diego St.</text>
+<rect x="378.0" y="411.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M379.0,433.0 L517.0,433.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="378.0" y="411.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="391.0" y="422.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="408.0" y="422.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Iowa St.</text>
+<rect x="378.0" y="433.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="378.0" y="433.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="391.0" y="444.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="408.0" y="444.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Illinois</text>
+<path d="M378.0,411.0 L388.0,411.0 L378.0,421.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="378.0" y="649.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M379.0,671.0 L517.0,671.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="378.0" y="649.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="391.0" y="660.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="408.0" y="660.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">North Carolina</text>
+<rect x="378.0" y="671.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="378.0" y="671.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="391.0" y="682.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="408.0" y="682.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Alabama</text>
+<path d="M378.0,649.0 L388.0,649.0 L378.0,659.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="378.0" y="857.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M379.0,879.0 L517.0,879.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="378.0" y="857.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="391.0" y="868.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="408.0" y="868.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Arizona</text>
+<rect x="378.0" y="879.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="378.0" y="879.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="391.0" y="890.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="408.0" y="890.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Clemson</text>
+<path d="M378.0,857.0 L388.0,857.0 L378.0,867.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1362.0" y="203.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1363.0,225.0 L1501.0,225.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1362.0" y="203.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1375.0" y="214.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1392.0" y="214.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Purdue</text>
+<rect x="1362.0" y="225.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1362.0" y="225.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1375.0" y="236.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="1392.0" y="236.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Gonzaga</text>
+<rect x="1362.0" y="411.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1363.0,433.0 L1501.0,433.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1362.0" y="411.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1375.0" y="422.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1392.0" y="422.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Tennessee</text>
+<rect x="1362.0" y="433.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1362.0" y="433.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1375.0" y="444.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="1392.0" y="444.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Creighton</text>
+<rect x="1362.0" y="649.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1363.0,671.0 L1501.0,671.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1362.0" y="649.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1375.0" y="660.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1392.0" y="660.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Houston</text>
+<rect x="1362.0" y="671.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1362.0" y="671.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1375.0" y="682.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="1392.0" y="682.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Duke</text>
+<path d="M1362.0,649.0 L1372.0,649.0 L1362.0,659.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="1362.0" y="857.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1363.0,879.0 L1501.0,879.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1362.0" y="857.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1375.0" y="868.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1392.0" y="868.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Marquette</text>
+<rect x="1362.0" y="879.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1362.0" y="879.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1375.0" y="890.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1392.0" y="890.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">North Carolin…</text>
+<path d="M1362.0,857.0 L1372.0,857.0 L1362.0,867.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="542.0" y="307.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M543.0,329.0 L681.0,329.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="542.0" y="307.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="555.0" y="318.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="572.0" y="318.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Connecticut</text>
+<rect x="542.0" y="329.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="542.0" y="329.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="555.0" y="340.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="572.0" y="340.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Illinois</text>
+<rect x="542.0" y="753.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M543.0,775.0 L681.0,775.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="542.0" y="753.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="555.0" y="764.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="572.0" y="764.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Clemson</text>
+<rect x="542.0" y="775.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="542.0" y="775.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="555.0" y="786.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="572.0" y="786.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Alabama</text>
+<rect x="1198.0" y="307.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1199.0,329.0 L1337.0,329.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1198.0" y="307.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1211.0" y="318.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1228.0" y="318.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Purdue</text>
+<rect x="1198.0" y="329.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1198.0" y="329.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1211.0" y="340.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="1228.0" y="340.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Tennessee</text>
+<rect x="1198.0" y="753.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#ffd700" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1199.0,775.0 L1337.0,775.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1198.0" y="753.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1211.0" y="764.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1228.0" y="764.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">North Carolin…</text>
+<rect x="1198.0" y="775.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1198.0" y="775.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1211.0" y="786.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="1228.0" y="786.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Duke</text>
+<path d="M1198.0,753.0 L1208.0,753.0 L1198.0,763.0 Z" fill="#ffd700" fill-opacity="0.9" />
+<rect x="706.0" y="530.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M707.0,552.0 L845.0,552.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="706.0" y="530.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="719.0" y="541.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="736.0" y="541.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Connecticut</text>
+<rect x="706.0" y="552.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="706.0" y="552.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="719.0" y="563.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="736.0" y="563.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Alabama</text>
+<rect x="1034.0" y="530.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M1035.0,552.0 L1173.0,552.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="1034.0" y="530.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="1047.0" y="541.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="1064.0" y="541.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Purdue</text>
+<rect x="1034.0" y="552.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="1034.0" y="552.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="1047.0" y="563.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">11</text>
+<text x="1064.0" y="563.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">North Carolin…</text>
+<rect x="870.0" y="530.0" width="140.0" height="44.0" rx="4.0" ry="4.0" fill="#16213e" fill-opacity="1.0" stroke="#2a3a5c" stroke-width="1.0" filter="url(#shadow)" />
+<path d="M871.0,552.0 L1009.0,552.0" stroke="#2a3a5c" stroke-width="0.5" />
+<rect x="870.0" y="530.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" />
+<text x="883.0" y="541.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="900.0" y="541.0" font-size="10.5" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="start" dominant-baseline="central">Connecticut</text>
+<rect x="870.0" y="552.0" width="26.0" height="22.0" rx="0" ry="0" fill="#0d1b2a" />
+<rect x="870.0" y="552.0" width="26.0" height="22.0" rx="4.0" ry="4.0" fill="#0d1b2a" clip-path="inset(0 0 0 0)" />
+<text x="883.0" y="563.0" font-size="10.0" fill="#b0bec5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="900.0" y="563.0" font-size="10.5" fill="#78909c" font-family="Arial, Helvetica, sans-serif" font-weight="normal" text-anchor="start" dominant-baseline="central">Purdue</text>
+<text x="940.0" y="77.0" font-size="18.0" fill="#e0e0e0" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2024 NCAA Tournament — Actual</text>
+<text x="120.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">R64</text>
+<text x="284.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">R32</text>
+<text x="448.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Sweet 16</text>
+<text x="612.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Elite 8</text>
+<text x="776.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Final 4</text>
+<text x="940.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Championship</text>
+<text x="1104.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Final 4</text>
+<text x="1268.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Elite 8</text>
+<text x="1432.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">Sweet 16</text>
+<text x="1596.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">R32</text>
+<text x="1760.0" y="95.0" font-size="12.0" fill="#90caf9" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">R64</text>
+<path d="M50.0,994.0 L60.0,994.0 L50.0,1004.0 Z" fill="#ffd700" />
+<text x="64.0" y="999.0" font-size="9.0" fill="#78909c" font-family="Arial, Helvetica, sans-serif" text-anchor="start" dominant-baseline="central">Upset</text>
+</svg>
