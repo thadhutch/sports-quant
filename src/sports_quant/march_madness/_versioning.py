@@ -24,6 +24,7 @@ from sports_quant.march_madness._bracket_builder import (
 from sports_quant.march_madness._config import (
     MM_BACKTEST_DIR,
     MM_MATCHUPS_RESTRUCTURED,
+    MM_SCHEDULE_DATA,
     load_models,
 )
 from sports_quant.march_madness._results import (
@@ -93,6 +94,7 @@ def _survivor_result_to_metrics(result) -> SurvivorMetrics:
     picks = tuple(
         {
             "round": p.round_name,
+            "day_slot": p.day_slot,
             "team": p.team,
             "seed": p.seed,
             "opponent": p.opponent,
@@ -111,6 +113,30 @@ def _survivor_result_to_metrics(result) -> SurvivorMetrics:
         total_rounds=result.total_rounds,
         exhausted=result.exhausted,
     )
+
+
+def _enrich_matchups_with_day_slots(matchups_df: pd.DataFrame) -> pd.DataFrame:
+    """Join day_slot data from the schedule CSV onto matchups.
+
+    Returns the matchups unchanged when the schedule file is missing
+    or the ``day_slot`` column is already present.
+    """
+    if "day_slot" in matchups_df.columns:
+        return matchups_df
+
+    schedule_path = MM_SCHEDULE_DATA
+    if not schedule_path.exists():
+        logger.info("No schedule data at %s — skipping day_slot enrichment", schedule_path)
+        return matchups_df
+
+    from sports_quant.march_madness.processing.derive_day_slots import (
+        derive_day_slots,
+        join_day_slots_to_matchups,
+    )
+
+    schedule_df = pd.read_csv(schedule_path)
+    schedule_with_slots = derive_day_slots(schedule_df)
+    return join_day_slots_to_matchups(matchups_df, schedule_with_slots)
 
 
 def _collect_survivor_metrics(
@@ -438,8 +464,9 @@ def save_version(
         "Saving version %s: years=%s, dir=%s", version, years, version_dir,
     )
 
-    # Load matchups
+    # Load matchups and enrich with day_slot from schedule data
     matchups_df = pd.read_csv(matchups_path)
+    matchups_df = _enrich_matchups_with_day_slots(matchups_df)
 
     # Load simulation resources once (shared by simulation + survivor)
     sim_resources = _load_simulation_resources()

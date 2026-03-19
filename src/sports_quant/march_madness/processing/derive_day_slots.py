@@ -20,6 +20,40 @@ from sports_quant.march_madness._features import standardize_team_name
 
 logger = logging.getLogger(__name__)
 
+
+_NAME_ALIASES: dict[str, str] = {
+    "Gardner Webb": "Gardner-Webb",
+    "Gardner-Webb": "Gardner-Webb",
+    "North Carolina State": "NC State",
+    "NC State": "NC State",
+    "Grambling State": "Grambling",
+    "Grambling": "Grambling",
+    "Nebraska Omaha": "Omaha",
+    "Omaha": "Omaha",
+    "Texas A&M Corpus Chris": "Texas A&M-Corpus Christi",
+    "Texas A&M-Corpus Christi": "Texas A&M-Corpus Christi",
+    "St. John's": "St. John's",
+    "Saint John's": "St. John's",
+}
+
+
+def _normalize_name(name: str) -> str:
+    """Extra normalization for schedule-to-matchup team name matching.
+
+    Handles common abbreviation differences that standardize_team_name
+    does not resolve (e.g. "St." -> "State", "FL" suffix, hyphens).
+    """
+    n = standardize_team_name(name.strip())
+    # "Mississippi St." -> "Mississippi State"
+    n = n.replace(" St.", " State").replace(" St ", " State ")
+    if n.endswith(" St"):
+        n = n[:-3] + " State"
+    # "Miami FL" -> "Miami"
+    if n.endswith(" FL"):
+        n = n[:-3]
+    # Apply explicit aliases for names that still diverge
+    return _NAME_ALIASES.get(n, n)
+
 # Survivor pool day slots in pick order
 SURVIVOR_SLOTS: tuple[str, ...] = (
     "R64_D1", "R64_D2",
@@ -196,8 +230,8 @@ def join_day_slots_to_matchups(
     schedule_lookup: dict[tuple[int, frozenset[str]], tuple[str, str]] = {}
 
     for _, row in schedule_df.iterrows():
-        t1 = standardize_team_name(str(row["Team1"]).strip())
-        t2 = standardize_team_name(str(row["Team2"]).strip())
+        t1 = _normalize_name(str(row["Team1"]))
+        t2 = _normalize_name(str(row["Team2"]))
         key = (int(row["YEAR"]), frozenset({t1, t2}))
         schedule_lookup[key] = (row["game_date"], row["day_slot"])
 
@@ -207,8 +241,8 @@ def join_day_slots_to_matchups(
     unmatched = 0
 
     for _, row in matchups_df.iterrows():
-        t1 = standardize_team_name(str(row["Team1"]).strip())
-        t2 = standardize_team_name(str(row["Team2"]).strip())
+        t1 = _normalize_name(str(row["Team1"]))
+        t2 = _normalize_name(str(row["Team2"]))
         key = (int(row["YEAR"]), frozenset({t1, t2}))
 
         match = schedule_lookup.get(key)

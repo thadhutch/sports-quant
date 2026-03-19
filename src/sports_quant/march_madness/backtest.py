@@ -439,6 +439,39 @@ def run_backtest() -> None:
         ensemble_preds = np.mean(
             [md["y_backtest_proba"] for md in ranked_models], axis=0
         )
+
+        # Meta-learner stacking (if enabled)
+        meta_cfg = cfg.get("meta_learner", {})
+        if meta_cfg.get("enabled", False):
+            from sports_quant.march_madness._meta_learner import (
+                train_and_predict_stack,
+            )
+
+            stack_result = train_and_predict_stack(
+                matchups_df=matchups,
+                backtest_year=backtest_year,
+                prepare_features_fn=_prepare_features,
+                hyperparams=hyperparams,
+                meta_cfg=meta_cfg,
+                do_symmetrize=do_symmetrize,
+                feature_mode=feature_mode,
+                early_stop_rounds=early_stop_rounds,
+                lgbm_backtest_probas=ensemble_preds,
+            )
+
+            logger.info(
+                "Year %d meta-learner coefficients: %s",
+                backtest_year,
+                {
+                    name: round(float(c), 4)
+                    for name, c in zip(
+                        stack_result.names,
+                        stack_result.meta_model.coef_[0],
+                    )
+                },
+            )
+            ensemble_preds = stack_result.meta_predictions
+
         ensemble_binary = (ensemble_preds > 0.5).astype(int)
         ensemble_accuracy = accuracy_score(y_backtest, ensemble_binary)
         ensemble_precision = precision_score(y_backtest, ensemble_binary)

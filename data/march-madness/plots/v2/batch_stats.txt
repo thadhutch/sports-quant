@@ -1,0 +1,36 @@
+Model Version: v2
+Feature Mode: difference
+Symmetrized: True
+Number of Models: 50
+
+Overall Statistics:
+--------------------------------------------------
+Mean Accuracy: 0.7102
+Std Dev Accuracy: 0.0338
+Mean F1 Score: 0.7820
+Mean Log Loss: 0.5681
+Mean Brier Score: 0.1931
+
+Top 3 Models:
+--------------------------------------------------
+Rank 1 (Original Model #31):
+  Seed: 1363
+  Accuracy: 0.7966
+  F1 Score: 0.8571
+  Log Loss: 0.5782
+  Brier Score: 0.1940
+
+Rank 2 (Original Model #35):
+  Seed: 6027
+  Accuracy: 0.7458
+  F1 Score: 0.8221
+  Log Loss: 0.5251
+  Brier Score: 0.1738
+
+Rank 3 (Original Model #14):
+  Seed: 7141
+  Accuracy: 0.7627
+  F1 Score: 0.8205
+  Log Loss: 0.5694
+  Brier Score: 0.1911
+

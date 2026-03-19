@@ -8,10 +8,10 @@
 March Madness bracket prediction and NFL over/under modeling.
 
 <p align="center">
-  <img src="docs/march-madness/2019_ensemble_comparison.svg" alt="2019 March Madness Bracket - 79.4% Accuracy" width="900">
+  <img src="docs/march-madness/2025_simulation.svg" alt="2025 March Madness Bracket - 81.0% Accuracy" width="900">
 </p>
 
-<p align="center"><em>2019 bracket prediction vs. actual results &mdash; 50 of 63 games correct (79.4%)</em></p>
+<p align="center"><em>2025 bracket prediction &mdash; 51 of 63 games correct (81.0%)</em></p>
 
 ---
 
@@ -19,25 +19,25 @@ March Madness bracket prediction and NFL over/under modeling.
 
 |  |  |  |  |
 |:---:|:---:|:---:|:---:|
-| **79.4%** | **4 of 6** | **Back-to-Back** | **Called It** |
-| bracket accuracy (2019) | champions correctly predicted | UConn champion picks (2023&ndash;2024) | NC State's Cinderella run (2024) |
+| **81.0%** | **4 of 6** | **Back-to-Back** | **Called It** |
+| bracket accuracy (2025) | champions correctly predicted | UConn champion picks (2023&ndash;2024) | NC State's Cinderella run (2024) |
 
 ---
 
 ## Year-by-Year Accuracy
 
-Results from v5 LightGBM ensemble with forward simulation, backtested across 6 tournaments:
+Results from v6b LightGBM ensemble with forward simulation, backtested across 6 tournaments:
 
 | Year | Accuracy | Correct / Total | Champion | Champion Correct? | Highlights |
 |:----:|:--------:|:---------------:|:--------:|:-----------------:|:-----------|
-| 2019 | **79.4%** | 50 / 63 | Virginia (1) | Yes | R32: 93.75% &mdash; best overall bracket |
-| 2025 | **77.8%** | 49 / 63 | TBD | In progress | Perfect Elite 8 (4/4), Sweet 16: 87.5% |
+| 2025 | **79.4%** | 50 / 63 | Florida (1) | No | Perfect Elite 8 (4/4), Sweet 16: 87.5% |
 | 2024 | **76.2%** | 48 / 63 | UConn (1) | Yes | Perfect Final Four + National Championship |
+| 2019 | **76.2%** | 48 / 63 | Virginia (1) | Yes | R32: 100% &mdash; perfect second round |
 | 2022 | **71.4%** | 45 / 63 | Kansas (1) | Yes | Perfect Elite 8 (4/4) |
 | 2021 | **67.7%** | 42 / 62 | Baylor (1) | No | Perfect Final Four |
-| 2023 | **58.7%** | 37 / 63 | UConn (4) | Yes | F4 + NCG correct despite historically wild year |
+| 2023 | **65.1%** | 41 / 63 | UConn (4) | Yes | F4 + NCG correct despite historically wild year |
 
-**Average accuracy: 71.9%** across 6 tournaments (377 / 525 games)
+**Average accuracy: 72.7%** across 6 tournaments (274 / 377 games)
 
 ---
 
@@ -67,21 +67,11 @@ The model's best upset calls &mdash; games where a lower-seeded team was correct
 
 ---
 
-## 2024: UConn Back-to-Back Champions
-
-<p align="center">
-  <img src="docs/march-madness/2024_ensemble_comparison.svg" alt="2024 March Madness Bracket - 76.2% Accuracy" width="900">
-</p>
-
-<p align="center"><em>2024 bracket &mdash; 48 of 63 correct (76.2%), including the UConn championship</em></p>
-
----
-
-## How It Works
+## How the March Madness Model Works
 
 The March Madness model uses a **LightGBM ensemble** trained on historical tournament data with features derived from team performance metrics, seeding, and matchup interactions.
 
-1. **Feature engineering** &mdash; KenPom ratings, seed-based statistics, conference strength, and matchup interaction features (v5)
+1. **Feature engineering** &mdash; KenPom ratings, Barttorvik T-Rank, seed-based statistics, conference strength, and matchup interaction features
 2. **Ensemble prediction** &mdash; Multiple LightGBM models vote on each game's win probability
 3. **Forward simulation** &mdash; The bracket is filled round-by-round, feeding predicted winners into the next round
 4. **Seed debiasing** &mdash; Adjusts for historical seed-vs-seed upset rates to avoid over-favoring top seeds
@@ -97,22 +87,7 @@ The project also includes a **survivor pool optimizer** that uses the model's ro
 
 ---
 
-## 2025 Predictions
-
-<p align="center">
-  <img src="docs/march-madness/2025_ensemble_comparison.svg" alt="2025 March Madness Bracket Predictions" width="900">
-</p>
-
-<p align="center"><em>2025 tournament predictions &mdash; currently 49 of 63 correct (77.8%)</em></p>
-
----
-
 ## NFL Over/Under Modeling
-
-<details>
-<summary><strong>Expand NFL section</strong></summary>
-
-### Overview
 
 An end-to-end data pipeline that scrapes [PFF](https://www.pff.com/) team grades and [Pro Football Reference](https://www.pro-football-reference.com/) game/betting data, builds analysis-ready datasets, and trains an ensemble XGBoost model for NFL over/under prediction.
 
@@ -120,7 +95,9 @@ An end-to-end data pipeline that scrapes [PFF](https://www.pff.com/) team grades
   <img src="docs/accuracy_by_algorithm_score.png" alt="Accuracy by Algorithm Score" width="600">
 </p>
 
-### How It Works
+### How the NFL Model Works
+
+The core idea is simple: **don't try to predict every game &mdash; find the games where the model is reliably right, and only bet those.**
 
 On each game-day the pipeline trains 50 XGBoost models with different random seeds on all available historical data. The pipeline filters to the top 3 based on a weighted seasonal accuracy score, then requires all three to agree on a pick before it counts. Each consensus pick gets an *algorithm score* that captures how well the ensemble has historically performed at that confidence level.
 
@@ -178,6 +155,9 @@ Normalize Names        Normalize Names
 
 ### Example Charts
 
+<details>
+<summary><strong>Expand NFL charts</strong></summary>
+
 <p align="center">
   <img src="docs/example_charts/vegas_line_accuracy.png" alt="Vegas Line Accuracy" width="600">
 </p>
@@ -222,6 +202,20 @@ Normalize Names        Normalize Names
 
 ---
 
+## Features
+
+- **March Madness Bracket Prediction** &mdash; LightGBM ensemble with forward simulation, seed debiasing, and survivor pool optimization
+- **PFF Scraping** &mdash; Selenium-based scraper for PFF team grades (requires PFF Premium; manual login on first run, cookies cached for subsequent runs)
+- **PFR Scraping** &mdash; Proxy-rotated scraper for Pro Football Reference boxscores
+- **Data Normalization** &mdash; Standardizes dates and team names across sources
+- **Dataset Merging** &mdash; Inner join on date + team columns
+- **Rolling Averages** &mdash; Pre-game cumulative stat averages per team per season
+- **Games Played Tracking** &mdash; Cumulative games played before each matchup
+- **Feature Rankings** &mdash; Per-date rankings across all teams
+- **Ensemble Training** &mdash; Trains 50 XGBoost models per game-day, selects top 3 by weighted seasonal accuracy, requires consensus agreement, and runs a financial simulation
+- **Walk-Forward Backtesting** &mdash; Trains 50 models across every historical date using walk-forward validation and averages metrics across all models
+- **CLI + Python API** &mdash; Run the full pipeline or any individual step
+
 ## Installation
 
 Install from [PyPI](https://pypi.org/project/sports-quant/):
@@ -237,6 +231,33 @@ git clone https://github.com/thadhutch/sports-quant.git
 cd sports-quant
 poetry install
 ```
+
+## Prerequisites
+
+| Requirement | Why |
+|---|---|
+| Python 3.12+ | Runtime |
+| Google Chrome | PFF scraper uses Selenium to render client-side data |
+| [PFF Premium](https://www.pff.com/) subscription | Authenticates access to PFF team grades |
+| Rotating proxies (CSV) | PFR rate-limits aggressively; proxies prevent blocks |
+
+## Configuration
+
+Create a `.env` file (see [`.env.example`](.env.example)) or export environment variables directly:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `NFL_SEASONS` | `2025` | Comma-separated seasons to scrape from PFF |
+| `NFL_START_YEAR` | `2025` | First year for PFR boxscore URL collection |
+| `NFL_END_YEAR` | `2025` | Last year for PFR boxscore URL collection |
+| `NFL_MAX_WEEK` | `18` | Final week to scrape in the last season |
+| `NFL_DATA_DIR` | `data` | Base directory for all output files |
+| `NFL_PROXY_FILE` | `proxies/proxies.csv` | Path to proxy list (`address:port:user:password` per line) |
+| `NFL_MODEL_CONFIG` | `model_config.yaml` | Path to model configuration file |
 
 ## Usage
 
@@ -274,23 +295,51 @@ sports_quant.run_training()
 sports_quant.run_backtest()
 ```
 
-## Configuration
+## Project Structure
 
-Create a `.env` file (see [`.env.example`](.env.example)) or export environment variables directly:
-
-```bash
-cp .env.example .env
 ```
-
-| Variable | Default | Description |
-|---|---|---|
-| `NFL_SEASONS` | `2025` | Comma-separated seasons to scrape from PFF |
-| `NFL_START_YEAR` | `2025` | First year for PFR boxscore URL collection |
-| `NFL_END_YEAR` | `2025` | Last year for PFR boxscore URL collection |
-| `NFL_MAX_WEEK` | `18` | Final week to scrape in the last season |
-| `NFL_DATA_DIR` | `data` | Base directory for all output files |
-| `NFL_PROXY_FILE` | `proxies/proxies.csv` | Path to proxy list |
-| `NFL_MODEL_CONFIG` | `model_config.yaml` | Path to model configuration file |
+sports-quant/
+├── src/sports_quant/
+│   ├── __init__.py           # Public API re-exports
+│   ├── _config.py            # Paths, env vars, logging
+│   ├── cli.py                # Click CLI entry point
+│   ├── pipeline.py           # Pipeline orchestrators
+│   ├── teams.py              # Team name/abbreviation mappings
+│   ├── march_madness/        # March Madness bracket prediction
+│   ├── scrapers/
+│   │   ├── pff.py            # PFF grades scraper (Selenium)
+│   │   ├── pfr.py            # PFR game data scraper
+│   │   ├── pfr_urls.py       # PFR boxscore URL collector
+│   │   ├── auth.py           # PFF authentication
+│   │   └── proxies.py        # Proxy loading utilities
+│   ├── parsers/
+│   │   ├── pff_dates.py      # PFF date extraction
+│   │   ├── pff_teams.py      # PFF team name normalization
+│   │   ├── pfr_dates.py      # PFR date normalization
+│   │   └── pfr_teams.py      # PFR team name extraction
+│   ├── processing/
+│   │   ├── merge.py          # Merge PFF + PFR datasets
+│   │   ├── over_under.py     # O/U betting line extraction
+│   │   ├── rolling_averages.py
+│   │   ├── games_played.py
+│   │   └── rankings.py
+│   └── modeling/
+│       ├── __init__.py       # Public API (run_training, run_backtest)
+│       ├── _features.py      # Shared feature definitions
+│       ├── _data.py          # Data loading and preparation
+│       ├── _training.py      # Single-model and ensemble training
+│       ├── _scoring.py       # Season weighting, consensus, model selection
+│       ├── _simulation.py    # Financial simulation / profit tracking
+│       ├── train.py          # Ensemble training orchestrator
+│       ├── backtest.py       # Walk-forward backtesting orchestrator
+│       └── plots.py          # All modeling-related charts
+├── tests/
+├── model_config.yaml
+├── pyproject.toml
+├── Makefile
+├── LICENSE
+└── README.md
+```
 
 ## Development
 
